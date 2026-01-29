@@ -4,7 +4,7 @@
 
 ---
 
-## 📌 Overview
+## Overview
 
 This project implements the **core backend logic** of a Lost & Found system **before** introducing an HTTP/API layer.
 
@@ -20,7 +20,7 @@ This mirrors **real-world backend backend engineering practices**, where correct
 
 ---
 
-## 🎯 Why This Project Matters
+## Why This Project Matters
 
 Many beginner projects jump straight to APIs and UIs.  
 This project intentionally **does not** — and that’s the point.
@@ -37,28 +37,28 @@ Everything here can be exposed via REST **without refactoring**.
 
 ---
 
-## 🧭 Project Status
+## Project Status
 
 **Current Version:** `v0.2.0`  
 **Phase:** Backend Core (Phase 1.3) — Complete
 
 ---
 
-## ✨ Core Features
+## Core Features
 
-### 📦 Found Items
+### Found Items
 
 - Create and persist found items
 - Retrieve items by ID
 - Normalized SQLite storage
 
-### 📝 Claims
+### Claims
 
 - Submit ownership claims for found items
 - Claims start in a `pending` state
 - Prevents invalid or duplicate processing
 
-### 🧮 Claim Scoring Engine
+### Claim Scoring Engine
 
 - Rule-based weighted scoring
 - Supports exact and partial matches
@@ -69,7 +69,7 @@ Everything here can be exposed via REST **without refactoring**.
 
 This enables **explainable decisions** and **admin transparency**.
 
-### ✅ Claim Validation
+### Claim Validation
 
 Centralized validation rules detect anomalies such as:
 
@@ -79,13 +79,13 @@ Centralized validation rules detect anomalies such as:
 
 Validation is **decoupled from persistence** and reusable.
 
-### 🛡 Admin Verification
+### Admin Verification
 
 - Admins can approve or reject claims
 - Claims cannot be processed twice
 - Status transitions enforced at the model layer
 
-### 🧾 Audit Logging
+### Audit Logging
 
 All critical actions are logged:
 
@@ -103,7 +103,7 @@ Each log stores:
 
 ---
 
-## 🧪 Testing Strategy
+## Testing Strategy
 
 This project uses a **single-run integration test** (`test.py`) instead of pytest.
 
@@ -129,7 +129,7 @@ The test exits immediately on failure with a **clear error message**.
 
 ---
 
-## 🛠 Tech Stack
+## Tech Stack
 
 - Python 3
 - SQLite
@@ -139,7 +139,7 @@ The test exits immediately on failure with a **clear error message**.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 backend/
 │
