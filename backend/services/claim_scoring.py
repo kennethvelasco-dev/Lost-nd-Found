@@ -61,3 +61,52 @@ def compute_claim_score(claim_data, found_item):
         "matched": matched_fields,
         "breakdown": breakdown
     }
+
+def compute_claim_score(claim: dict, found_item: dict) -> dict:
+    """
+    Compute a claim score based on matching fields with the found item.
+    Returns a dict:
+        {
+            "total": int,
+            "breakdown": {field: score, ...}
+        }
+    """
+    WEIGHTS = {
+        "category": 20,
+        "item_type": 20,
+        "brand": 20,
+        "color": 20,
+        "private_details": 20
+    }
+
+    # Mapping from claim field -> DB field in found_item
+    FOUND_ITEM_FIELD_MAP = {
+        "category": "found_category",
+        "item_type": "found_item_type",
+        "brand": "found_brand",
+        "color": "color",
+        "private_details": "public_description"  # or whatever you want to compare
+    }
+
+    breakdown = {}
+    total = 0
+
+    for field, weight in WEIGHTS.items():
+        claim_value = claim.get(f"claimed_{field}") or ""
+        found_value = found_item.get(FOUND_ITEM_FIELD_MAP.get(field, field)) or ""
+
+        # Normalize to lowercase for comparison
+        claim_value_lower = str(claim_value).lower()
+        found_value_lower = str(found_value).lower()
+
+        if claim_value_lower == found_value_lower:
+            score = weight  # exact match
+        elif claim_value_lower in found_value_lower or found_value_lower in claim_value_lower:
+            score = weight // 2  # partial match
+        else:
+            score = 0
+
+        breakdown[field] = score
+        total += score
+
+    return {"total": total, "breakdown": breakdown}
