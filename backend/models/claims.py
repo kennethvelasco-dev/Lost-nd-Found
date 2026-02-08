@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from .audit import log_action
 from .items import get_found_item_by_id
-from backend.services.claim_scoring import compute_claim_score
+from backend.services.scoring_service import compute_claim_score
 from .base import get_db_connection
 from .validators import (
     ValidationError,
@@ -34,7 +34,10 @@ def create_claim(data):
             "claimed_brand",
             "claimed_color",
             "claimed_location",
-            "claimed_private_details"
+            "claimed_private_details",
+            "receipt_proof",
+            "description",
+            "declared_value"
         }
 
         fields, placeholders, values = [], [], []
@@ -101,7 +104,7 @@ def get_pending_claims():
         FROM claims c
         JOIN found_items f ON c.found_item_id = f.id
         WHERE c.status = 'pending'
-        ORDER BY c.created_at ASC
+        ORDER BY c.score DESC
     """
     cursor.execute(query)
     rows = cursor.fetchall()

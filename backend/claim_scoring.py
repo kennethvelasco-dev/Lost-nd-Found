@@ -1,4 +1,4 @@
-from backend.services.claim_scoring import compute_claim_score
+from backend.services.scoring_service import compute_claim_score
 
 def make_found_item():
     return {

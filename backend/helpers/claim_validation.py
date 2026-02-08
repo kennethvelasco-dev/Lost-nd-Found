@@ -1,5 +1,5 @@
 def no_receipt(data):
-    return not data.get("receipt")
+    return not data.get("receipt_proof")
 
 def high_amount(data):
     return data.get("amount", 0) > 5000

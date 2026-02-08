@@ -1,164 +1,147 @@
-# Lost & Found System — Backend Core
+# Campus Lost & Found System
 
-> A production-ready backend foundation for a Lost & Found platform, focused on **data integrity, validation, scoring logic, auditability, and testability**.
-
----
-
-## Overview
-
-This project implements the **core backend logic** of a Lost & Found system **before** introducing an HTTP/API layer.
-
-Instead of starting with routes and UI, this system prioritizes:
-
-- Clean data modeling
-- Explicit validation
-- Deterministic business logic
-- Auditable admin actions
-- Repeatable integration testing
-
-This mirrors **real-world backend backend engineering practices**, where correctness and maintainability come first.
+> **Production-Ready Backend Core (v1.0.0)**
+> A robust, secure, and testable backend for managing lost and found items with claim scoring and admin verification.
 
 ---
 
-## Why This Project Matters
+## 🚀 Features
 
-Many beginner projects jump straight to APIs and UIs.  
-This project intentionally **does not** — and that’s the point.
+### Core Functionality
 
-It demonstrates:
+- **User Authentication**: JWT-based Register, Login, Refresh, Logout.
+- **Item Management**: Post Lost & Found items with detailed attributes.
+- **Claims System**: specific validation logic (`receipt_proof`, `declared_value`) and status tracking.
+- **Scoring Engine**: Intelligent matching of claims against found items using weighted rules.
+- **Admin Dashboard**: Verification workflow for pending claims.
+- **Audit Logging**: Comprehensive activity trail for security and compliance.
 
-- Separation of concerns
-- Defensive programming
-- Clear domain modeling
-- Testable business logic
-- Readiness for future API layers
+### Technical Highlights
 
-Everything here can be exposed via REST **without refactoring**.
-
----
-
-## Project Status
-
-**Current Version:** `v0.2.0`  
-**Phase:** Backend Core (Phase 1.3) — Complete
+- **Architecture**: Modular Flask application with service layer pattern.
+- **Database**: SQLite with normalized schema and migrations.
+- **Security**: Password hashing (Argon2/PBKDF2 via Werkzeug), Role-Based Access Control (RBAC).
+- **Quality Assurance**: Single-command integration test suite covering full lifecycles.
 
 ---
 
-## Core Features
+## 🛠️ Setup & Installation
 
-### Found Items
+### Prerequisites
 
-- Create and persist found items
-- Retrieve items by ID
-- Normalized SQLite storage
+- Python 3.8+
+- Virtualenv
+
+### Installation
+
+1. **Clone & Setup Environment**
+
+   ```bash
+   git clone <repo>
+   cd lost-and-found
+   python -m venv backend/venv
+   # Windows:
+   .\backend\venv\Scripts\activate
+   # Mac/Linux:
+   source backend/venv/bin/activate
+   ```
+
+2. **Install Dependencies**
+
+   ```bash
+   pip install -r backend/requirements.txt
+   ```
+
+3. **Initialize Database**
+   The database is auto-initialized on first run. To seed a default admin:
+
+   ```bash
+   # Run the integration test (resets DB and creates admin)
+   python -m tests.integration_test
+   ```
+
+   **Default Admin Credentials:**
+   - Username: `admin`
+   - Password: `adminpassword`
+
+---
+
+## 🧪 Testing
+
+Run the comprehensive integration test suite:
+
+```bash
+python -m tests.integration_test
+```
+
+_Expected Output:_ `✅ INTEGRATION TEST PASSED`
+
+---
+
+## 📖 API Documentation
+
+### Authentication
+
+- `POST /api/auth/register` - Create new user account.
+- `POST /api/auth/login` - Authenticate and receive JWT.
+- `POST /api/auth/refresh` - Refresh access token.
+- `POST /api/auth/logout` - Revoke current token.
+
+### Items
+
+- `POST /api/items/lost` - Report a lost item.
+- `GET /api/items/found` - View published found items.
+- `POST /api/items/found` - Report a found item.
 
 ### Claims
 
-- Submit ownership claims for found items
-- Claims start in a `pending` state
-- Prevents invalid or duplicate processing
+- `POST /api/claims/claim` - Submit a claim for a found item.
+  - **Required Fields**: `found_item_id`, `description`, `declared_value`, `receipt_proof`.
+  - **Optional**: `claimed_brand`, `claimed_color`, etc. (used for scoring).
 
-### Claim Scoring Engine
+### Admin
 
-- Rule-based weighted scoring
-- Supports exact and partial matches
-- Returns:
-  - Total score
-  - Matched fields
-  - Detailed breakdown
-
-This enables **explainable decisions** and **admin transparency**.
-
-### Claim Validation
-
-Centralized validation rules detect anomalies such as:
-
-- Missing receipts
-- Unusually high claim amounts
-- Missing descriptions
-
-Validation is **decoupled from persistence** and reusable.
-
-### Admin Verification
-
-- Admins can approve or reject claims
-- Claims cannot be processed twice
-- Status transitions enforced at the model layer
-
-### Audit Logging
-
-All critical actions are logged:
-
-- Claim creation
-- Admin decisions
-- System actions
-
-Each log stores:
-
-- Action
-- Entity type
-- Entity ID
-- Actor
-- Timestamp
+- `GET /api/admin/claims` - List pending claims (Sorted by Score Descending).
+- `POST /api/admin/claims/<id>/verify` - Approve/Reject a claim.
 
 ---
 
-## Testing Strategy
+## 🧠 Scoring Logic
 
-This project uses a **single-run integration test** (`test.py`) instead of pytest.
+The system automatically scores claims (0-100) based on field matches against the found item:
 
-### Why this approach?
+| Field           | Weight | Match Type |
+| --------------- | ------ | ---------- |
+| Private Details | 40%    | Contains   |
+| Category        | 30%    | Exact      |
+| Item Type       | 25%    | Contains   |
+| Brand           | 20%    | Contains   |
+| Color           | 15%    | Contains   |
+| Location        | 10%    | Contains   |
 
-- No hidden fixtures
-- No test magic
-- Explicit execution order
-- Easy debugging
-
-### What is tested
-
-- Database initialization
-- Table creation
-- Found item creation & retrieval
-- Claim validation (positive & negative)
-- Claim scoring correctness
-- Claim creation
-- Admin verification
-- Audit log persistence
-
-The test exits immediately on failure with a **clear error message**.
+_Note: Scores are normalized and capped._
 
 ---
 
-## Tech Stack
+## 🔒 Security Notes
 
-- Python 3
-- SQLite
-- Python Standard Library
-- No ORM
-- No web framework (yet)
+- **Admin Registration**: Public registration forces `role='user'`. Admins must be seeded or created via database access.
+- **Token Revocation**: Logout adds JTI to a revocation list (in-memory for this version).
 
 ---
 
-## Project Structure
+## 📂 Project Structure
 
+```
 backend/
-│
-├── app.py                  # Entry point (DB init hook)
-├── test.py                 # One-run integration test
-│
-├── models/
-│   ├── __init__.py
-│   ├── base.py              # DB connection & schema
-│   ├── items.py             # Found item logic
-│   ├── claims.py            # Claim lifecycle
-│   ├── audit.py             # Audit logging
-│   └── validators.py        # Core validators
-│
-├── helpers/
-│   ├── __init__.py
-│   └── claim_validation.py  # Claim anomaly rules
-│
-├── services/
-│   └── claim_scoring.py     # Rule-based scoring engine
-│
-└── database.db              # SQLite database (generated)
+├── app.py                  # App entry point
+├── services/               # Business logic
+│   ├── auth_service.py
+│   ├── scoring_service.py  # Core scoring algorithm
+│   └── ...
+├── routes/                 # API controllers
+├── models/                 # DB access & schemas
+└── config/                 # Configuration
+tests/
+└── integration_test.py     # End-to-end test suite
+```

@@ -6,7 +6,7 @@ from backend.helpers.user_helpers import create_default_admin
 from backend.services.auth_service import register_user, login_user, refresh_token, logout_token
 from backend.models.items import create_found_item, get_found_item_by_id
 from backend.models.claims import create_claim, get_pending_claims
-from backend.services.claim_scoring import compute_claim_score
+from backend.services.scoring_service import compute_claim_score
 from backend.helpers.claim_validation import validate_claim_data
 from backend.models.audit import log_action
 
@@ -36,8 +36,7 @@ with app.app_context():
         cursor.execute("PRAGMA foreign_keys = OFF;")
         tables = ["users","admins","lost_items","found_items","claims","audit_logs","admin_actions"]
         for table in tables:
-            cursor.execute(f"DELETE FROM {table};")
-            cursor.execute(f"DELETE FROM sqlite_sequence WHERE name='{table}';")
+            cursor.execute(f"DROP TABLE IF EXISTS {table};")
         cursor.execute("PRAGMA foreign_keys = ON;")
         conn.commit()
         conn.close()
@@ -137,8 +136,9 @@ with app.app_context():
     "claimed_brand": "Samsung",
     "claimed_color": "Black",
     "claimed_private_details": "Screen slightly cracked",
-    "receipt": True,
-    "description": "Lost my Samsung phone near library"
+    "receipt_proof": "receipt.pdf",
+    "description": "Lost my Samsung phone near library",
+    "declared_value": 500
     }
 
 

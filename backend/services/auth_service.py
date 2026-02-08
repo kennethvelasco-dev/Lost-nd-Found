@@ -12,7 +12,8 @@ def register_user(data: dict):
     validate_registration_data(data)
     username = data.get("username")
     password = data.get("password")
-    role = data.get("role", "user")
+    # Security: Always force 'user' role for public registration
+    role = "user"
 
     result = create_user(username, password, role)
 
