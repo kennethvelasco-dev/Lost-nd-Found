@@ -29,30 +29,25 @@ def create_claim(data):
             
         ALLOWED_FIELDS = {
             "found_item_id",
-            "claimed_category",
-            "claimed_item_type",
-            "claimed_brand",
-            "claimed_color",
-            "claimed_location",
-            "claimed_private_details",
-            "receipt_proof",
-            "description",
+            "claimant_name",
+            "claimant_email",
+            "answers",
             "declared_value"
         }
 
-        fields, placeholders, values = [], [], []
-
-        for key, value in data.items():
-            if key in ALLOWED_FIELDS:
-                if isinstance(value, (dict, list)):
-                    value = json.dumps(value)
-                fields.append(key)
-                placeholders.append("?")
-                values.append(value)
-
-        fields.extend(["score", "status", "created_at"])
-        placeholders.extend(["?", "?", "?"])
-        values.extend([score, "pending", datetime.now(timezone.utc).isoformat()])
+        # Need to handle dynamic columns properly
+        fields = ["found_item_id", "claimant_name", "claimant_email", "answers", "verification_score", "decision", "created_at"]
+        placeholders = ["?", "?", "?", "?", "?", "?", "?"]
+        
+        values = [
+            data["found_item_id"], 
+            data.get("claimant_name", "Unknown"), 
+            data.get("claimant_email", "unknown@test.com"), 
+            data.get("answers", "{}"),
+            score,
+            "pending",
+            datetime.now(timezone.utc).isoformat()
+        ]
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
@@ -73,7 +68,7 @@ def create_claim(data):
         return {"error": ve.message}, ve.status_code
 
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        return {"error": f"Database error: {str(e)}"}, 500
 
 # GET PENDING CLAIMS
 def get_pending_claims():
@@ -85,14 +80,11 @@ def get_pending_claims():
         SELECT
             c.id AS claim_id,
             c.found_item_id,
-            c.claimed_category,
-            c.claimed_item_type,
-            c.claimed_brand,
-            c.claimed_color,
-            c.claimed_location,
-            c.claimed_private_details,
-            c.score,
-            c.status,
+            c.claimant_name,
+            c.claimant_email,
+            c.answers,
+            c.verification_score AS score,
+            c.decision AS status,
             c.created_at,
 
             f.category AS found_category,
@@ -103,8 +95,8 @@ def get_pending_claims():
             f.public_description
         FROM claims c
         JOIN found_items f ON c.found_item_id = f.id
-        WHERE c.status = 'pending'
-        ORDER BY c.score DESC
+        WHERE c.decision = 'pending'
+        ORDER BY c.verification_score DESC
     """
     cursor.execute(query)
     rows = cursor.fetchall()
@@ -124,7 +116,7 @@ def update_claim_status(claim_id, new_status):
             if not cursor.fetchone():
                 return {"error": "Claim not found"}, 404
 
-            cursor.execute("UPDATE claims SET status = ? WHERE id = ?", (new_status, claim_id))
+            cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (new_status, claim_id))
 
         log_action("update_status", "claim", claim_id, "system")
         return {"message": "Claim status updated"}, 200
@@ -139,13 +131,10 @@ def update_claim(claim_id, data):
         validate_int(claim_id, "claim_id")
 
         ALLOWED_FIELDS = {
-            "claimed_category",
-            "claimed_item_type",
-            "claimed_brand",
-            "claimed_color",
-            "claimed_location",
-            "claimed_private_details",
-            "status"
+            "claimant_name",
+            "claimant_email",
+            "answers",
+            "decision"
         }
 
         updates = []
@@ -181,13 +170,13 @@ def verify_claim(claim_id, decision, admin_username):
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            row = cursor.execute("SELECT status FROM claims WHERE id = ?", (claim_id,)).fetchone()
+            row = cursor.execute("SELECT decision FROM claims WHERE id = ?", (claim_id,)).fetchone()
             if not row:
                 return {"error": "Claim not found"}, 404
-            if row["status"] != "pending":
+            if row["decision"] != "pending":
                 return {"error": "Claim already processed"}, 400
 
-            cursor.execute("UPDATE claims SET status = ? WHERE id = ?", (decision, claim_id))
+            cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (decision, claim_id))
 
         log_action(decision, "claim", claim_id, admin_username)
         return {"message": f"Claim {decision} successfully"}, 200

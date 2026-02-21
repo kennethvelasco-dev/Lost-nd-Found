@@ -14,21 +14,30 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        import uuid
+
         cursor.execute("""
             INSERT INTO lost_items (
-                category, item_type, last_seen_location,
+                report_id, category, item_type, last_seen_location,
                 last_seen_datetime, public_description, private_details,
-                status, created_at
+                main_picture, additional_picture_1, additional_picture_2,
+                additional_picture_3, reporter_id, status, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
+            str(uuid.uuid4()), # Auto-generate report_id
             data["category"],
             data.get("item_type", "Unknown"),
             data["last_seen_location"],
             data["last_seen_datetime"],
             data.get("public_description"),
             data.get("private_details"),
-            "published",
+            data.get("main_picture"),
+            data.get("additional_picture_1"),
+            data.get("additional_picture_2"),
+            data.get("additional_picture_3"),
+            data.get("reporter_id"),
+            "lost", # Default status
             datetime.now(timezone.utc).isoformat()
         ))
 
@@ -36,7 +45,7 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
         item_id = cursor.lastrowid
 
         # Log creation
-        log_action("create", "lost_item", item_id, data.get("reported_by", "system"))
+        log_action("create", "lost_item", item_id, str(data.get("reporter_id", "system")))
 
         return {"message": "Lost item created successfully", "item_id": item_id}
 
@@ -44,7 +53,8 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
         return {"error": ve.message}
 
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        import traceback
+        return {"error": f"Database error: {str(e)}\n{traceback.format_exc()}"}
 
     finally:
         conn.close()
@@ -58,14 +68,19 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        import uuid
+
         cursor.execute("""
             INSERT INTO found_items (
-                category, item_type, color, brand,
+                report_id, category, item_type, color, brand,
                 found_location, found_datetime,
-                public_description, status, created_at
+                public_description, private_details, main_picture,
+                additional_picture_1, additional_picture_2, additional_picture_3,
+                reporter_id, status, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
+            str(uuid.uuid4()), # Auto-generate report_id
             data["category"],
             data.get("item_type", "Unknown"),
             data.get("color"),
@@ -73,7 +88,13 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
             data["found_location"],
             data["found_datetime"],
             data.get("public_description"),
-            "published",
+            data.get("private_details"),
+            data.get("main_picture"),
+            data.get("additional_picture_1"),
+            data.get("additional_picture_2"),
+            data.get("additional_picture_3"),
+            data.get("reporter_id"),
+            "found", # Default status
             datetime.now(timezone.utc).isoformat()
         ))
 
@@ -81,7 +102,7 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
         item_id = cursor.lastrowid
 
         # Log creation
-        log_action("create", "found_item", item_id, data.get("reported_by", "system"))
+        log_action("create", "found_item", item_id, str(data.get("reporter_id", "system")))
 
         return {"message": "Found item created successfully", "item_id": item_id}
 
@@ -89,7 +110,8 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
         return {"error": ve.message}
 
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        import traceback
+        return {"error": f"Database error: {str(e)}\n{traceback.format_exc()}"}
 
     finally:
         conn.close()
@@ -101,10 +123,11 @@ def get_published_found_items() -> list[Dict[str, Any]]:
     cursor = conn.cursor()
 
     cursor.execute("""
-        SELECT id, category, item_type, color, brand,
-               found_location, found_datetime, public_description
+        SELECT id, report_id, category, item_type, color, brand,
+               found_location, found_datetime, public_description,
+               main_picture
         FROM found_items
-        WHERE status = 'published'
+        WHERE status = 'found'
         ORDER BY created_at DESC
     """)
 

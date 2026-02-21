@@ -62,6 +62,7 @@ def run_integration_test():
             "brand": "Apple",
             "color": "White",
             "public_description": "White iPhone found on table",
+            "reporter_id": 1,
             "reported_by": "testuser"
         }
         item_res = create_found_item(found_item)
@@ -72,6 +73,9 @@ def run_integration_test():
         log("Submitting Claim...")
         claim_data = {
             "found_item_id": found_item_id,
+            "claimant_name": "Test User",
+            "claimant_email": "test@example.com",
+            "answers": "Yes it is mine",
             "claimed_category": "Electronics",
             "claimed_item_type": "Phone",
             "claimed_brand": "Apple",
@@ -124,9 +128,9 @@ def run_integration_test():
         # 8. Verify Status Update
         log("Verifying Status Update...")
         conn = get_db_connection()
-        row = conn.execute("SELECT status FROM claims WHERE id=?", (claim_id,)).fetchone()
-        if row["status"] != "approved":
-            fail(f"Claim status is {row['status']}, expected 'approved'")
+        row = conn.execute("SELECT decision FROM claims WHERE id=?", (claim_id,)).fetchone()
+        if row["decision"] != "approved":
+            fail(f"Claim decision is {row['decision']}, expected 'approved'")
         conn.close()
         
         print("✅ INTEGRATION TEST PASSED")

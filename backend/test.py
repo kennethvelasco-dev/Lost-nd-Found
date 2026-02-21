@@ -116,7 +116,8 @@ with app.app_context():
             "color": "Black",
             "found_location": "Library",
             "found_datetime": datetime.now(timezone.utc).isoformat(),
-            "public_description": "Black Samsung phone near entrance"
+            "public_description": "Black Samsung phone near entrance",
+            "reporter_id": 1
         }
         res = create_found_item(found_item_data)
         found_item_id = res.get("item_id")
@@ -131,6 +132,9 @@ with app.app_context():
     print("\n--- CLAIM VALIDATION ---")
     claim_data = {
     "found_item_id": found_item_id,
+    "claimant_name": "User Two",
+    "claimant_email": "user2@test.com",
+    "answers": "Yes it is mine",
     "claimed_category": "Electronics",
     "claimed_item_type": "Phone",
     "claimed_brand": "Samsung",

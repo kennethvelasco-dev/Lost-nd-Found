@@ -3,39 +3,70 @@ CREATE TABLE IF NOT EXISTS users (
     username TEXT UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,
     role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
-    email TEXT,
+    email TEXT UNIQUE,
+    name TEXT,
+    admin_id TEXT,
     is_email_verified INTEGER DEFAULT 0,
     created_at TEXT NOT NULL
 );
 
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
+
 CREATE TABLE IF NOT EXISTS lost_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_id TEXT UNIQUE NOT NULL,
     category TEXT NOT NULL,
     item_type TEXT NOT NULL,
     color TEXT,
     brand TEXT,
     last_seen_location TEXT NOT NULL,
     last_seen_datetime TEXT NOT NULL,
+    date_to_claim TEXT,
     public_description TEXT,
     private_details TEXT NOT NULL,
+    main_picture TEXT,
+    additional_picture_1 TEXT,
+    additional_picture_2 TEXT,
+    additional_picture_3 TEXT,
+    reporter_id INTEGER,
+    claim_id INTEGER,
+    processed_id TEXT,
     score_breakdown TEXT,
-    status TEXT NOT NULL DEFAULT 'published',
-    created_at TEXT NOT NULL
+    status TEXT NOT NULL DEFAULT 'lost',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (reporter_id) REFERENCES users(id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_lost_items_status ON lost_items(status);
+CREATE INDEX IF NOT EXISTS idx_lost_items_category_type ON lost_items(category, item_type);
+CREATE INDEX IF NOT EXISTS idx_lost_items_reporter ON lost_items(reporter_id);
 CREATE TABLE IF NOT EXISTS found_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_id TEXT UNIQUE NOT NULL,
     category TEXT NOT NULL,
     item_type TEXT NOT NULL,
     color TEXT,
     brand TEXT,
     found_location TEXT NOT NULL,
     found_datetime TEXT NOT NULL,
+    date_to_claim TEXT,
     public_description TEXT,
-    status TEXT NOT NULL DEFAULT 'published',
-    created_at TEXT NOT NULL
+    private_details TEXT,
+    main_picture TEXT,
+    additional_picture_1 TEXT,
+    additional_picture_2 TEXT,
+    additional_picture_3 TEXT,
+    reporter_id INTEGER,
+    claim_id INTEGER,
+    processed_id TEXT,
+    status TEXT NOT NULL DEFAULT 'found',
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (reporter_id) REFERENCES users(id)
 );
 
+CREATE INDEX IF NOT EXISTS idx_found_items_status ON found_items(status);
+CREATE INDEX IF NOT EXISTS idx_found_items_category_type ON found_items(category, item_type);
+CREATE INDEX IF NOT EXISTS idx_found_items_reporter ON found_items(reporter_id);
 CREATE TABLE IF NOT EXISTS claims (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
