@@ -68,3 +68,9 @@ def compute_claim_score(claim_data: dict, found_item: dict) -> dict:
         "matched": matched_fields,
         "breakdown": breakdown
     }
+
+def calculate_match_confidence(claim_data: dict, found_item: dict) -> dict:
+    """
+    Alias for compute_claim_score to provide semantic clarity during complete transaction flow.
+    """
+    return compute_claim_score(claim_data, found_item)

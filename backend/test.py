@@ -7,7 +7,7 @@ from backend.services.auth_service import register_user, login_user, refresh_tok
 from backend.models.items import create_found_item, get_found_item_by_id
 from backend.models.claims import create_claim, get_pending_claims
 from backend.services.scoring_service import compute_claim_score
-from backend.helpers.claim_validation import validate_claim_data
+from backend.helpers.input_validation import validate_claim_payload
 from backend.models.audit import log_action
 
 # ==========================
@@ -51,8 +51,8 @@ with app.app_context():
     # ==========================
     print("\n--- USER REGISTRATION ---")
     users = [
-        {"username": "user1", "password": "password123"},
-        {"username": "user2", "password": "password456"}
+        {"username": "user1", "password": "Password123!"},
+        {"username": "user2", "password": "Password456!"}
     ]
 
     user_tokens = {}
@@ -142,9 +142,10 @@ with app.app_context():
     }
 
 
-    errors = validate_claim_data(claim_data)
-    if errors:
-        fail(f"Claim validation failed → {errors}")
+    try:
+        validate_claim_payload(claim_data)
+    except Exception as e:
+        fail(f"Claim validation failed → {e}")
     print(f"Claim validation data → {claim_data}")
     pass_test("validate_claim_data is working successfully")
 

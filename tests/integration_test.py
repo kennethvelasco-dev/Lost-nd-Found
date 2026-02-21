@@ -9,7 +9,7 @@ from backend.services.auth_service import register_user, login_user
 from backend.models.items import create_found_item
 from backend.models.claims import create_claim, get_pending_claims
 from backend.services.admin_service import process_claim_verification
-from backend.helpers.claim_validation import validate_claim_data
+from backend.helpers.input_validation import validate_claim_payload
 
 def log(msg):
     print(f"\n[TEST] {msg}")
@@ -34,11 +34,11 @@ def run_integration_test():
         conn.close()
         
         init_db()
-        create_default_admin() # Creates admin/adminpassword
+        create_default_admin() # Creates admin/AdminPass123!
 
         # 2. User Registration & Login
         log("Registering & Logging in User...")
-        user_creds = {"username": "testuser", "password": "password123"}
+        user_creds = {"username": "testuser", "password": "Password123!"}
         register_user(user_creds)
         
         token_data, _ = login_user(user_creds)
@@ -47,7 +47,7 @@ def run_integration_test():
 
         # 3. Admin Login
         log("Logging in Admin...")
-        admin_creds = {"username": "admin", "password": "adminpassword"}
+        admin_creds = {"username": "admin", "password": "AdminPass123!"}
         admin_token_data, _ = login_user(admin_creds)
         admin_token = admin_token_data["token"]
         print(f"Admin Token: {admin_token[:20]}...")
@@ -83,9 +83,10 @@ def run_integration_test():
         }
         
         # Pre-validate
-        errors = validate_claim_data(claim_data)
-        if errors:
-            fail(f"Validation errors: {errors}")
+        try:
+            validate_claim_payload(claim_data)
+        except Exception as e:
+            fail(f"Validation errors: {e}")
 
         claim_res, status = create_claim(claim_data)
         if status != 201:

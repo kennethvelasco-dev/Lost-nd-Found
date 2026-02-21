@@ -1,17 +1,20 @@
-def success_response(data=None):
+def success_response(data=None, message="Success"):
+    """
+    Standardizes successful API responses.
+    """
     return {
         "success": True,
-        "data": data,
-        "error": None
+        "message": message,
+        "data": data
     }
 
 
-def error_response(code, message):
+def error_response(code: str, message: str):
+    """
+    Standardizes error API responses.
+    """
     return {
         "success": False,
-        "data": None,
-        "error": {
-            "code": code,
-            "message": message
-        }
+        "message": message,
+        "error_code": code  # Keeping code for internal mapping, but message is top-level
     }

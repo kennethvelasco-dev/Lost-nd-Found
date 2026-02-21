@@ -1,7 +1,7 @@
 from backend.helpers.user_helpers import create_user, get_user, verify_password
 from backend.models import ValidationError
 from flask_jwt_extended import create_access_token
-from backend.helpers.validate_register import validate_registration_data
+from backend.helpers.input_validation import validate_registration_data
 
 # Simple in-memory revoked tokens store
 revoked_tokens = set()
