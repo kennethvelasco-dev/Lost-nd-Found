@@ -57,7 +57,12 @@
 
    ```bash
    # Run the integration test (resets DB and creates admin)
-   python -m tests.integration_test
+   # Windows (PowerShell):
+   $env:PYTHONPATH="." 
+   python tests/integration_test.py
+   
+   # Mac/Linux:
+   PYTHONPATH="." python tests/integration_test.py
    ```
 
    **Default Admin Credentials:**
@@ -68,13 +73,24 @@
 
 ## 🧪 Testing
 
-Run the comprehensive integration test suite:
+The system features standalone integration test scripts covering complete lifecycles (DB operations, Auth flows, Claim logic, and Admin verification).
 
 ```bash
-python -m tests.integration_test
+# Run tests from the project root directory
+
+# Windows (PowerShell):
+$env:PYTHONPATH="."
+python tests/integration_test.py
+python backend/test.py
+
+# Mac/Linux:
+PYTHONPATH="." python tests/integration_test.py
+PYTHONPATH="." python backend/test.py
 ```
 
-_Expected Output:_ `✅ INTEGRATION TEST PASSED`
+_Expected Output:_ 
+- `✅ INTEGRATION TEST PASSED` 
+- `✅ FULL QA INTEGRATION TEST COMPLETED SUCCESSFULLY`
 
 ---
 
@@ -143,5 +159,7 @@ backend/
 ├── models/                 # DB access & schemas
 └── config/                 # Configuration
 tests/
-└── integration_test.py     # End-to-end test suite
+└── integration_test.py     # End-to-end user flow test
+backend/
+└── test.py                 # Full QA integration test (Auth, Claims, DB)
 ```
