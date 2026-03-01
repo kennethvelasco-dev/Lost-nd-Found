@@ -70,7 +70,7 @@ CREATE INDEX IF NOT EXISTS idx_found_items_reporter ON found_items(reporter_id);
 CREATE TABLE IF NOT EXISTS claims (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
-    found_item_id INTEGER NOT NULL,
+    found_item_id INTEGER,
     claimant_name TEXT NOT NULL,
     claimant_email TEXT NOT NULL,
     answers TEXT NOT NULL,
@@ -78,6 +78,8 @@ CREATE TABLE IF NOT EXISTS claims (
     decision TEXT NOT NULL DEFAULT 'pending',
     decision_reason TEXT,
     score_breakdown TEXT,
+    pickup_datetime TEXT,
+    pickup_location TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (found_item_id) REFERENCES found_items(id)
 );

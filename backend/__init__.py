@@ -20,10 +20,10 @@ def create_app():
 
     jwt.init_app(app)
 
-    app.register_blueprint(auth_bp, url_prefix="/api")
-    app.register_blueprint(item_bp, url_prefix="/api")
-    app.register_blueprint(claim_bp, url_prefix="/api")
-    app.register_blueprint(admin_bp, url_prefix="/api")
+    app.register_blueprint(auth_bp, url_prefix="/api/auth")
+    app.register_blueprint(item_bp, url_prefix="/api/items")
+    app.register_blueprint(claim_bp, url_prefix="/api/claims")
+    app.register_blueprint(admin_bp, url_prefix="/api/admin")
     
 
     @app.errorhandler(Exception)

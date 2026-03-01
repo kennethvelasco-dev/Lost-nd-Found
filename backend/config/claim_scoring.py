@@ -22,5 +22,9 @@ SCORING_RULES = {
     "private_details": {
         "weight": 40,
         "tolerance": "contains"
+    },
+    "date": {
+        "weight": 20,
+        "tolerance": "days_3"
     }
 }

@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from backend.config.claim_scoring import SCORING_RULES
 
 def normalize(value):
@@ -7,11 +8,21 @@ def matches(a, b):
     return normalize(a) == normalize(b)
 
 def match_with_tolerance(claim_value, found_value, tolerance):
-    a = normalize(claim_value)
-    b = normalize(found_value)
-
-    if not a or not b:
+    if not claim_value or not found_value:
         return False
+
+    # Date proximity check
+    if isinstance(tolerance, str) and tolerance.startswith("days_"):
+        try:
+            days_limit = int(tolerance.split("_")[1])
+            d1 = datetime.fromisoformat(str(claim_value).replace("Z", "+00:00"))
+            d2 = datetime.fromisoformat(str(found_value).replace("Z", "+00:00"))
+            return abs((d1 - d2).days) <= days_limit
+        except (ValueError, TypeError, AttributeError):
+            return False
+
+    a = normalize(str(claim_value))
+    b = normalize(str(found_value))
 
     matchers = {
         "exact": lambda x, y: x == y,
@@ -30,6 +41,7 @@ def compute_claim_score(claim_data: dict, found_item: dict) -> dict:
     breakdown = []
 
     # Map claim fields to found item fields
+    # Note: Added 'date' mapping
     field_map = {
         "category": ("claimed_category", "category"),
         "item_type": ("claimed_item_type", "item_type"),
@@ -37,6 +49,7 @@ def compute_claim_score(claim_data: dict, found_item: dict) -> dict:
         "color": ("claimed_color", "color"),
         "location": ("claimed_location", "found_location"),
         "private_details": ("claimed_private_details", "public_description"),
+        "date": ("claimed_datetime", "found_datetime"),
     }
 
     for field, (claim_key, found_key) in field_map.items():
@@ -44,9 +57,12 @@ def compute_claim_score(claim_data: dict, found_item: dict) -> dict:
         if not rule:
             continue
 
+        claim_val = claim_data.get(claim_key)
+        found_val = found_item.get(found_key)
+
         matched = match_with_tolerance(
-            str(claim_data.get(claim_key, "")),
-            str(found_item.get(found_key, "")),
+            claim_val,
+            found_val,
             rule["tolerance"]
         )
 
