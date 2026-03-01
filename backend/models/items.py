@@ -155,25 +155,47 @@ def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
     finally:
         conn.close()
 
-# Update Found Item Status
-def update_found_item_status(item_id: int, new_status: str) -> Dict[str, Any]:
-    """Update status of a found item with validation."""
-    try:
-        validate_int(item_id, "item_id")
+# Search Items
+def search_items_db(filters: Dict[str, Any]) -> list[Dict[str, Any]]:
+    """
+    Search items (lost or found) based on filters.
+    Supported filters: category, item_type, color, brand, status, query.
+    """
+    status = filters.get("status", "found") # Default to found items
+    table = "found_items" if status == "found" else "lost_items"
+    
+    query_str = f"SELECT * FROM {table} WHERE status = ?"
+    params = [status]
 
-        with get_db_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id FROM found_items WHERE id = ?", (item_id,))
-            if not cursor.fetchone():
-                return {"error": "Item not found"}, 404
+    if filters.get("category"):
+        query_str += " AND category = ?"
+        params.append(filters["category"])
+    
+    if filters.get("item_type"):
+        query_str += " AND item_type = ?"
+        params.append(filters["item_type"])
 
-            cursor.execute("UPDATE found_items SET status = ? WHERE id = ?", (new_status, item_id))
-            conn.commit()
+    if filters.get("color"):
+        query_str += " AND color = ?"
+        params.append(filters["color"])
 
-        log_action("update_status", "found_item", item_id, "system")
-        return {"message": "Found item status updated successfully"}, 200
+    if filters.get("brand"):
+        query_str += " AND brand = ?"
+        params.append(filters["brand"])
 
-    except ValidationError as ve:
-        return {"error": ve.message}, ve.status_code
-    except Exception as e:
-        return {"error": f"Database error: {str(e)}"}, 500
+    if filters.get("query"):
+        query_str += " AND (public_description LIKE ? OR category LIKE ? OR item_type LIKE ?)"
+        like_val = f"%{filters['query']}%"
+        params.extend([like_val, like_val, like_val])
+
+    query_str += " ORDER BY created_at DESC"
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(query_str, params)
+    
+    rows = cursor.fetchall()
+    items = [dict(row) for row in rows]
+    conn.close()
+    
+    return items

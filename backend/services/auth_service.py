@@ -8,7 +8,6 @@ revoked_tokens = set()
 
 def register_user(data: dict):
     """Handles user registration"""
-
     validate_registration_data(data)
     username = data.get("username")
     password = data.get("password")
@@ -20,8 +19,11 @@ def register_user(data: dict):
     result = create_user(username, password, role, name, email, admin_id)
 
     if "user_id" in result:
+        # Use string ID as identity, role in additional claims
+        user_id_str = str(result["user_id"])
         token = create_access_token(
-            identity={"user_id": result["user_id"], "role": role}
+            identity=user_id_str,
+            additional_claims={"role": role}
         )
         return {"token": token, "message": result["message"]}, 201
 
@@ -43,16 +45,20 @@ def login_user(data: dict):
     if not user or not verify_password(password, user["password_hash"]):
         raise ValidationError("Invalid username or password.")
 
-    # Minimal JWT identity
+    # Use string ID as identity, role in additional claims
+    user_id_str = str(user["id"])
     token = create_access_token(
-        identity={"user_id": user["id"], "role": user["role"]}
+        identity=user_id_str,
+        additional_claims={"role": user["role"]}
     )
     return {"token": token, "message": "Login successful"}, 200
 
-def refresh_token(identity):
+def refresh_token(user_id: str, role: str):
     """Generate a new access token"""
-    # identity already minimal if coming from get_jwt_identity()
-    new_access_token = create_access_token(identity=identity)
+    new_access_token = create_access_token(
+        identity=user_id,
+        additional_claims={"role": role}
+    )
     return {"token": new_access_token, "message": "Access token refreshed"}, 200
 
 def logout_token(jti: str):

@@ -9,11 +9,10 @@ claim_bp = Blueprint("claims", __name__)
 @claim_bp.route("/claim", methods=["POST"])
 @jwt_required()
 def submit_claim_route():
-    data = request.json or {}
+    data = request.get_json() or {}
     try:
-        identity = get_jwt_identity()
-        minimal_identity = {"user_id": identity["user_id"], "role": identity["role"]}
-        result, status = submit_claim(data, minimal_identity)
+        user_id = get_jwt_identity() # now a string
+        result, status = submit_claim(data, user_id)
         return jsonify(success_response(result)), status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code

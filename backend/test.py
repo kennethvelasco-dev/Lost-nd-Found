@@ -4,7 +4,13 @@ from backend import create_app
 from backend.models.base import get_db_connection, init_db
 from backend.helpers.user_helpers import create_default_admin
 from backend.services.auth_service import register_user, login_user, refresh_token, logout_token
-from backend.models.items import create_found_item, get_found_item_by_id
+from backend.services.item_service import (
+    submit_lost_item, 
+    submit_found_item, 
+    get_found_items,
+    search_items_service
+)
+from backend.models.items import get_found_item_by_id
 from backend.models.claims import create_claim, get_pending_claims
 from backend.services.scoring_service import compute_claim_score
 from backend.helpers.input_validation import validate_claim_payload
@@ -109,6 +115,7 @@ with app.app_context():
     # ==========================
     print("\n--- CREATE FOUND ITEM ---")
     try:
+        user1_identity = {"user_id": 1, "role": "user"}
         found_item_data = {
             "category": "Electronics",
             "item_type": "Phone",
@@ -116,15 +123,60 @@ with app.app_context():
             "color": "Black",
             "found_location": "Library",
             "found_datetime": datetime.now(timezone.utc).isoformat(),
-            "public_description": "Black Samsung phone near entrance",
-            "reporter_id": 1
+            "public_description": "Black Samsung phone near entrance"
         }
-        res = create_found_item(found_item_data)
+        res, status = submit_found_item(found_item_data, user1_identity)
         found_item_id = res.get("item_id")
         print(f"Found item creation → {res}")
-        pass_test("create_found_item is working successfully")
+        pass_test("submit_found_item is working successfully")
     except Exception as e:
-        fail(f"create_found_item failed → {e}")
+        fail(f"submit_found_item failed → {e}")
+
+    # ==========================
+    # 5.1️⃣ Create Lost Item (user2)
+    # ==========================
+    print("\n--- CREATE LOST ITEM ---")
+    try:
+        user2_identity = {"user_id": 2, "role": "user"}
+        lost_item_data = {
+            "category": "Electronics",
+            "item_type": "Phone",
+            "brand": "Samsung",
+            "color": "Black",
+            "last_seen_location": "Cafeteria",
+            "last_seen_datetime": datetime.now(timezone.utc).isoformat(),
+            "public_description": "Lost my black samsung phone",
+            "private_details": "Has a cracked screen on bottom left"
+        }
+        res, status = submit_lost_item(lost_item_data, user2_identity)
+        lost_item_id = res.get("item_id")
+        print(f"Lost item creation → {res}")
+        pass_test("submit_lost_item is working successfully")
+    except Exception as e:
+        fail(f"submit_lost_item failed → {e}")
+
+    # ==========================
+    # 5.2️⃣ Search Items
+    # ==========================
+    print("\n--- SEARCH ITEMS ---")
+    try:
+        # Search for the found phone
+        filters = {"category": "Electronics", "query": "Samsung", "status": "found"}
+        res, status = search_items_service(filters)
+        print(f"Search results (found): {len(res)} items found")
+        assert len(res) > 0
+        actual_id = res[0].get("item_id") or res[0].get("id")
+        assert actual_id == found_item_id
+        
+        # Search for lost phone
+        filters = {"query": "samsung", "status": "lost"}
+        res, status = search_items_service(filters)
+        print(f"Search results (lost): {len(res)} items found")
+        assert len(res) > 0
+        
+        pass_test("search_items_service is working successfully")
+    except Exception as e:
+        fail(f"search_items_service failed → {e}")
 
     # ==========================
     # 6️⃣ Validate Claim (user2)

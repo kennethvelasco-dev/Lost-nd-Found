@@ -28,9 +28,9 @@ def login():
 @jwt_required(refresh=True)
 def refresh():
     try:
-        identity = get_jwt_identity()
-        minimal_identity = {"user_id": identity["user_id"], "role": identity["role"]}
-        result, status = refresh_token(minimal_identity)
+        user_id = get_jwt_identity() # now a string
+        role = get_jwt().get("role")
+        result, status = refresh_token(user_id, role)
         return jsonify(success_response(result)), status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 401

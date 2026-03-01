@@ -5,32 +5,26 @@ from backend.models import (
     validate_found_item_id,
 )
 
-def submit_claim(data: dict, claimed_by: str) -> tuple:
+def submit_claim(data: dict, user_id: str) -> tuple:
     """
     Validates and creates a claim.
-    
-    Args:
-        data (dict): Raw input data from route
-        claimed_by (str): username from JWT
-
-    Returns:
-        tuple: (result dict, HTTP status)
     """
-    require_fields(data, ["found_item_id", "description", "declared_value"])
+    require_fields(data, ["found_item_id", "description", "declared_value", "receipt_proof"])
     validate_found_item_id(data["found_item_id"])
     
-    # Validate types
-    if not isinstance(data.get("declared_value"), (int, float)):
-        return {"error": "declared_value must be a number"}, 400
-        
-    if data["declared_value"] < 0:
-         return {"error": "declared_value must be positive"}, 400
+    # Validate declared_value is a number
+    try:
+        val = float(data["declared_value"])
+        if val < 0:
+            raise ValueError()
+    except (TypeError, ValueError):
+        raise ValidationError("declared_value must be a positive number", 400)
 
-    # Receipt validation (strict: must be present)
-    if not data.get("receipt_proof"):
-         return {"error": "receipt_proof is required"}, 400
-
-    data["claimed_by"] = claimed_by
-    result, status = create_claim(data)
+    # Inject claimant ID from JWT
+    data["claimed_by"] = user_id
     
+    result, status = create_claim(data)
+    if "error" in result:
+        raise ValidationError(result["error"])
+        
     return result, status

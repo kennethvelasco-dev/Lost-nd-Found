@@ -3,63 +3,68 @@ from backend.models import (
     create_found_item,
     get_published_found_items,
     ValidationError,
-    require_fields,
 )
-from datetime import datetime
+from backend.helpers.input_validation import validate_item_payload
+from backend.models.items import search_items_db
 
-def submit_lost_item(data: dict) -> tuple:
+def submit_lost_item(data: dict, user_id: str) -> tuple:
     """
     Validates and submits a lost item.
-    
-    Args:
-        data (dict): Raw input data from route
-
-    Returns:
-        tuple: (result dict, HTTP status)
     """
-    # Required fields
-    require_fields(data, ["category", "last_seen_location", "lost_datetime", "public_description"])
+    validate_item_payload(data, "lost")
     
-    # Optional: you could normalize datetime here if needed
-    # Example: ensure lost_datetime is a string in ISO format
-    if isinstance(data.get("lost_datetime"), str):
-        try:
-            datetime.fromisoformat(data["lost_datetime"])
-        except ValueError:
-            raise ValidationError("Invalid datetime format for lost_datetime", 400)
+    # Inject reporter_id from JWT
+    data["reporter_id"] = user_id
     
-    create_lost_item(data)
-    return {"message": "Lost item reported successfully"}, 201
+    result = create_lost_item(data)
+    if "error" in result:
+        raise ValidationError(result["error"])
+        
+    return result, 201
 
 
-def submit_found_item(data: dict) -> tuple:
+def submit_found_item(data: dict, user_id: str) -> tuple:
     """
-    Validates and submits a found item.
-    
-    Args:
-        data (dict): Raw input data from route
-
-    Returns:
-        tuple: (result dict, HTTP status)
+    Validates and submits a found item by a regular user.
     """
-    require_fields(data, ["category", "found_location", "found_datetime"])
+    validate_item_payload(data, "found")
     
-    # Optional: normalize datetime
-    if isinstance(data.get("found_datetime"), str):
-        try:
-            datetime.fromisoformat(data["found_datetime"])
-        except ValueError:
-            raise ValidationError("Invalid datetime format for found_datetime", 400)
+    # Inject reporter_id from JWT
+    data["reporter_id"] = user_id
     
-    create_found_item(data)
-    return {"message": "Found item reported successfully"}, 201
+    result = create_found_item(data)
+    if "error" in result:
+        raise ValidationError(result["error"])
+        
+    return result, 201
+
+def submit_admin_found_item(data: dict, admin_id: str) -> tuple:
+    """
+    Validates and submits a found item by an admin.
+    Admins might have different defaults or logging.
+    """
+    validate_item_payload(data, "found")
+    
+    data["reporter_id"] = admin_id
+    # Admin reports might have different status or priority in future
+    
+    result = create_found_item(data)
+    if "error" in result:
+        raise ValidationError(result["error"])
+        
+    return result, 201
 
 
 def get_found_items() -> tuple:
     """
-    Returns published found items. No validation needed.
-    
-    Returns:
-        tuple: (list of items, HTTP status)
+    Returns published found items.
     """
     return get_published_found_items(), 200
+
+def search_items_service(filters: dict) -> tuple:
+    """
+    Service for searching and filtering items.
+    Filters can include category, item_type, color, brand, status, and query.
+    """
+    items = search_items_db(filters)
+    return items, 200

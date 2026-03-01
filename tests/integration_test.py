@@ -3,13 +3,12 @@ import sys
 import json
 from datetime import datetime, timezone
 from backend import create_app
-from backend.models.base import get_db_connection, init_db
+print(f"DEBUG: backend file: {create_app.__module__}")
+import backend
+print(f"DEBUG: backend path: {backend.__path__}")
+from backend.models.base import get_db_connection, init_db, DataBase
 from backend.helpers.user_helpers import create_default_admin
-from backend.services.auth_service import register_user, login_user
-from backend.models.items import create_found_item
-from backend.models.claims import create_claim, get_pending_claims
-from backend.services.admin_service import process_claim_verification
-from backend.helpers.input_validation import validate_claim_payload
+import os
 
 def log(msg):
     print(f"\n[TEST] {msg}")
@@ -20,46 +19,46 @@ def fail(msg):
 
 def run_integration_test():
     app = create_app()
+    client = app.test_client()
+    
     with app.app_context():
         # 1. Setup
         log("Setting up Database...")
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA foreign_keys = OFF;")
-        tables = ["users","admins","lost_items","found_items","claims","audit_logs","admin_actions"]
-        for table in tables:
-            cursor.execute(f"DROP TABLE IF EXISTS {table};")
-        cursor.execute("PRAGMA foreign_keys = ON;")
-        conn.commit()
-        conn.close()
-        
+        if os.path.exists(DataBase):
+            os.remove(DataBase)
+            print(f"Deleted existing database at {DataBase}")
+
         init_db()
         create_default_admin() # Creates admin/AdminPass123!
 
         # 2. User Registration & Login
         log("Registering & Logging in User...")
-        user_creds = {
+        user_data = {
             "username": "testuser", 
             "password": "Password123!",
             "name": "Test User",
             "email": "test@test.com",
             "role": "user"
         }
-        register_user(user_creds)
+        resp = client.post("/api/register", json=user_data)
+        if resp.status_code != 201:
+            fail(f"Registration failed: {resp.get_json()}")
         
-        token_data, _ = login_user(user_creds)
-        user_token = token_data["token"]
-        print(f"User Token: {user_token[:20]}...")
+        resp = client.post("/api/login", json={"username": "testuser", "password": "Password123!"})
+        if resp.status_code != 200:
+            fail(f"Login failed: {resp.get_json()}")
+        
+        user_token = resp.get_json()["data"]["token"]
+        user_headers = {"Authorization": f"Bearer {user_token}"}
 
         # 3. Admin Login
         log("Logging in Admin...")
-        admin_creds = {"username": "admin", "password": "AdminPass123!"}
-        admin_token_data, _ = login_user(admin_creds)
-        admin_token = admin_token_data["token"]
-        print(f"Admin Token: {admin_token[:20]}...")
+        resp = client.post("/api/login", json={"username": "admin", "password": "AdminPass123!"})
+        admin_token = resp.get_json()["data"]["token"]
+        admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
         # 4. Post Found Item (by User)
-        log("Posting Found Item...")
+        log("Posting Found Item (User)...")
         found_item = {
             "category": "Electronics", 
             "item_type": "Phone",
@@ -67,94 +66,102 @@ def run_integration_test():
             "found_datetime": datetime.now(timezone.utc).isoformat(),
             "brand": "Apple",
             "color": "White",
-            "public_description": "White iPhone found on table",
-            "reporter_id": 1,
-            "reported_by": "testuser"
+            "public_description": "White iPhone found on table"
         }
-        item_res = create_found_item(found_item)
-        found_item_id = item_res["item_id"]
+        resp = client.post("/api/found", json=found_item, headers=user_headers)
+        if resp.status_code != 201:
+            fail(f"Found item post failed: {resp.get_json()}")
+        
+        found_item_id = resp.get_json()["data"]["item_id"]
         print(f"Found Item ID: {found_item_id}")
 
-        # 5. Submit Claim (by User)
+        # 5. Post Lost Item (by User)
+        log("Posting Lost Item (User)...")
+        lost_item = {
+            "category": "Electronics",
+            "item_type": "Phone",
+            "brand": "Apple",
+            "color": "White",
+            "last_seen_location": "Library",
+            "last_seen_datetime": datetime.now(timezone.utc).isoformat(),
+            "public_description": "Lost my white iPhone",
+            "private_details": "Serial number: SN12345"
+        }
+        resp = client.post("/api/lost", json=lost_item, headers=user_headers)
+        if resp.status_code != 201:
+            fail(f"Lost item post failed: {resp.get_json()}")
+        print("Lost item posted successfully")
+
+        # 6. Search Items
+        log("Testing Search...")
+        # 6a. Public search for found electronics
+        resp = client.get("/api/search?category=Electronics&status=found", headers=user_headers)
+        search_results = resp.get_json()["data"]
+        if not search_results:
+            fail("Search for found electronics returned nothing")
+        print(f"Found {len(search_results)} found items")
+
+        # 6b. Search with query
+        resp = client.get("/api/search?query=iPhone", headers=user_headers)
+        search_results = resp.get_json()["data"]
+        if not any(item["item_type"] == "Phone" for item in search_results):
+            fail("Search for 'iPhone' did not return the expected phone")
+        print("Search by query passed")
+
+        # 7. Admin Post Found Item
+        log("Admin Posting Found Item...")
+        admin_found_item = {
+            "category": "Accessories",
+            "item_type": "Watch",
+            "found_location": "Office",
+            "found_datetime": datetime.now(timezone.utc).isoformat(),
+            "public_description": "Found a watch in the office storage"
+        }
+        resp = client.post("/api/items/found", json=admin_found_item, headers=admin_headers)
+        if resp.status_code != 201:
+            fail(f"Admin found item post failed: {resp.get_json()}")
+        print("Admin reporting works")
+
+        # 8. Submit Claim
         log("Submitting Claim...")
         claim_data = {
             "found_item_id": found_item_id,
             "claimant_name": "Test User",
             "claimant_email": "test@example.com",
-            "answers": "Yes it is mine",
-            "claimed_category": "Electronics",
-            "claimed_item_type": "Phone",
-            "claimed_brand": "Apple",
-            "claimed_color": "White", 
-            "receipt_proof": "http://example.com/receipt.jpg",
-            "description": "Lost my white iPhone while eating",
-            "declared_value": 999.99,
-            "claimed_private_details": "Has a scratch on the back"
+            "answers": "It is mine",
+            "receipt_proof": "http://img.com/receipt.jpg",
+            "description": "I left it there",
+            "declared_value": 500
         }
-        
-        # Pre-validate
-        try:
-            validate_claim_payload(claim_data)
-        except Exception as e:
-            fail(f"Validation errors: {e}")
+        resp = client.post("/api/claim", json=claim_data, headers=user_headers)
+        if resp.status_code != 201:
+            fail(f"Claim failed: {resp.get_json()}")
+        claim_id = resp.get_json()["data"]["claim_id"]
 
-        claim_res, status = create_claim(claim_data)
-        if status != 201:
-            fail(f"Claim creation failed: {claim_res}")
-            
-        claim_id = claim_res["claim_id"]
-        score = claim_res["score"]
-        print(f"Claim ID: {claim_id}, Score: {score}")
+        # 9. Admin Verify & Complete
+        log("Admin Approving Claim...")
+        resp = client.post(f"/api/claims/{claim_id}/verify", json={"decision": "approved"}, headers=admin_headers)
+        if resp.status_code != 200:
+            fail(f"Approval failed: {resp.get_json()}")
 
-        if score < 50:
-            print("WARNING: Low score!")
+        log("Admin Completing Transaction...")
+        resp = client.post(f"/api/claims/{claim_id}/verify", json={"decision": "completed"}, headers=admin_headers)
+        if resp.status_code != 200:
+            fail(f"Completion failed: {resp.get_json()}")
 
-        # 6. Admin View Pending Claims
-        log("Admin Checking Pending Claims...")
-        pending = get_pending_claims()
-        if not pending:
-            fail("No pending claims found!")
-        
-        target_claim = next((c for c in pending if c["claim_id"] == claim_id), None)
-        if not target_claim:
-            fail("Target claim not in pending list")
-            
-        print(f"Found pending claim score: {target_claim['score']}")
-
-        # 7. Admin Verify Claim
-        log("Admin Verifying Claim...")
-        verify_data = {"decision": "approved"}
-        verify_res, v_status = process_claim_verification(claim_id, verify_data, "admin")
-        
-        if v_status != 200:
-            fail(f"Verification failed: {verify_res}")
-            
-        print(f"Verification Result: {verify_res}")
-
-        # 9. Complete Transaction
-        log("Completing Transaction...")
-        complete_data = {"decision": "completed"}
-        complete_res, c_status = process_claim_verification(claim_id, complete_data, "admin")
-        
-        if c_status != 200:
-            fail(f"Completion failed: {complete_res}")
-            
-        print(f"Completion Result: {complete_res}")
-
-        # 10. Verify Final Statuses
-        log("Verifying Final Statuses...")
+        # 10. Verify Final Statuses in DB
+        log("Final Data Check...")
         conn = get_db_connection()
-        claim_row = conn.execute("SELECT decision FROM claims WHERE id=?", (claim_id,)).fetchone()
-        item_row = conn.execute("SELECT status FROM found_items WHERE id=?", (found_item_id,)).fetchone()
-        
-        if claim_row["decision"] != "completed":
-            fail(f"Claim decision is {claim_row['decision']}, expected 'completed'")
-        if item_row["status"] != "returned":
-            fail(f"Item status is {item_row['status']}, expected 'returned'")
-            
+        claim = conn.execute("SELECT decision FROM claims WHERE id=?", (claim_id,)).fetchone()
+        item = conn.execute("SELECT status FROM found_items WHERE id=?", (found_item_id,)).fetchone()
         conn.close()
-        
-        print("✅ INTEGRATION TEST PASSED (INCLUDING TRANSACTION COMPLETION)")
+
+        if claim["decision"] != "completed":
+            fail(f"Claim status {claim['decision']}, expected completed")
+        if item["status"] != "returned":
+            fail(f"Item status {item['status']}, expected returned")
+
+        print("\n✅ API-LEVEL INTEGRATION TEST PASSED")
 
 if __name__ == "__main__":
     run_integration_test()

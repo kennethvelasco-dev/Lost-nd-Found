@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, request
 from flask_jwt_extended import JWTManager
 
 from backend.config.config import Config
@@ -24,6 +24,7 @@ def create_app():
     app.register_blueprint(item_bp, url_prefix="/api")
     app.register_blueprint(claim_bp, url_prefix="/api")
     app.register_blueprint(admin_bp, url_prefix="/api")
+    
 
     @app.errorhandler(Exception)
     def handle_exception(e):
