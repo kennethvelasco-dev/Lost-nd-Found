@@ -162,7 +162,7 @@ def search_items_db(filters: Dict[str, Any]) -> list[Dict[str, Any]]:
     Supported filters: category, item_type, color, brand, status, query.
     """
     status = filters.get("status", "found") # Default to found items
-    table = "found_items" if status == "found" else "lost_items"
+    table = "found_items" if status in ["found", "returned"] else "lost_items"
     
     query_str = f"SELECT * FROM {table} WHERE status = ?"
     params = [status]

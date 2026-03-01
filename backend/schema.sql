@@ -80,6 +80,8 @@ CREATE TABLE IF NOT EXISTS claims (
     score_breakdown TEXT,
     pickup_datetime TEXT,
     pickup_location TEXT,
+    handover_notes TEXT,
+    completed_at TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (found_item_id) REFERENCES found_items(id)
 );

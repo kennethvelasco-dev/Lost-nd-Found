@@ -140,6 +140,42 @@ def get_pending_claims():
 
     return [dict(row) for row in rows]
 
+# GET COMPLETED CLAIMS (For Reporting)
+def get_completed_claims():
+    """Return all completed claims for transaction reporting."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    query = """
+        SELECT
+            c.id AS claim_id,
+            c.found_item_id,
+            c.claimant_name,
+            c.claimant_email,
+            c.verification_score AS score,
+            c.decision AS status,
+            c.pickup_datetime,
+            c.pickup_location,
+            c.handover_notes,
+            c.completed_at,
+            c.created_at,
+
+            f.report_id AS found_report_id,
+            f.category AS found_category,
+            f.item_type AS found_item_type,
+            f.found_location,
+            f.found_datetime
+        FROM claims c
+        JOIN found_items f ON c.found_item_id = f.id
+        WHERE c.decision = 'completed'
+        ORDER BY c.completed_at DESC
+    """
+    cursor.execute(query)
+    rows = cursor.fetchall()
+    conn.close()
+
+    return [dict(row) for row in rows]
+
 # UPDATE CLAIM STATUS
 def update_claim_status(claim_id, new_status):
     """Update status of a claim with validation."""
@@ -203,7 +239,7 @@ def update_claim(claim_id, data):
         return {"error": ve.message}, ve.status_code
 
 # VERIFY CLAIM
-def verify_claim(claim_id, decision, admin_username):
+def verify_claim(claim_id, decision, admin_username, handover_notes=None):
     """Approve, reject or complete a claim."""
     try:
         validate_int(claim_id, "claim_id")
@@ -223,17 +259,24 @@ def verify_claim(claim_id, decision, admin_username):
                     return {"error": "Only approved claims can be completed"}, 400
                 if not found_item_id:
                     return {"error": "Cannot complete a claim that is not linked to an item"}, 400
-            elif current_decision not in ("pending", "approved"):
-                return {"error": f"Claim already processed (Current status: {current_decision})"}, 400
-
-            cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (decision, claim_id))
-            
-            if decision == "completed" and found_item_id:
+                
+                # Perform completion
+                completed_at = datetime.now(timezone.utc).isoformat()
+                cursor.execute("""
+                    UPDATE claims 
+                    SET decision = ?, handover_notes = ?, completed_at = ? 
+                    WHERE id = ?
+                """, (decision, handover_notes, completed_at, claim_id))
+                
                 cursor.execute("UPDATE found_items SET status = 'returned' WHERE id = ?", (found_item_id,))
+            else:
+                if current_decision not in ("pending", "approved"):
+                    return {"error": f"Claim already processed (Current status: {current_decision})"}, 400
+                cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (decision, claim_id))
             
             conn.commit()
 
-        log_action(decision, "claim", claim_id, admin_username)
+        log_action(decision, "claim", claim_id, admin_username, notes=handover_notes)
         return {"message": f"Claim {decision} successfully"}, 200
 
     except ValidationError as ve:

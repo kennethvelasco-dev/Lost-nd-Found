@@ -13,6 +13,8 @@ from .items import (
 from .claims import (
     create_claim,
     get_pending_claims,
+    get_completed_claims,
+    get_claim_by_id,
     update_claim,
     update_claim_status,
     verify_claim
