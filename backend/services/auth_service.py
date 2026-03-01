@@ -12,10 +12,12 @@ def register_user(data: dict):
     validate_registration_data(data)
     username = data.get("username")
     password = data.get("password")
-    # Security: Always force 'user' role for public registration
-    role = "user"
+    name = data.get("name")
+    email = data.get("email")
+    role = data.get("role")
+    admin_id = data.get("admin_id")
 
-    result = create_user(username, password, role)
+    result = create_user(username, password, role, name, email, admin_id)
 
     if "user_id" in result:
         token = create_access_token(

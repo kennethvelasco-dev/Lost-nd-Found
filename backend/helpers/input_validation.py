@@ -41,13 +41,16 @@ def validate_registration_data(data: dict) -> bool:
     if not data:
         raise ValidationError("Missing registration data", 400)
 
-    require_fields(data, ["username", "password"])
+    require_fields(data, ["username", "password", "name", "email", "role"])
     
     validate_password_strength(data["password"])
+    validate_email(data["email"])
     
-    # If email is provided, validate it
-    if "email" in data and data["email"]:
-        validate_email(data["email"])
+    if data["role"] not in ["user", "admin"]:
+        raise ValidationError("Role must be either 'user' or 'admin'", 400)
+    
+    if data["role"] == "admin" and not data.get("admin_id"):
+        raise ValidationError("Admin ID is required for administrative accounts", 400)
         
     return True
 

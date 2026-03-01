@@ -38,7 +38,13 @@ def run_integration_test():
 
         # 2. User Registration & Login
         log("Registering & Logging in User...")
-        user_creds = {"username": "testuser", "password": "Password123!"}
+        user_creds = {
+            "username": "testuser", 
+            "password": "Password123!",
+            "name": "Test User",
+            "email": "test@test.com",
+            "role": "user"
+        }
         register_user(user_creds)
         
         token_data, _ = login_user(user_creds)

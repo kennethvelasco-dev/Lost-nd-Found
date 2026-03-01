@@ -51,8 +51,8 @@ with app.app_context():
     # ==========================
     print("\n--- USER REGISTRATION ---")
     users = [
-        {"username": "user1", "password": "Password123!"},
-        {"username": "user2", "password": "Password456!"}
+        {"username": "user1", "password": "Password123!", "name": "User One", "email": "user1@test.com", "role": "user"},
+        {"username": "user2", "password": "Password456!", "name": "User Two", "email": "user2@test.com", "role": "user"}
     ]
 
     user_tokens = {}
