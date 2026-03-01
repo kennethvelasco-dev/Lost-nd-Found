@@ -125,15 +125,30 @@ def run_integration_test():
             
         print(f"Verification Result: {verify_res}")
 
-        # 8. Verify Status Update
-        log("Verifying Status Update...")
+        # 9. Complete Transaction
+        log("Completing Transaction...")
+        complete_data = {"decision": "completed"}
+        complete_res, c_status = process_claim_verification(claim_id, complete_data, "admin")
+        
+        if c_status != 200:
+            fail(f"Completion failed: {complete_res}")
+            
+        print(f"Completion Result: {complete_res}")
+
+        # 10. Verify Final Statuses
+        log("Verifying Final Statuses...")
         conn = get_db_connection()
-        row = conn.execute("SELECT decision FROM claims WHERE id=?", (claim_id,)).fetchone()
-        if row["decision"] != "approved":
-            fail(f"Claim decision is {row['decision']}, expected 'approved'")
+        claim_row = conn.execute("SELECT decision FROM claims WHERE id=?", (claim_id,)).fetchone()
+        item_row = conn.execute("SELECT status FROM found_items WHERE id=?", (found_item_id,)).fetchone()
+        
+        if claim_row["decision"] != "completed":
+            fail(f"Claim decision is {claim_row['decision']}, expected 'completed'")
+        if item_row["status"] != "returned":
+            fail(f"Item status is {item_row['status']}, expected 'returned'")
+            
         conn.close()
         
-        print("✅ INTEGRATION TEST PASSED")
+        print("✅ INTEGRATION TEST PASSED (INCLUDING TRANSACTION COMPLETION)")
 
 if __name__ == "__main__":
     run_integration_test()

@@ -154,3 +154,26 @@ def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
 
     finally:
         conn.close()
+
+# Update Found Item Status
+def update_found_item_status(item_id: int, new_status: str) -> Dict[str, Any]:
+    """Update status of a found item with validation."""
+    try:
+        validate_int(item_id, "item_id")
+
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM found_items WHERE id = ?", (item_id,))
+            if not cursor.fetchone():
+                return {"error": "Item not found"}, 404
+
+            cursor.execute("UPDATE found_items SET status = ? WHERE id = ?", (new_status, item_id))
+            conn.commit()
+
+        log_action("update_status", "found_item", item_id, "system")
+        return {"message": "Found item status updated successfully"}, 200
+
+    except ValidationError as ve:
+        return {"error": ve.message}, ve.status_code
+    except Exception as e:
+        return {"error": f"Database error: {str(e)}"}, 500

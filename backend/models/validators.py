@@ -29,5 +29,5 @@ def validate_found_item_id(item_id):
     return validate_int(item_id, "found_item_id")
 
 def validate_claim_decision(decision):
-    if decision not in {"approved", "rejected"}:
+    if decision not in {"approved", "rejected", "completed"}:
         raise ValidationError("Invalid decision", 400)

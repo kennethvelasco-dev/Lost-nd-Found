@@ -114,11 +114,9 @@ _Expected Output:_
 - `POST /api/claims/claim` - Submit a claim for a found item.
   - **Required Fields**: `found_item_id`, `description`, `declared_value`, `receipt_proof`.
   - **Optional**: `claimed_brand`, `claimed_color`, etc. (used for scoring).
-
-### Admin
-
-- `GET /api/admin/claims` - List pending claims (Sorted by Score Descending).
-- `POST /api/admin/claims/<id>/verify` - Approve/Reject a claim.
+- `POST /api/admin/claims/<id>/verify` - Approve, Reject, or Complete a claim.
+  - **Decisions**: `approved`, `rejected`, `completed`.
+  - **Note**: Marking as `completed` updates the found item status to `returned`.
 
 ---
 

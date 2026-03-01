@@ -22,10 +22,6 @@ def process_claim_verification(claim_id: int, data: dict, admin_username: str):
     if not claim:
         raise ValidationError(f"Claim ID {claim_id} not found", 404)
 
-    # Already verified?
-    if claim.get("decision", claim.get("status")) != "pending":
-        raise ValidationError(f"Claim ID {claim_id} has already been verified", 400)
-
     # Perform verification
     result, status = verify_claim(
         claim_id=claim_id,

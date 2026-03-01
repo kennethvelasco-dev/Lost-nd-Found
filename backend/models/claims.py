@@ -163,20 +163,38 @@ def update_claim(claim_id, data):
 
 # VERIFY CLAIM
 def verify_claim(claim_id, decision, admin_username):
-    """Approve or reject a claim and log the action."""
+    """Approve, reject or complete a claim and log the action."""
     try:
         validate_int(claim_id, "claim_id")
         validate_claim_decision(decision)
 
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            row = cursor.execute("SELECT decision FROM claims WHERE id = ?", (claim_id,)).fetchone()
+            row = cursor.execute("SELECT found_item_id, decision FROM claims WHERE id = ?", (claim_id,)).fetchone()
             if not row:
                 return {"error": "Claim not found"}, 404
-            if row["decision"] != "pending":
-                return {"error": "Claim already processed"}, 400
+            
+            current_decision = row["decision"]
+            found_item_id = row["found_item_id"]
+
+            # State Machine Logic:
+            # 1. pending -> approved or rejected (Valid)
+            # 2. approved -> completed (Valid)
+            # 3. anything else -> (Invalid)
+            
+            if decision == "completed":
+                if current_decision != "approved":
+                    return {"error": "Only approved claims can be completed"}, 400
+            elif current_decision != "pending":
+                return {"error": f"Claim already processed (Current status: {current_decision})"}, 400
 
             cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (decision, claim_id))
+            
+            # If completed, mark item as returned
+            if decision == "completed":
+                cursor.execute("UPDATE found_items SET status = 'returned' WHERE id = ?", (found_item_id,))
+            
+            conn.commit()
 
         log_action(decision, "claim", claim_id, admin_username)
         return {"message": f"Claim {decision} successfully"}, 200
@@ -185,4 +203,4 @@ def verify_claim(claim_id, decision, admin_username):
         return {"error": ve.message}, ve.status_code
 
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        return {"error": f"Database error: {str(e)}"}, 500
