@@ -11,6 +11,7 @@ class Config:
     # Core Flask
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")
     TESTING = False
+    DATABASE_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "database.db")
 
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret")

@@ -7,11 +7,11 @@ from typing import Optional, Dict, Any
 # Lost Items
 def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a lost item record with validation and logging."""
+    conn = get_db_connection()
     try:
         # Validate required fields
         require_fields(data, ["category", "last_seen_location", "last_seen_datetime"])
 
-        conn = get_db_connection()
         cursor = conn.cursor()
 
         import uuid
@@ -62,10 +62,10 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
 # Found Items
 def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a found item record with validation and logging."""
+    conn = get_db_connection()
     try:
         require_fields(data, ["category", "found_location", "found_datetime"])
 
-        conn = get_db_connection()
         cursor = conn.cursor()
 
         import uuid
@@ -120,32 +120,35 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
 def get_published_found_items(limit=20, offset=0) -> tuple[list[Dict[str, Any]], int]:
     """Return all published found items with pagination."""
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    # Get total count
-    cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found'")
-    total_count = cursor.fetchone()[0]
+        # Get total count
+        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found'")
+        total_count = cursor.fetchone()[0]
 
-    cursor.execute("""
-        SELECT id, report_id, category, item_type, color, brand,
-               found_location, found_datetime, public_description,
-               main_picture
-        FROM found_items
-        WHERE status = 'found'
-        ORDER BY created_at DESC
-        LIMIT ? OFFSET ?
-    """, (limit, offset))
+        cursor.execute("""
+            SELECT id, report_id, category, item_type, color, brand,
+                   found_location, found_datetime, public_description,
+                   main_picture
+            FROM found_items
+            WHERE status = 'found'
+            ORDER BY created_at DESC
+            LIMIT ? OFFSET ?
+        """, (limit, offset))
 
-    items = [dict(row) for row in cursor.fetchall()]
-    conn.close()
-    return items, total_count
+        items = [dict(row) for row in cursor.fetchall()]
+        return items, total_count
+    finally:
+        conn.close()
+
 # Get Found Item by ID
 def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
     """Return a found item by ID. Validates ID type."""
+    conn = get_db_connection()
     try:
         validate_int(item_id, "item_id")
 
-        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute("SELECT * FROM found_items WHERE id = ?", (item_id,))
@@ -155,7 +158,6 @@ def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
             return None
 
         return dict(row)
-
     finally:
         conn.close()
 
@@ -193,24 +195,24 @@ def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]
         like_val = f"%{filters['query']}%"
         params.extend([like_val, like_val, like_val])
 
-    # Get total count first
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute(f"SELECT COUNT(*) {base_query}", params)
-    total_count = cursor.fetchone()[0]
+    try:
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT COUNT(*) {base_query}", params)
+        total_count = cursor.fetchone()[0]
 
-    # Now get paginated results
-    query_str = f"SELECT * {base_query} ORDER BY created_at DESC"
-    
-    limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
-    offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
-    
-    query_str += " LIMIT ? OFFSET ?"
-    params.extend([limit, offset])
+        # Now get paginated results
+        query_str = f"SELECT * {base_query} ORDER BY created_at DESC"
+        
+        limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
+        offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
+        
+        query_str += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
 
-    cursor.execute(query_str, params)
-    rows = cursor.fetchall()
-    items = [dict(row) for row in rows]
-    conn.close()
-    
-    return items, total_count
+        cursor.execute(query_str, params)
+        rows = cursor.fetchall()
+        items = [dict(row) for row in rows]
+        return items, total_count
+    finally:
+        conn.close()

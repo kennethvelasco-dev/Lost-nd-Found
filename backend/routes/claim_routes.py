@@ -4,7 +4,8 @@ from backend.services.claim_service import (
     submit_claim,
     get_potential_matches_service,
     link_claim_service,
-    schedule_pickup_service
+    schedule_pickup_service,
+    get_user_claims_service
 )
 from backend.models.claims import (
     get_pending_claims,

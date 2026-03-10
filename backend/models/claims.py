@@ -47,12 +47,15 @@ def create_claim(data):
             datetime.now(timezone.utc).isoformat()
         ]
 
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             query = f"INSERT INTO claims ({', '.join(fields)}) VALUES ({', '.join(placeholders)})"
             cursor.execute(query, values)
             claim_id = cursor.lastrowid
             conn.commit()
+        finally:
+            conn.close()
 
         log_action("create", "claim", claim_id, str(data.get("user_id", "system")))
 
@@ -79,7 +82,8 @@ def link_claim_to_found_item(claim_id, found_item_id):
         if not found_item:
             return {"error": "Found item not found"}, 404
 
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             claim_row = cursor.execute("SELECT answers FROM claims WHERE id = ?", (claim_id,)).fetchone()
             if not claim_row:
@@ -100,6 +104,8 @@ def link_claim_to_found_item(claim_id, found_item_id):
                 WHERE id = ?
             """, (found_item_id, score, claim_id))
             conn.commit()
+        finally:
+            conn.close()
 
         log_action("link", "claim", claim_id, "system")
         return {"message": "Claim linked successfully", "score": score}, 200
@@ -111,70 +117,74 @@ def link_claim_to_found_item(claim_id, found_item_id):
 def get_pending_claims():
     """Return all pending claims. Handles both linked and unlinked."""
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    query = """
-        SELECT
-            c.id AS claim_id,
-            c.found_item_id,
-            c.claimant_name,
-            c.claimant_email,
-            c.answers,
-            c.verification_score AS score,
-            c.decision AS status,
-            c.pickup_datetime,
-            c.pickup_location,
-            c.created_at,
+        query = """
+            SELECT
+                c.id AS claim_id,
+                c.user_id,
+                c.found_item_id,
+                c.claimant_name,
+                c.claimant_email,
+                c.answers,
+                c.verification_score AS score,
+                c.decision AS status,
+                c.pickup_datetime,
+                c.pickup_location,
+                c.created_at,
 
-            f.category AS found_category,
-            f.item_type AS found_item_type,
-            f.found_location
-        FROM claims c
-        LEFT JOIN found_items f ON c.found_item_id = f.id
-        WHERE c.decision IN ('pending', 'approved')
-        ORDER BY c.verification_score DESC
-    """
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    conn.close()
-
-    return [dict(row) for row in rows]
+                f.category AS found_category,
+                f.item_type AS found_item_type,
+                f.found_location
+            FROM claims c
+            LEFT JOIN found_items f ON c.found_item_id = f.id
+            WHERE c.decision IN ('pending', 'approved')
+            ORDER BY c.verification_score DESC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
 
 # GET COMPLETED CLAIMS (For Reporting)
 def get_completed_claims():
     """Return all completed claims for transaction reporting."""
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    query = """
-        SELECT
-            c.id AS claim_id,
-            c.found_item_id,
-            c.claimant_name,
-            c.claimant_email,
-            c.verification_score AS score,
-            c.decision AS status,
-            c.pickup_datetime,
-            c.pickup_location,
-            c.handover_notes,
-            c.completed_at,
-            c.created_at,
+        query = """
+            SELECT
+                c.id AS claim_id,
+                c.user_id,
+                c.found_item_id,
+                c.claimant_name,
+                c.claimant_email,
+                c.verification_score AS score,
+                c.decision AS status,
+                c.pickup_datetime,
+                c.pickup_location,
+                c.handover_notes,
+                c.completed_at,
+                c.created_at,
 
-            f.report_id AS found_report_id,
-            f.category AS found_category,
-            f.item_type AS found_item_type,
-            f.found_location,
-            f.found_datetime
-        FROM claims c
-        JOIN found_items f ON c.found_item_id = f.id
-        WHERE c.decision = 'completed'
-        ORDER BY c.completed_at DESC
-    """
-    cursor.execute(query)
-    rows = cursor.fetchall()
-    conn.close()
-
-    return [dict(row) for row in rows]
+                f.report_id AS found_report_id,
+                f.category AS found_category,
+                f.item_type AS found_item_type,
+                f.found_location,
+                f.found_datetime
+            FROM claims c
+            JOIN found_items f ON c.found_item_id = f.id
+            WHERE c.decision = 'completed'
+            ORDER BY c.completed_at DESC
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        return [dict(row) for row in rows]
+    finally:
+        conn.close()
 
 # UPDATE CLAIM STATUS
 def update_claim_status(claim_id, new_status):
@@ -182,7 +192,8 @@ def update_claim_status(claim_id, new_status):
     try:
         validate_int(claim_id, "claim_id")
 
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             cursor.execute("SELECT id FROM claims WHERE id = ?", (claim_id,))
             if not cursor.fetchone():
@@ -190,6 +201,8 @@ def update_claim_status(claim_id, new_status):
 
             cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (new_status, claim_id))
             conn.commit()
+        finally:
+            conn.close()
 
         log_action("update_status", "claim", claim_id, "system")
         return {"message": "Claim status updated"}, 200
@@ -226,11 +239,14 @@ def update_claim(claim_id, data):
 
         values.append(claim_id)
 
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             query = f"UPDATE claims SET {', '.join(updates)} WHERE id = ?"
             cursor.execute(query, values)
             conn.commit()
+        finally:
+            conn.close()
 
         log_action("update", "claim", claim_id, "system")
         return {"message": "Claim updated successfully"}, 200
@@ -245,7 +261,8 @@ def verify_claim(claim_id, decision, admin_username, handover_notes=None):
         validate_int(claim_id, "claim_id")
         validate_claim_decision(decision)
 
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             row = cursor.execute("SELECT found_item_id, decision FROM claims WHERE id = ?", (claim_id,)).fetchone()
             if not row:
@@ -285,6 +302,8 @@ def verify_claim(claim_id, decision, admin_username, handover_notes=None):
                 cursor.execute("UPDATE claims SET decision = ? WHERE id = ?", (decision, claim_id))
             
             conn.commit()
+        finally:
+            conn.close()
 
         log_action(decision, "claim", claim_id, admin_username, notes=handover_notes)
         return {"message": f"Claim {decision} successfully"}, 200
@@ -300,7 +319,8 @@ def schedule_pickup(claim_id, pickup_datetime, pickup_location):
     try:
         validate_int(claim_id, "claim_id")
         
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             row = cursor.execute("SELECT decision FROM claims WHERE id = ?", (claim_id,)).fetchone()
             if not row:
@@ -315,6 +335,8 @@ def schedule_pickup(claim_id, pickup_datetime, pickup_location):
                 WHERE id = ?
             """, (pickup_datetime, pickup_location, claim_id))
             conn.commit()
+        finally:
+            conn.close()
 
         log_action("schedule", "claim", claim_id, "system")
         return {"message": "Pickup scheduled successfully"}, 200
@@ -324,7 +346,9 @@ def schedule_pickup(claim_id, pickup_datetime, pickup_location):
 def get_claim_by_id(claim_id):
     """Helper to fetch a claim full record."""
     conn = get_db_connection()
-    cursor = conn.cursor()
-    row = cursor.execute("SELECT * FROM claims WHERE id = ?", (claim_id,)).fetchone()
-    conn.close()
-    return dict(row) if row else None
+    try:
+        cursor = conn.cursor()
+        row = cursor.execute("SELECT * FROM claims WHERE id = ?", (claim_id,)).fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()

@@ -2,33 +2,31 @@ from flask import Flask, request
 from flask_jwt_extended import JWTManager
 
 from backend.config.config import Config
-from backend.routes.auth_routes import auth_bp
-from backend.routes.item_routes import item_bp
-from backend.routes.claim_routes import claim_bp
-from backend.routes.admin_routes import admin_bp
-from backend.routes.health import health_bp
 from backend.models import init_db
 from backend.helpers.user_helpers import create_default_admin
 from backend.helpers.response import error_response
 from flask import jsonify
 from werkzeug.exceptions import HTTPException
 
-from flask_limiter import Limiter
-from flask_limiter.util import get_remote_address
-
-jwt = JWTManager()
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["100 per minute"],
-    storage_uri="memory://",
-)
+from backend.extensions import jwt, limiter
 
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
     jwt.init_app(app)
+    
+    if app.config.get("TESTING"):
+        limiter.enabled = False
+    
     limiter.init_app(app)
+
+    # Deferred imports to avoid circular dependency with limiter
+    from backend.routes.auth_routes import auth_bp
+    from backend.routes.item_routes import item_bp
+    from backend.routes.claim_routes import claim_bp
+    from backend.routes.admin_routes import admin_bp
+    from backend.routes.health import health_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(item_bp, url_prefix="/api/items")
@@ -39,6 +37,8 @@ def create_app():
 
     @app.errorhandler(Exception)
     def handle_exception(e):
+        if app.config.get("TESTING"):
+            raise e
         # Pass through HTTP errors
         if isinstance(e, HTTPException):
             return jsonify(error_response("HTTP_ERROR", e.description)), e.code

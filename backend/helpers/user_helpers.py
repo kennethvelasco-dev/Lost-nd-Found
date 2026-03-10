@@ -45,37 +45,41 @@ def create_user(username: str, password: str, role: str = "user", name: str = No
 def get_user(username: str):
     """Fetch a user by username. Returns dict or None."""
     conn = get_db_connection()
-    c = conn.cursor()
-    c.execute(
-        "SELECT id, username, password_hash, role, name, email, admin_id, is_email_verified, created_at FROM users WHERE username = ?",
-        (username,)
-    )
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return {
-            "id": row[0],
-            "username": row[1],
-            "password_hash": row[2],
-            "role": row[3],
-            "name": row[4],
-            "email": row[5],
-            "admin_id": row[6],
-            "is_email_verified": bool(row[7]),
-            "created_at": row[8]
-        }
-    return None
+    try:
+        c = conn.cursor()
+        c.execute(
+            "SELECT id, username, password_hash, role, name, email, admin_id, is_email_verified, created_at FROM users WHERE username = ?",
+            (username,)
+        )
+        row = c.fetchone()
+        if row:
+            return {
+                "id": row[0],
+                "username": row[1],
+                "password_hash": row[2],
+                "role": row[3],
+                "name": row[4],
+                "email": row[5],
+                "admin_id": row[6],
+                "is_email_verified": bool(row[7]),
+                "created_at": row[8]
+            }
+        return None
+    finally:
+        conn.close()
 
 def create_default_admin():
     conn = get_db_connection()
-    cursor = conn.cursor()
+    try:
+        cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM users WHERE username = 'admin'")
-    if cursor.fetchone() is None: 
-        password_hash = hash_password("AdminPass123!")
-        cursor.execute(
-            "INSERT INTO users (username, password_hash, role, name, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-            ("admin", password_hash, "admin", "System Admin", "ADM-001", datetime.now(timezone.utc).isoformat())
-        )
-        conn.commit()
-    conn.close()
+        cursor.execute("SELECT * FROM users WHERE username = 'admin'")
+        if cursor.fetchone() is None: 
+            password_hash = hash_password("AdminPass123!")
+            cursor.execute(
+                "INSERT INTO users (username, password_hash, role, name, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                ("admin", password_hash, "admin", "System Admin", "ADM-001", datetime.now(timezone.utc).isoformat())
+            )
+            conn.commit()
+    finally:
+        conn.close()

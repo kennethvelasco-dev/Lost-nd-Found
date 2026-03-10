@@ -32,16 +32,16 @@ def log_action(action: str, entity_type: str, entity_id: int, performed_by: str,
 
         # Insert into audit_logs
         """Log an action performed on an entity."""
-        with get_db_connection() as conn:
+        conn = get_db_connection()
+        try:
             cursor = conn.cursor()
             cursor.execute("""
                 INSERT INTO audit_logs (action, entity_type, entity_id, performed_by, timestamp, notes)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (action, entity_type, entity_id, performed_by, datetime.utcnow().isoformat(), notes))
-
-
-        conn.commit()
-        conn.close()
+            """, (action, entity_type, entity_id, performed_by, datetime.now(timezone.utc).isoformat(), notes))
+            conn.commit()
+        finally:
+            conn.close()
 
         return {"message": "Action logged successfully"}
 

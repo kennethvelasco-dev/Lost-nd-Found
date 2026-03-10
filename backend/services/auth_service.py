@@ -25,7 +25,7 @@ def register_user(data: dict):
             identity=user_id_str,
             additional_claims={"role": role}
         )
-        return {"token": token, "message": result["message"]}, 201
+        return {"access_token": token, "message": result["message"]}, 201
 
     raise ValidationError(result.get("error", "Registration failed"))
 
@@ -51,7 +51,7 @@ def login_user(data: dict):
         identity=user_id_str,
         additional_claims={"role": user["role"]}
     )
-    return {"token": token, "message": "Login successful"}, 200
+    return {"access_token": token, "message": "Login successful"}, 200
 
 def refresh_token(user_id: str, role: str):
     """Generate a new access token"""
@@ -59,7 +59,7 @@ def refresh_token(user_id: str, role: str):
         identity=user_id,
         additional_claims={"role": role}
     )
-    return {"token": new_access_token, "message": "Access token refreshed"}, 200
+    return {"access_token": new_access_token, "message": "Access token refreshed"}, 200
 
 def logout_token(jti: str):
     """Revoke a JWT"""

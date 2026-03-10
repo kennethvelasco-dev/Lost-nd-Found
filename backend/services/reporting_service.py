@@ -16,10 +16,13 @@ def get_transaction_summary(claim_id: int):
     found_item = get_found_item_by_id(claim["found_item_id"])
     
     # Fetch user info for the claimant
-    with get_db_connection() as conn:
+    conn = get_db_connection()
+    try:
         cursor = conn.cursor()
         user_row = cursor.execute("SELECT username, name, email FROM users WHERE id = ?", (claim["user_id"],)).fetchone()
         user = dict(user_row) if user_row else {}
+    finally:
+        conn.close()
 
     report = {
         "transaction_id": claim["id"],

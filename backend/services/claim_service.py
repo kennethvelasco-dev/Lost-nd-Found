@@ -80,7 +80,7 @@ def get_potential_matches_service(claim_id: int, user_id: str, role: str) -> tup
     if not claim:
         return {"error": "Claim not found"}, 404
         
-    found_items = get_published_found_items()
+    found_items, _ = get_published_found_items()
     matches = []
     
     import json

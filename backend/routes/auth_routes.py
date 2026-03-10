@@ -3,7 +3,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from backend.services.auth_service import register_user, login_user, refresh_token, logout_token
 from backend.helpers.response import success_response, error_response
 from backend.models import ValidationError
-from backend import limiter
+from backend.extensions import limiter
 
 auth_bp = Blueprint("auth", __name__)
 

@@ -17,13 +17,16 @@ def health_check():
         }
     }
     
+    conn = None # Initialize conn to None
     try:
         conn = get_db_connection()
         conn.execute("SELECT 1")
-        conn.close()
         health_status["services"]["database"] = "up"
     except Exception as e:
         health_status["status"] = "degraded"
         health_status["error"] = str(e)
+    finally:
+        if conn: # Ensure conn exists before trying to close it
+            conn.close()
 
     return jsonify(health_status), 200 if health_status["status"] == "healthy" else 503
