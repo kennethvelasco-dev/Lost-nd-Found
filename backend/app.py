@@ -1,10 +1,10 @@
+```python
 from backend.__init__ import create_app
-from flask_jwt_extended import JWTManager
 from flask import jsonify
 from backend.services.auth_service import is_token_revoked
+from backend.extensions import jwt
 
 app = create_app()
-jwt = JWTManager(app)
 
 # Callback to check if token is revoked
 @jwt.token_in_blocklist_loader
@@ -19,3 +19,4 @@ def revoked_token_response(jwt_header, jwt_payload):
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
+```
