@@ -1,0 +1,47 @@
+﻿
+> frontend@0.0.0 build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 44 modules transformed.
+node.exe : [31mΓ£ù[39m Build 
+failed in 262ms
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" "C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~
+    + CategoryInfo          : NotS 
+   pecified: ([31mΓ£ù[39m Build  
+   failed in 262ms:String) [], R   
+ emoteException
+    + FullyQualifiedErrorId : Nati 
+   veCommandError
+ 
+[31merror during build:
+[31mCould not resolve 
+"./Discovery.css" from "src/compone
+nts/UI/ItemCard.jsx"[31m
+file: [36mC:/Users/Kenneth/OneDriv
+e/Desktop/LostnFound/frontend/src/c
+omponents/UI/ItemCard.jsx[31m
+    at getRollupError (file:///C:/U
+sers/Kenneth/OneDrive/Desktop/Lostn
+Found/frontend/node_modules/rollup/
+dist/es/shared/parseAst.js:402:41)
+    at error (file:///C:/Users/Kenn
+eth/OneDrive/Desktop/LostnFound/fro
+ntend/node_modules/rollup/dist/es/s
+hared/parseAst.js:398:42)
+    at ModuleLoader.handleInvalidRe
+solvedId (file:///C:/Users/Kenneth/
+OneDrive/Desktop/LostnFound/fronten
+d/node_modules/rollup/dist/es/share
+d/node-entry.js:21710:24)
+    at file:///C:/Users/Kenneth/One
+Drive/Desktop/LostnFound/frontend/n
+ode_modules/rollup/dist/es/shared/n
+ode-entry.js:21670:26[39m
