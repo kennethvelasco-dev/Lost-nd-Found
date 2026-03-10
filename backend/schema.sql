@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS lost_items (
 CREATE INDEX IF NOT EXISTS idx_lost_items_status ON lost_items(status);
 CREATE INDEX IF NOT EXISTS idx_lost_items_category_type ON lost_items(category, item_type);
 CREATE INDEX IF NOT EXISTS idx_lost_items_reporter ON lost_items(reporter_id);
+
 CREATE TABLE IF NOT EXISTS found_items (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     report_id TEXT UNIQUE NOT NULL,
@@ -67,6 +68,8 @@ CREATE TABLE IF NOT EXISTS found_items (
 CREATE INDEX IF NOT EXISTS idx_found_items_status ON found_items(status);
 CREATE INDEX IF NOT EXISTS idx_found_items_category_type ON found_items(category, item_type);
 CREATE INDEX IF NOT EXISTS idx_found_items_reporter ON found_items(reporter_id);
+CREATE INDEX IF NOT EXISTS idx_found_items_datetime ON found_items(found_datetime);
+
 CREATE TABLE IF NOT EXISTS claims (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     user_id INTEGER,
@@ -85,6 +88,10 @@ CREATE TABLE IF NOT EXISTS claims (
     created_at TEXT NOT NULL,
     FOREIGN KEY (found_item_id) REFERENCES found_items(id)
 );
+
+CREATE INDEX IF NOT EXISTS idx_claims_user ON claims(user_id);
+CREATE INDEX IF NOT EXISTS idx_claims_item ON claims(found_item_id);
+CREATE INDEX IF NOT EXISTS idx_claims_decision ON claims(decision);
 
 CREATE TABLE IF NOT EXISTS admins (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

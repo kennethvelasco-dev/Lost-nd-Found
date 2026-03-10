@@ -34,15 +34,21 @@ def found_items():
         except ValidationError as ve:
             return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
         
-    items, status = get_found_items()
-    return jsonify(success_response(items)), status
+    limit = request.args.get("limit", 20, type=int)
+    offset = request.args.get("offset", 0, type=int)
+    result, status = get_found_items(limit, offset)
+    return jsonify(success_response(result)), status
 
 @item_bp.route("/search", methods=["GET"])
 @jwt_required()
 def search_items_route():
     filters = request.args.to_dict()
+    # Ensure limit/offset are integers if provided
+    if "limit" in filters: filters["limit"] = int(filters["limit"])
+    if "offset" in filters: filters["offset"] = int(filters["offset"])
+    
     try:
-        items, status = search_items_service(filters)
-        return jsonify(success_response(items)), status
+        result, status = search_items_service(filters)
+        return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500

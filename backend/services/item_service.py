@@ -54,20 +54,34 @@ def submit_admin_found_item(data: dict, admin_id: str) -> tuple:
     return result, 201
 
 
-def get_found_items() -> tuple:
+def get_found_items(limit=20, offset=0) -> tuple:
     """
-    Returns published found items with formatted descriptions.
+    Returns published found items with formatted descriptions and pagination metadata.
     """
-    items = get_published_found_items()
+    items, total = get_published_found_items(limit, offset)
     for item in items:
         item["full_description"] = format_item_description(item)
-    return items, 200
+    return {
+        "items": items,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": offset
+        }
+    }, 200
 
 def search_items_service(filters: dict) -> tuple:
     """
-    Service for searching and filtering items with formatted descriptions.
+    Service for searching and filtering items with formatted descriptions and pagination.
     """
-    items = search_items_db(filters)
+    items, total = search_items_db(filters)
     for item in items:
         item["full_description"] = format_item_description(item)
-    return items, 200
+    return {
+        "items": items,
+        "pagination": {
+            "total": total,
+            "limit": filters.get("limit", 20),
+            "offset": filters.get("offset", 0)
+        }
+    }, 200

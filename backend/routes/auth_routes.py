@@ -3,10 +3,12 @@ from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from backend.services.auth_service import register_user, login_user, refresh_token, logout_token
 from backend.helpers.response import success_response, error_response
 from backend.models import ValidationError
+from backend import limiter
 
 auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
+@limiter.limit("5 per minute")
 def register():
     data = request.get_json() or {}
     try:
@@ -16,6 +18,7 @@ def register():
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 400
 
 @auth_bp.route("/login", methods=["POST"])
+@limiter.limit("5 per minute")
 def login():
     data = request.get_json() or {}
     try:

@@ -117,10 +117,14 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
         conn.close()
 
 # Get Found Items
-def get_published_found_items() -> list[Dict[str, Any]]:
-    """Return all published found items."""
+def get_published_found_items(limit=20, offset=0) -> tuple[list[Dict[str, Any]], int]:
+    """Return all published found items with pagination."""
     conn = get_db_connection()
     cursor = conn.cursor()
+
+    # Get total count
+    cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found'")
+    total_count = cursor.fetchone()[0]
 
     cursor.execute("""
         SELECT id, report_id, category, item_type, color, brand,
@@ -129,12 +133,12 @@ def get_published_found_items() -> list[Dict[str, Any]]:
         FROM found_items
         WHERE status = 'found'
         ORDER BY created_at DESC
-    """)
+        LIMIT ? OFFSET ?
+    """, (limit, offset))
 
     items = [dict(row) for row in cursor.fetchall()]
     conn.close()
-    return items
-
+    return items, total_count
 # Get Found Item by ID
 def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
     """Return a found item by ID. Validates ID type."""
@@ -156,46 +160,57 @@ def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
         conn.close()
 
 # Search Items
-def search_items_db(filters: Dict[str, Any]) -> list[Dict[str, Any]]:
+def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]:
     """
     Search items (lost or found) based on filters.
-    Supported filters: category, item_type, color, brand, status, query.
+    Supported filters: category, item_type, color, brand, status, query, limit, offset.
+    Returns (items, total_count).
     """
     status = filters.get("status", "found") # Default to found items
     table = "found_items" if status in ["found", "returned"] else "lost_items"
     
-    query_str = f"SELECT * FROM {table} WHERE status = ?"
+    base_query = f"FROM {table} WHERE status = ?"
     params = [status]
 
     if filters.get("category"):
-        query_str += " AND category = ?"
+        base_query += " AND category = ?"
         params.append(filters["category"])
     
     if filters.get("item_type"):
-        query_str += " AND item_type = ?"
+        base_query += " AND item_type = ?"
         params.append(filters["item_type"])
 
     if filters.get("color"):
-        query_str += " AND color = ?"
+        base_query += " AND color = ?"
         params.append(filters["color"])
 
     if filters.get("brand"):
-        query_str += " AND brand = ?"
+        base_query += " AND brand = ?"
         params.append(filters["brand"])
 
     if filters.get("query"):
-        query_str += " AND (public_description LIKE ? OR category LIKE ? OR item_type LIKE ?)"
+        base_query += " AND (public_description LIKE ? OR category LIKE ? OR item_type LIKE ?)"
         like_val = f"%{filters['query']}%"
         params.extend([like_val, like_val, like_val])
 
-    query_str += " ORDER BY created_at DESC"
-
+    # Get total count first
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute(query_str, params)
+    cursor.execute(f"SELECT COUNT(*) {base_query}", params)
+    total_count = cursor.fetchone()[0]
+
+    # Now get paginated results
+    query_str = f"SELECT * {base_query} ORDER BY created_at DESC"
     
+    limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
+    offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
+    
+    query_str += " LIMIT ? OFFSET ?"
+    params.extend([limit, offset])
+
+    cursor.execute(query_str, params)
     rows = cursor.fetchall()
     items = [dict(row) for row in rows]
     conn.close()
     
-    return items
+    return items, total_count
