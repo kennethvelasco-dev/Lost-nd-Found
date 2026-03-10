@@ -71,7 +71,7 @@ def create_default_admin():
     cursor = conn.cursor()
 
     cursor.execute("SELECT * FROM users WHERE username = 'admin'")
-    if cursor.fetchone() is None:
+    if cursor.fetchone() is None: 
         password_hash = hash_password("AdminPass123!")
         cursor.execute(
             "INSERT INTO users (username, password_hash, role, name, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",

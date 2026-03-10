@@ -27,9 +27,11 @@ def post_claim():
 @claim_bp.route("/pending", methods=["GET"])
 @jwt_required()
 def get_pending():
-    """Get all pending claims."""
-    claims = get_pending_claims()
-    return jsonify(success_response(claims)), 200
+    """Get pending claims restricted by ownership/role."""
+    user_id = get_jwt_identity()
+    role = get_jwt().get("role", "user")
+    claims, status = get_user_claims_service(user_id, role)
+    return jsonify(success_response(claims)), status
 
 @claim_bp.route("/<int:claim_id>/verify", methods=["POST"])
 @jwt_required()
@@ -43,30 +45,40 @@ def post_verify_claim(claim_id):
     decision = data.get("decision")
     admin_username = get_jwt_identity()
     result, status = verify_claim(claim_id, decision, admin_username)
+    
+    if status >= 400:
+        return jsonify(error_response("VERIFICATION_ERROR", result.get("error", "Error"))), status
+        
     return jsonify(success_response(result)), status
 
 @claim_bp.route("/<int:claim_id>/potential-matches", methods=["GET"])
 @jwt_required()
 def get_matches(claim_id):
-    """Get potential items matching a claim."""
-    result, status = get_potential_matches_service(claim_id)
+    """Get potential items matching a claim. Owner or Admin only."""
+    user_id = get_jwt_identity()
+    role = get_jwt().get("role", "user")
+    result, status = get_potential_matches_service(claim_id, user_id, role)
     return jsonify(success_response(result)), status
 
 @claim_bp.route("/<int:claim_id>/link", methods=["POST"])
 @jwt_required()
 def post_link_claim(claim_id):
-    """Link a general claim/report to a found item."""
+    """Link a general claim/report to a found item. Owner or Admin only."""
+    user_id = get_jwt_identity()
+    role = get_jwt().get("role", "user")
     data = request.get_json()
     found_item_id = data.get("found_item_id")
-    result, status = link_claim_service(claim_id, found_item_id)
+    result, status = link_claim_service(claim_id, found_item_id, user_id, role)
     return jsonify(success_response(result)), status
 
 @claim_bp.route("/<int:claim_id>/schedule", methods=["POST"])
 @jwt_required()
 def post_schedule_pickup(claim_id):
-    """Schedule a pickup for an approved claim."""
+    """Schedule a pickup for an approved claim. Owner or Admin only."""
+    user_id = get_jwt_identity()
+    role = get_jwt().get("role", "user")
     data = request.get_json()
-    result, status = schedule_pickup_service(claim_id, data)
+    result, status = schedule_pickup_service(claim_id, data, user_id, role)
     return jsonify(success_response(result)), status
 
 @claim_bp.errorhandler(ValidationError)

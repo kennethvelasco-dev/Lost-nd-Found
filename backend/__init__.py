@@ -28,12 +28,15 @@ def create_app():
 
     @app.errorhandler(Exception)
     def handle_exception(e):
-        # pass through HTTP errors
+        # Pass through HTTP errors
         if isinstance(e, HTTPException):
             return jsonify(error_response("HTTP_ERROR", e.description)), e.code
         
-        # now you're handling non-HTTP exceptions only
-        return jsonify(error_response("INTERNAL_SERVER_ERROR", "An unexpected error occurred.")), 500
+        # Log the internal error (using app.logger or print for now)
+        app.logger.error(f"Unexpected Error: {str(e)}", exc_info=True)
+        
+        # Return a safe, standardized error response
+        return jsonify(error_response("INTERNAL_SERVER_ERROR", "An unexpected server error occurred. Please contact support.")), 500
 
     @app.errorhandler(404)
     def handle_404(e):

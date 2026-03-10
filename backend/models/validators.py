@@ -16,9 +16,23 @@ def require_fields(data, required_fields):
             400
         )
 
-def validate_int(value, field_name):
+def validate_string(value, field_name, min_len=0, max_len=1000):
+    if not isinstance(value, str):
+        raise ValidationError(f"{field_name} must be a string", 400)
+    if len(value) < min_len:
+        raise ValidationError(f"{field_name} is too short (min {min_len})", 400)
+    if len(value) > max_len:
+        raise ValidationError(f"{field_name} is too long (max {max_len})", 400)
+    return value
+
+def validate_int(value, field_name, min_val=None, max_val=None):
     try:
-        return int(value)
+        val = int(value)
+        if min_val is not None and val < min_val:
+            raise ValidationError(f"{field_name} must be at least {min_val}", 400)
+        if max_val is not None and val > max_val:
+            raise ValidationError(f"{field_name} must be at most {max_val}", 400)
+        return val
     except (TypeError, ValueError):
         raise ValidationError(
             f"{field_name} must be an integer",
@@ -26,8 +40,9 @@ def validate_int(value, field_name):
         )
 
 def validate_found_item_id(item_id):
-    return validate_int(item_id, "found_item_id")
+    return validate_int(item_id, "found_item_id", min_val=1)
 
 def validate_claim_decision(decision):
     if decision not in {"approved", "rejected", "completed"}:
         raise ValidationError("Invalid decision", 400)
+    return decision

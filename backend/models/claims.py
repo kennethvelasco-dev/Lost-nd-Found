@@ -254,6 +254,16 @@ def verify_claim(claim_id, decision, admin_username, handover_notes=None):
             current_decision = row["decision"]
             found_item_id = row["found_item_id"]
 
+            if decision == "approved":
+                # Ensure no OTHER claim is already approved/completed for this item
+                if found_item_id:
+                    other_approved = cursor.execute(
+                        "SELECT id FROM claims WHERE found_item_id = ? AND decision IN ('approved', 'completed') AND id != ?",
+                        (found_item_id, claim_id)
+                    ).fetchone()
+                    if other_approved:
+                        return {"error": "Another claim is already approved or completed for this item"}, 400
+
             if decision == "completed":
                 if current_decision != "approved":
                     return {"error": "Only approved claims can be completed"}, 400

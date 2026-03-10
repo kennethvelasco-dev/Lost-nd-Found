@@ -6,6 +6,7 @@ from backend.models import (
 )
 from backend.helpers.input_validation import validate_item_payload
 from backend.models.items import search_items_db
+from backend.helpers.formatter import format_item_description
 
 def submit_lost_item(data: dict, user_id: str) -> tuple:
     """
@@ -41,12 +42,10 @@ def submit_found_item(data: dict, user_id: str) -> tuple:
 def submit_admin_found_item(data: dict, admin_id: str) -> tuple:
     """
     Validates and submits a found item by an admin.
-    Admins might have different defaults or logging.
     """
     validate_item_payload(data, "found")
     
     data["reporter_id"] = admin_id
-    # Admin reports might have different status or priority in future
     
     result = create_found_item(data)
     if "error" in result:
@@ -57,14 +56,18 @@ def submit_admin_found_item(data: dict, admin_id: str) -> tuple:
 
 def get_found_items() -> tuple:
     """
-    Returns published found items.
+    Returns published found items with formatted descriptions.
     """
-    return get_published_found_items(), 200
+    items = get_published_found_items()
+    for item in items:
+        item["full_description"] = format_item_description(item)
+    return items, 200
 
 def search_items_service(filters: dict) -> tuple:
     """
-    Service for searching and filtering items.
-    Filters can include category, item_type, color, brand, status, and query.
+    Service for searching and filtering items with formatted descriptions.
     """
     items = search_items_db(filters)
+    for item in items:
+        item["full_description"] = format_item_description(item)
     return items, 200
