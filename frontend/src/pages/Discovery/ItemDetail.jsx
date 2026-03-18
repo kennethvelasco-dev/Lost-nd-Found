@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import Button from '../../components/UI/Button';
+import Input from '../../components/UI/Input';
 import './ItemDetail.css';
 
 const ItemDetail = () => {
@@ -17,12 +19,9 @@ const ItemDetail = () => {
     });
 
     useEffect(() => {
-        // Since we don't have a single item endpoint in spec yet, we'll fetch list and find, or assume a new endpoint
         const fetchItem = async () => {
             try {
                 setLoading(true);
-                // Assuming we could pass full item via state, or we fetch from search 
-                // For robustness, simulating a fetch by getting found items and filtering
                 const response = await api.get('/items/found', { params: { limit: 100 } });
                 const items = response.data.data.items || [];
                 const foundItem = items.find(i => i.id === parseInt(id));
@@ -33,7 +32,6 @@ const ItemDetail = () => {
                     setError('Item not found.');
                 }
             } catch (err) {
-                // Ignore err to fix lint or log it
                 console.error(err);
                 setError('Failed to fetch item details.');
             } finally {
@@ -58,76 +56,120 @@ const ItemDetail = () => {
         }
     };
 
-    if (loading) return <div className="loading-spinner">Loading...</div>;
-    if (error) return <div className="error-message">{error}</div>;
+    if (loading) return (
+        <div className="container" style={{ padding: 'var(--space-4) 0', textAlign: 'center' }}>
+            <p>Loading item details...</p>
+        </div>
+    );
+    
+    if (error) return (
+        <div className="container" style={{ padding: 'var(--space-4) 0', textAlign: 'center' }}>
+            <div className="error-message" style={{ color: 'var(--danger)' }}>{error}</div>
+            <Button variant="neutral" style={{ marginTop: 'var(--space-2)' }} onClick={() => navigate('/lost-items')}>
+                Back to List
+            </Button>
+        </div>
+    );
+
     if (!item) return null;
 
     return (
-        <div className="item-detail-page">
-            <button className="back-btn" onClick={() => navigate(-1)}>← Back</button>
+        <div className="container item-detail-page">
+            <div className="back-link" onClick={() => navigate(-1)}>
+                <span>←</span> Back to Discovery
+            </div>
 
-            <div className="item-detail-container glass-panel">
-                <div className="item-detail-image">
-                    <img src={item.image_url || 'https://via.placeholder.com/600x400?text=No+Image'} alt={item.item_type} />
+            <div className="item-detail-container">
+                <div className="item-detail-image-section">
+                    <img 
+                        src={item.image_url || 'https://via.placeholder.com/800x600?text=No+Image'} 
+                        alt={item.item_type} 
+                    />
                 </div>
 
-                <div className="item-detail-info">
-                    <h2>{item.item_type}</h2>
-                    <div className="info-grid">
-                        <div className="info-item"><span>Category:</span> {item.category}</div>
-                        <div className="info-item"><span>Color:</span> {item.color}</div>
-                        <div className="info-item"><span>Brand:</span> {item.brand || 'N/A'}</div>
-                        <div className="info-item"><span>Location Found:</span> {item.found_location}</div>
-                        <div className="info-item"><span>Date Found:</span> {new Date(item.found_datetime || item.created_at).toLocaleDateString()}</div>
-                    </div>
-                    <div className="info-description">
-                        <h3>Description</h3>
-                        <p>{item.public_description || item.full_description || 'No description provided.'}</p>
+                <div className="item-detail-info-section">
+                    <div className="item-header">
+                        <span className="item-category-badge">{item.category}</span>
+                        <h1 className="item-detail-title">{item.item_type}</h1>
                     </div>
 
-                    {!showClaimForm ? (
-                        <button className="claim-btn" onClick={() => setShowClaimForm(true)}>
-                            Claim This Item
-                        </button>
-                    ) : (
-                        <form className="claim-form" onSubmit={handleClaimSubmit}>
-                            <h3>Submit Claim</h3>
-                            <div className="form-group">
-                                <label>Proof Description (How do we know it's yours?)</label>
-                                <textarea
-                                    required
-                                    className="auth-input"
-                                    value={claimData.description}
-                                    onChange={e => setClaimData({ ...claimData, description: e.target.value })}
-                                />
+                    <div className="info-grid">
+                        <div>
+                            <p className="info-item-label">Color</p>
+                            <p className="info-item-value">{item.color}</p>
+                        </div>
+                        <div>
+                            <p className="info-item-label">Brand</p>
+                            <p className="info-item-value">{item.brand || 'N/A'}</p>
+                        </div>
+                        <div>
+                            <p className="info-item-label">Location Found</p>
+                            <p className="info-item-value">{item.found_location}</p>
+                        </div>
+                        <div>
+                            <p className="info-item-label">Date Found</p>
+                            <p className="info-item-value">{new Date(item.found_datetime || item.created_at).toLocaleDateString()}</p>
+                        </div>
+                    </div>
+
+                    <div className="info-description-section">
+                        <h3 className="description-label">Description</h3>
+                        <p className="description-text">
+                            {item.public_description || item.full_description || 'No detailed description available for this item.'}
+                        </p>
+                    </div>
+
+                    <div className="claim-section">
+                        {!showClaimForm ? (
+                            <Button 
+                                variant="primary" 
+                                style={{ padding: '14px 40px' }}
+                                onClick={() => setShowClaimForm(true)}
+                            >
+                                Claim This Item
+                            </Button>
+                        ) : (
+                            <div className="claim-form-container">
+                                <h3 className="claim-form-title">Submit Claim</h3>
+                                <form onSubmit={handleClaimSubmit}>
+                                    <Input
+                                        label="Proof Description"
+                                        placeholder="How can we verify this item belongs to you?"
+                                        type="textarea"
+                                        required
+                                        value={claimData.description}
+                                        onChange={e => setClaimData({ ...claimData, description: e.target.value })}
+                                        style={{ minHeight: '100px' }}
+                                    />
+                                    
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)' }}>
+                                        <Input
+                                            label="Declared Value ($)"
+                                            type="number"
+                                            step="0.01"
+                                            required
+                                            value={claimData.declared_value}
+                                            onChange={e => setClaimData({ ...claimData, declared_value: e.target.value })}
+                                        />
+                                        <Input
+                                            label="Receipt or Proof URL"
+                                            type="text"
+                                            placeholder="Optional URL to proof"
+                                            value={claimData.receipt_proof}
+                                            onChange={e => setClaimData({ ...claimData, receipt_proof: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="claim-form-actions">
+                                        <Button type="submit" variant="primary">Submit Claim</Button>
+                                        <Button type="button" variant="neutral" onClick={() => setShowClaimForm(false)}>
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </form>
                             </div>
-                            <div className="form-group">
-                                <label>Declared Value ($)</label>
-                                <input
-                                    type="number"
-                                    step="0.01"
-                                    required
-                                    className="auth-input"
-                                    value={claimData.declared_value}
-                                    onChange={e => setClaimData({ ...claimData, declared_value: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Receipt or Proof URL</label>
-                                <input
-                                    type="text"
-                                    required
-                                    className="auth-input"
-                                    value={claimData.receipt_proof}
-                                    onChange={e => setClaimData({ ...claimData, receipt_proof: e.target.value })}
-                                />
-                            </div>
-                            <div className="form-actions">
-                                <button type="submit" className="auth-primary-btn">Submit Claim</button>
-                                <button type="button" className="auth-secondary-btn" onClick={() => setShowClaimForm(false)}>Cancel</button>
-                            </div>
-                        </form>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
         </div>
