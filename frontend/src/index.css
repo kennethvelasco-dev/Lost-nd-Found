@@ -1,29 +1,28 @@
 :root {
-  /* Dynamic Atmospheric Palette */
-  --mesh-green: #e1efe3;
-  --mesh-yellow: #f8f6e9;
-  --mesh-accent: #f0f7ef;
+  /* Atmospheric Palette with Authentic Background */
+  --mesh-green: #e6f1e8;
+  --mesh-yellow: #fdfaf0;
   --background: var(--mesh-green);
   
   --primary: #2d5016;
   --primary-light: #4ade80;
   --secondary: #fbbf24;
-  --text: #2d3e50;
-  --text-muted: #5a6d7e;
+  --text: #1f2d3d;
+  --text-muted: #4b5e71;
   --danger: #ef4444;
   --success: #22c55e;
   --white: #ffffff;
   
   /* Layout Constants */
-  --navbar-height: 160px;
-  --radius-sm: 14px;
-  --radius-md: 24px;
-  --radius-lg: 36px;
+  --navbar-height: 180px; /* Slight increase for larger branding */
+  --radius-sm: 16px;
+  --radius-md: 28px;
+  --radius-lg: 42px;
   
-  /* Refined Neumorphic Shadows for Gradient Background */
-  --nm-flat: 8px 8px 16px rgba(163, 177, 198, 0.4), -8px -8px 16px rgba(255, 255, 255, 0.6);
-  --nm-inset: inset 6px 6px 12px rgba(163, 177, 198, 0.4), inset -6px -6px 12px rgba(255, 255, 255, 0.6);
-  --nm-flat-sm: 4px 4px 8px rgba(163, 177, 198, 0.4), -4px -4px 8px rgba(255, 255, 255, 0.6);
+  /* High-Contrast Neumorphic Shadows for Image Backgrounds */
+  --nm-flat: 10px 10px 20px rgba(0, 0, 0, 0.12), -10px -10px 20px rgba(255, 255, 255, 0.4);
+  --nm-inset: inset 8px 8px 16px rgba(0, 0, 0, 0.12), inset -8px -8px 16px rgba(255, 255, 255, 0.4);
+  --nm-flat-sm: 5px 5px 10px rgba(0, 0, 0, 0.1), -5px -5px 10px rgba(255, 255, 255, 0.3);
   
   /* Spacing */
   --space-1: 8px;
@@ -42,15 +41,15 @@
 }
 
 body {
-  /* Complex Mesh Gradient - Atmospheric and Non-Simple */
-  background-color: var(--background);
+  /* Integrated Authentic Background Image with Atmospheric Overlay */
   background-image: 
-    radial-gradient(at 10% 10%, rgba(45, 80, 22, 0.08) 0, transparent 40%),
-    radial-gradient(at 90% 15%, rgba(251, 191, 36, 0.12) 0, transparent 40%),
-    radial-gradient(at 50% 50%, rgba(74, 222, 128, 0.05) 0, transparent 50%),
-    radial-gradient(at 20% 80%, rgba(45, 80, 22, 0.06) 0, transparent 40%),
-    radial-gradient(at 80% 90%, rgba(251, 191, 36, 0.08) 0, transparent 40%);
+    linear-gradient(rgba(230, 241, 232, 0.75), rgba(230, 241, 232, 0.85)),
+    url("/assets/gen_bg.png");
+  background-size: cover;
+  background-position: center;
   background-attachment: fixed;
+  background-repeat: no-repeat;
+  
   color: var(--text);
   line-height: 1.6;
   min-height: 100vh;
@@ -70,10 +69,10 @@ body {
 }
 
 .container {
-  max-width: 1150px;
+  max-width: 1200px;
   margin: 0 auto;
   width: 100%;
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-4);
 }
 
 /* "Pretty Header" */
@@ -83,45 +82,45 @@ body {
 }
 
 .pretty-title {
-  font-size: 3.5rem;
-  font-weight: 900;
+  font-size: 3.8rem;
+  font-weight: 950;
   color: var(--primary);
-  letter-spacing: -2px;
-  margin-bottom: 12px;
+  letter-spacing: -2.5px;
+  margin-bottom: 15px;
   background: linear-gradient(135deg, var(--primary), #166534);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   display: inline-block;
-  text-shadow: 2px 2px 4px rgba(0,0,0,0.05);
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.08);
 }
 
 .title-underline {
-  height: 6px;
-  width: 120px;
+  height: 7px;
+  width: 140px;
   background: linear-gradient(to right, var(--secondary), var(--primary-light));
   margin: 0 auto;
-  border-radius: 10px;
-  box-shadow: 3px 3px 10px rgba(0,0,0,0.1);
+  border-radius: 12px;
+  box-shadow: 4px 4px 12px rgba(0,0,0,0.15);
 }
 
 .auth-subtitle {
   color: var(--text-muted);
-  font-size: 1.25rem;
-  max-width: 600px;
+  font-size: 1.3rem;
+  max-width: 650px;
   margin: 0 auto;
-  font-weight: 600;
-  opacity: 0.8;
+  font-weight: 700;
+  opacity: 0.9;
 }
 
-/* Response Grid */
+/* Responsive Grid */
 .grid-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: var(--space-4);
 }
 
 @media (max-width: 768px) {
   .pretty-title {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
 }
