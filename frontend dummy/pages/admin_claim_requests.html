@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LostndFound - Claim Requests</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+<div class="header-top">
+<img src="../images/Logo_bg.png" class="logo">
+<div class="title">LostndFound</div>
+<button class="sign-out" onclick="window.location.href='../login.html'">Sign Out</button>
+</div>
+<div class="nav-links">
+<a href="admin_claim_requests.html" class="active">Claim Requests</a>
+<a href="admin_report_item.html">Report Item</a>
+<a href="admin_return_item.html">Return Item</a>
+</div>
+</nav>
+
+<section class="page active">
+<h1>Pending Claim Requests</h1>
+<div class="items-grid">
+<div class="item-card" onclick="window.location.href='admin_claim_detail.html'">
+<p>Item: Wallet</p>
+<p>User: John Doe</p>
+<p>Date: 2023-10-03</p>
+</div>
+<div class="item-card" onclick="window.location.href='admin_claim_detail.html'">
+<p>Item: Phone</p>
+<p>User: Jane Smith</p>
+<p>Date: 2023-10-04</p>
+</div>
+</div>
+</section>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

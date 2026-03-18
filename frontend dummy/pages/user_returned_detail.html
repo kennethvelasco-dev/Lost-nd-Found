@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LostndFound - Returned Item Detail</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+<div class="header-top">
+<img src="../images/Logo_bg.png" class="logo">
+<div class="title">LostndFound</div>
+<button class="sign-out" onclick="window.location.href='../login.html'">Sign Out</button>
+</div>
+<div class="nav-links">
+<a href="user_lost_list.html">Lost List</a>
+<a href="user_returned_list.html">Returned List</a>
+<a href="user_report_item.html">Report Item</a>
+</div>
+</nav>
+
+<section class="page active">
+<h1>Returned Item Details</h1>
+<div class="detail-container">
+<div class="image-section">
+<button class="arrow left-arrow" onclick="changeImage(-1)">&#10094;</button>
+<img id="item-image" src="../images/item_1.jpg" alt="Item Image" onclick="openModal()">
+<button class="arrow right-arrow" onclick="changeImage(1)">&#10095;</button>
+</div>
+<div class="description-section">
+<h2>Wallet</h2>
+<p><strong>Location Found:</strong> Library</p>
+<p><strong>Date Found:</strong> 2023-10-01</p>
+<p><strong>Date Returned:</strong> 2023-10-05</p>
+<p><strong>Description:</strong> Returned to owner after verification.</p>
+</div>
+</div>
+</section>
+
+<div id="modal" class="modal">
+<div class="modal-content">
+<button class="close-modal" onclick="closeModal()">&times;</button>
+<button class="arrow left-arrow" onclick="changeModalImage(-1)">&#10094;</button>
+<img id="modal-image" src="../images/item_1.jpg" alt="Item Image">
+<button class="arrow right-arrow" onclick="changeModalImage(1)">&#10095;</button>
+</div>
+</div>
+
+<script>
+let currentImageIndex = 0;
+const images = ['../images/item_1.jpg', '../images/item_2.jpg', '../images/item_3.jpg'];
+
+function changeImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex < 0) currentImageIndex = images.length - 1;
+    if (currentImageIndex >= images.length) currentImageIndex = 0;
+    document.getElementById('item-image').src = images[currentImageIndex];
+}
+
+function openModal() {
+    document.getElementById('modal').style.display = 'flex';
+    document.getElementById('modal-image').src = images[currentImageIndex];
+}
+
+function closeModal() {
+    document.getElementById('modal').style.display = 'none';
+}
+
+function changeModalImage(direction) {
+    currentImageIndex += direction;
+    if (currentImageIndex < 0) currentImageIndex = images.length - 1;
+    if (currentImageIndex >= images.length) currentImageIndex = 0;
+    document.getElementById('modal-image').src = images[currentImageIndex];
+    document.getElementById('item-image').src = images[currentImageIndex]; // sync
+}
+</script>
+</body>
+</html>
