@@ -33,56 +33,55 @@ const AdminReports = () => {
     }, [navigate]);
 
     return (
-        <div className="container admin-dashboard">
-            <div className="page-header">
-                <h1 className="page-title">Transaction Reports</h1>
-                <p className="auth-subtitle">History of all verified item handovers and resolutions</p>
-            </div>
-
-            <div className="admin-section-title">
-                <span>Completed Transactions</span>
-                <Button variant="secondary" size="sm" onClick={fetchReports}>Refresh</Button>
-            </div>
-
-            {loading ? (
-                <div style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
-                    <p>Loading transaction history...</p>
+        <div className="page-container">
+            <div className="container admin-reports">
+                <div className="page-header">
+                    <h1 className="page-title">Transaction Reports</h1>
+                    <div className="admin-section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-3)' }}>
+                        <p className="auth-subtitle" style={{ margin: 0 }}>History of all verified item handovers and resolutions</p>
+                        <Button variant="secondary" size="sm" onClick={fetchReports}>Refresh</Button>
+                    </div>
                 </div>
-            ) : error ? (
-                <Card style={{ textAlign: 'center', color: 'var(--danger)' }}>{error}</Card>
-            ) : reports.length === 0 ? (
-                <Card style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
-                    <p className="no-items">No completed transactions found in the system yet.</p>
-                </Card>
-            ) : (
-                <div className="claims-container">
-                    {reports.map((report) => (
-                        <Card key={report.claim_id} className="admin-claim-card" hover={false}>
-                            <div className="claim-card-header">
-                                <span className="claim-id">TRANSACTION #{report.claim_id}</span>
-                                <span className="admin-status-badge completed">Completed</span>
-                            </div>
-                            
-                            <div className="claim-card-body">
-                                <div className="claim-main-info">
-                                    <p className="claim-info-row">Item: <span>{report.item_name}</span></p>
-                                    <p className="claim-info-row">Claimant: <span>{report.claimant_email}</span></p>
-                                    <p className="claim-info-row">Admin: <span>{report.admin_username}</span></p>
-                                    <p className="claim-info-row">Date: <span>{new Date(report.transaction_timestamp).toLocaleString()}</span></p>
+
+                {loading ? (
+                    <div style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
+                        <p>Loading transaction history...</p>
+                    </div>
+                ) : error ? (
+                    <Card style={{ textAlign: 'center', color: 'var(--danger)' }}>{error}</Card>
+                ) : reports.length === 0 ? (
+                    <Card style={{ textAlign: 'center', padding: 'var(--space-4) 0' }}>
+                        <p className="no-items">No completed transactions found in the system yet.</p>
+                    </Card>
+                ) : (
+                    <div className="reports-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                        {reports.map((report) => (
+                            <Card key={report.claim_id} className="admin-claim-card" hover={false} style={{ padding: 'var(--space-3)' }}>
+                                <div className="claim-card-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-2)' }}>
+                                    <span className="claim-id" style={{ fontWeight: 700, color: 'var(--primary)' }}>TRANSACTION #{report.claim_id}</span>
+                                    <span className="admin-status-badge completed" style={{ backgroundColor: '#dcfce7', color: '#166534', padding: '4px 8px', borderRadius: '4px', fontSize: '12px' }}>Completed</span>
                                 </div>
                                 
-                                <div className="claim-proof-section">
-                                    <p className="proof-label">Verification Details</p>
-                                    <p className="proof-text">{report.verification_details}</p>
+                                <div className="claim-card-body">
+                                    <div className="claim-main-info" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-2)', marginBottom: 'var(--space-2)' }}>
+                                        <p className="claim-info-row"><strong>Item:</strong> {report.item_name}</p>
+                                        <p className="claim-info-row"><strong>Claimant:</strong> {report.claimant_email}</p>
+                                        <p className="claim-info-row"><strong>Admin:</strong> {report.admin_username}</p>
+                                        <p className="claim-info-row"><strong>Date:</strong> {new Date(report.transaction_timestamp).toLocaleString()}</p>
+                                    </div>
+                                    
+                                    <div className="claim-proof-section" style={{ borderTop: '1px solid #e5e7eb', paddingTop: 'var(--space-2)' }}>
+                                        <p className="proof-label" style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '4px' }}>Verification Details</p>
+                                        <p className="proof-text">{report.verification_details}</p>
+                                    </div>
                                 </div>
-                            </div>
-                        </Card>
-                    ))}
-                </div>
-            )}
+                            </Card>
+                        ))}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 export default AdminReports;
-

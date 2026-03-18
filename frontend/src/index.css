@@ -1,56 +1,75 @@
 :root {
-  /* Soft Minimalism Color Palette */
-  --primary: #16a34a;       /* green-600 */
-  --primary-hover: #15803d; /* green-700 */
-  --accent: #22c55e;        /* green-500 */
-  --dark: #1f2937;          /* gray-800 */
-  --background: #f3f4f6;    /* gray-100 */
-  --card-bg: #ffffff;
-  --text-main: #111827;     /* gray-900 */
-  --text-muted: #6b7280;    /* gray-500 */
-  
-  /* Status Colors */
+  /* Green Theme Colors from Dummy */
+  --primary: #2d5016;
+  --primary-light: #4ade80;
+  --secondary: #fbbf24;
+  --secondary-dark: #f59e0b;
+  --background: #f5f5f5;
+  --text: #1f2937;
+  --text-muted: #6b7280;
   --danger: #ef4444;
-  --warning: #f59e0b;
-  --success: #16a34a;
+  --success: #22c55e;
   
-  /* Spacing & Borders */
-  --radius-lg: 14px;
-  --radius-md: 10px;
+  /* Layout */
+  --navbar-height: 120px;
   --radius-sm: 8px;
-  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
-  --shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.12);
-  --nav-height: 80px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
   
-  /* Typography */
-  --font-main: 'Inter', 'Roboto', system-ui, -apple-system, sans-serif;
-  
-  /* Spacing System (8px) */
+  /* Spacing */
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
   --space-4: 32px;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
+
+  /* Gradients */
+  --nav-gradient: linear-gradient(135deg, #2d5016, #4ade80);
+  --btn-gradient: linear-gradient(135deg, #fbbf24, #f59e0b);
 }
 
 * {
-  box-sizing: border-box;
   margin: 0;
   padding: 0;
+  box-sizing: border-box;
+  font-family: 'Roboto', sans-serif;
 }
 
 body {
-  font-family: var(--font-main);
-  background-color: var(--background);
-  color: var(--text-main);
-  min-height: 100vh;
+  background-image: url("/assets/auth-bg.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  color: var(--text);
   line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Glass effect for pages */
+.page-container {
+  flex: 1;
+  background: var(--background);
+  padding: var(--space-6) var(--space-2);
+  min-height: calc(100vh - var(--navbar-height));
+  display: flex;
+  flex-direction: column;
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 var(--space-2);
+  width: 100%;
 }
 
 /* Card Base */

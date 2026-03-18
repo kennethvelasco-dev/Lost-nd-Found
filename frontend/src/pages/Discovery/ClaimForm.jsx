@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
+import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
-import Card from '../../components/UI/Card';
-import './ClaimForm.css';
+
+const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
 
 const ClaimForm = () => {
     const { id } = useParams();
@@ -13,17 +14,16 @@ const ClaimForm = () => {
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
+        color: 'Black',
         description: '',
-        declared_value: '',
-        receipt_proof: ''
+        proof: ''
     });
 
     useEffect(() => {
         const fetchItem = async () => {
             try {
-                const response = await api.get('/items/found');
-                const foundItem = (response.data.data.items || []).find(i => i.id === parseInt(id));
-                if (foundItem) setItem(foundItem);
+                const response = await api.get(`/items/found/${id}`);
+                setItem(response.data.data.item);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -37,93 +37,77 @@ const ClaimForm = () => {
         e.preventDefault();
         setSubmitting(true);
         try {
-            await api.post('/claims/submit', {
-                found_item_id: item.id,
-                ...formData,
-                declared_value: parseFloat(formData.declared_value)
+            await api.post('/claims', {
+                found_item_id: id,
+                answers: {
+                    color: formData.color,
+                    description: formData.description,
+                    proof: formData.proof
+                }
             });
-            navigate('/claim-confirmation', { state: { itemType: item.item_type } });
+            navigate('/confirmation', { 
+                state: { title: 'Claim Submitted!', message: 'The administrator will review your claim and notify you soon.' } 
+            });
         } catch (err) {
-            alert(err.response?.data?.message || 'Failed to submit claim.');
+            console.error(err);
+        } finally {
             setSubmitting(false);
         }
     };
 
-    if (loading) return (
-        <div className="container" style={{ padding: 'var(--space-4) 0', textAlign: 'center' }}>
-            <p>Loading item details...</p>
-        </div>
-    );
-
-    if (!item) return (
-        <div className="container" style={{ padding: 'var(--space-4) 0', textAlign: 'center' }}>
-            <p>Item not found.</p>
-            <Button variant="neutral" onClick={() => navigate('/lost-items')}>Back to Discovery</Button>
-        </div>
-    );
+    if (loading) return <div className="page-container"><p>Loading item details...</p></div>;
 
     return (
-        <div className="container claim-form-page">
-            <div className="page-header">
-                <h1 className="page-title">Submit a Claim</h1>
-                <p className="auth-subtitle">Provide details to verify your ownership of the {item.item_type}</p>
-            </div>
+        <div className="page-container">
+            <div className="container" style={{ maxWidth: '800px' }}>
+                <div className="pretty-header">
+                    <h1 className="pretty-title">Submit Ownership Claim</h1>
+                    <div className="title-underline"></div>
+                </div>
 
-            <div className="claim-form-layout">
-                <Card className="claim-item-summary" hover={false}>
-                    <div className="summary-image">
-                        <img src={item.image_url || 'https://via.placeholder.com/300x200?text=No+Image'} alt={item.item_type} />
-                    </div>
-                    <div className="summary-details">
-                        <h3>{item.item_type}</h3>
-                        <p>Found at: <span>{item.found_location}</span></p>
-                        <p>Date: <span>{new Date(item.found_datetime || item.created_at).toLocaleDateString()}</span></p>
-                    </div>
-                </Card>
-
-                <Card className="claim-form-card" hover={false}>
-                    <form onSubmit={handleSubmit} className="auth-form">
-                        <Input
-                            label="Proof of Ownership"
-                            type="textarea"
-                            placeholder="Describe specific marks, contents, or details only the owner would know..."
-                            value={formData.description}
-                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                            required
-                            style={{ minHeight: '120px' }}
-                        />
-
-                        <Input
-                            label="Estimated Value ($)"
-                            type="number"
-                            step="0.01"
-                            placeholder="0.00"
-                            value={formData.declared_value}
-                            onChange={(e) => setFormData({ ...formData, declared_value: e.target.value })}
-                            required
-                        />
-
-                        <Input
-                            label="Proof / Receipt URL (Optional)"
-                            type="text"
-                            placeholder="Link to a photo or digital receipt"
-                            value={formData.receipt_proof}
-                            onChange={(e) => setFormData({ ...formData, receipt_proof: e.target.value })}
-                        />
-
-                        <div className="claim-form-footer">
-                            <p className="claim-disclaimer">
-                                By submitting this claim, you certify that the information provided is accurate and you are the rightful owner of this item.
-                            </p>
-                            <div className="claim-actions">
-                                <Button type="submit" variant="primary" disabled={submitting} style={{ flex: 1 }}>
-                                    {submitting ? 'Submitting...' : 'Confirm & Submit Claim'}
-                                </Button>
-                                <Button type="button" variant="neutral" onClick={() => navigate(-1)}>
-                                    Cancel
-                                </Button>
-                            </div>
+                <Card className="claim-form-card">
+                    <h2 style={{ color: 'var(--primary)', marginBottom: 'var(--space-3)' }}>
+                        Claiming: {item?.item_type}
+                    </h2>
+                    
+                    <form onSubmit={handleSubmit} className="report-form">
+                        <div className="form-group">
+                            <label className="form-label">Primary Color of your item</label>
+                            <select 
+                                className="form-select"
+                                value={formData.color}
+                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                            >
+                                {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                            </select>
                         </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Detailed Description</label>
+                            <textarea 
+                                className="form-textarea"
+                                placeholder="Describe unique features, markings, or contents..."
+                                value={formData.description}
+                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                required
+                                style={{ minHeight: '120px' }}
+                            ></textarea>
+                        </div>
+
+                        <div className="form-group">
+                            <label className="form-label">Proof of Ownership (Optional)</label>
+                            <textarea 
+                                className="form-textarea"
+                                placeholder="Serial numbers, specific photos you have, or other proof..."
+                                value={formData.proof}
+                                onChange={(e) => setFormData({ ...formData, proof: e.target.value })}
+                                style={{ minHeight: '80px' }}
+                            ></textarea>
+                        </div>
+
+                        <Button type="submit" variant="primary" disabled={submitting} style={{ width: '100%', marginTop: 'var(--space-3)' }}>
+                            {submitting ? 'Submitting Claim...' : 'Submit Claim'}
+                        </Button>
                     </form>
                 </Card>
             </div>

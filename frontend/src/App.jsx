@@ -9,9 +9,11 @@ import ReturnedItems from './pages/Discovery/ReturnedItems';
 import ItemDetail from './pages/Discovery/ItemDetail';
 import ClaimForm from './pages/Discovery/ClaimForm';
 import ConfirmationPage from './pages/Discovery/ConfirmationPage';
+import ReportItem from './pages/Discovery/ReportItem'; // Added import
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminReports from './pages/Admin/AdminReports';
 import AdminClaimList from './pages/Admin/AdminClaimList';
+import AdminReturnItem from './pages/Admin/AdminReturnItem'; // Added import
 import './index.css';
 
 // A generic ProtectedRoute that requires the user to be logged in
@@ -46,14 +48,13 @@ function App() {
           <Route path="/items/:id" element={<ProtectedRoute><Layout><ItemDetail /></Layout></ProtectedRoute>} />
           <Route path="/items/:id/claim" element={<ProtectedRoute><Layout><ClaimForm /></Layout></ProtectedRoute>} />
           <Route path="/claim-confirmation" element={<ProtectedRoute><Layout><ConfirmationPage /></Layout></ProtectedRoute>} />
+          <Route path="/report-item" element={<ProtectedRoute><Layout><ReportItem /></Layout></ProtectedRoute>} />
 
           {/* Admin Routes - Protected */}
           <Route path="/admin/dashboard" element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />
           <Route path="/admin/claims" element={<AdminRoute><Layout><AdminClaimList /></Layout></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><Layout><AdminReports /></Layout></AdminRoute>} />
-
-          {/* Placeholder for Report Item */}
-          <Route path="/report-item" element={<ProtectedRoute><Layout><div>Report Item Page Coming Soon</div></Layout></ProtectedRoute>} />
+          <Route path="/admin/return-item" element={<AdminRoute><Layout><AdminReturnItem /></Layout></AdminRoute>} />
 
           {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />

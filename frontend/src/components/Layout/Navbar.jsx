@@ -1,84 +1,66 @@
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import Button from '../UI/Button';
 import './Navbar.css';
 
 const Navbar = () => {
-    const { user, logout } = useAuth();
-    const navigate = useNavigate();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
+  const isAdmin = user?.role === 'admin';
 
-    const handleLogout = () => {
-        logout();
-        navigate('/login');
-    };
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
 
-    return (
-        <nav className="navbar">
-            {/* Row 1: Site Title */}
-            <div className="nav-row-branding">
-                <h1 className="nav-site-title">LostnDFound</h1>
-            </div>
+  const isActive = (path) => location.pathname === path ? 'active' : '';
 
-            {/* Row 2: Navigation Tabs */}
-            <div className="nav-row-tabs">
-                <div className="nav-tabs-container">
-                    <NavLink
-                        to="/lost-items"
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    >
-                        Lost Items
-                    </NavLink>
-                    <NavLink
-                        to="/report-item"
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    >
-                        Report Item
-                    </NavLink>
-                    <NavLink
-                        to="/returned-items"
-                        className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                    >
-                        Returned Items
-                    </NavLink>
-                    {user?.role === 'admin' && (
-                        <>
-                            <NavLink
-                                to="/admin/dashboard"
-                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                            >
-                                Dashboard
-                            </NavLink>
-                            <NavLink
-                                to="/admin/claims"
-                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                            >
-                                Claims
-                            </NavLink>
-                            <NavLink
-                                to="/admin/reports"
-                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                            >
-                                Reports
-                            </NavLink>
-                        </>
-                    )}
-                </div>
-                <div className="nav-auth-container">
-                    {user ? (
-                        <>
-                            <span className="nav-link" style={{ marginRight: '1rem' }}>Hi, {user.username}</span>
-                            <button onClick={handleLogout} className="nav-link auth-btn" style={{ border: 'none', cursor: 'pointer' }}>Logout</button>
-                        </>
-                    ) : (
-                        <>
-                            <NavLink to="/login" className="nav-link">Login</NavLink>
-                            <NavLink to="/signup" className="nav-link auth-btn">Sign Up</NavLink>
-                        </>
-                    )}
-                </div>
-            </div>
-        </nav>
-    );
+  return (
+    <nav className="navbar">
+      {/* Branding Row - Now centered and more prominent */}
+      <div className="navbar-brand-row">
+        <div className="brand-pill">
+            <Link to="/" className="navbar-logo">
+                <img src="/assets/logo.png" alt="Lost & Found" />
+                <span className="brand-name">Campus Lost & Found</span>
+            </Link>
+        </div>
+        
+        {user && (
+          <div className="user-control">
+            <Button variant="secondary" size="sm" onClick={handleLogout} className="logout-btn">
+              Sign Out
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Navigation Row */}
+      {user && (
+        <div className="navbar-links-row">
+          <div className="nav-links-container">
+            {!isAdmin ? (
+              <>
+                <Link to="/lost-items" className={`nav-link ${isActive('/lost-items')}`}>Lost Items</Link>
+                <Link to="/found-items" className={`nav-link ${isActive('/found-items')}`}>Found Items</Link>
+                <Link to="/report-item" className={`nav-link ${isActive('/report-item')}`}>Report Item</Link>
+                <Link to="/returned-items" className={`nav-link ${isActive('/returned-items')}`}>Verified Handovers</Link>
+              </>
+            ) : (
+              <>
+                <Link to="/admin/dashboard" className={`nav-link ${isActive('/admin/dashboard')}`}>Admin Console</Link>
+                <Link to="/admin/claims" className={`nav-link ${isActive('/admin/claims')}`}>Review Claims</Link>
+                <Link to="/admin/return-item" className={`nav-link ${isActive('/admin/return-item')}`}>Log Return</Link>
+                <Link to="/admin/reports" className={`nav-link ${isActive('/admin/reports')}`}>Reports</Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </nav>
+  );
 };
 
 export default Navbar;

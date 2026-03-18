@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import ItemCard from '../../components/UI/ItemCard';
+import Card from '../../components/UI/Card';
 import SearchBar from '../../components/UI/SearchBar';
 import api from '../../services/api';
+import './ReturnedItems.css';
 
 const ReturnedItems = () => {
     const [items, setItems] = useState([]);
@@ -11,20 +12,13 @@ const ReturnedItems = () => {
     const fetchItems = async (query = '') => {
         try {
             setLoading(true);
-            // For now, we use the same items/found endpoint but we'll eventually filter by 'returned' status
-            // Once the backend supports a specific returned items endpoint, we will update this.
-            // Currently, 'returned' items are just those with a completed handover/claim status.
             const response = await api.get('/items/found', {
-                params: {
-                    query,
-                    status: 'completed' // Assuming the backend filters by status
-                }
+                params: { query, status: 'returned' }
             });
             setItems(response.data.data.items || []);
             setError(null);
         } catch (err) {
-            setError('Failed to fetch returned items.');
-            console.error(err);
+            setError('Failed to fetch transaction history.');
         } finally {
             setLoading(false);
         }
@@ -35,27 +29,61 @@ const ReturnedItems = () => {
     }, []);
 
     return (
-        <div className="returned-items-page">
-            <SearchBar
-                onSearch={(q) => fetchItems(q)}
-                onFilter={(f) => fetchItems('', f)}
-            />
-
-            {loading ? (
-                <div className="loading-spinner">Loading...</div>
-            ) : error ? (
-                <div className="error-message">{error}</div>
-            ) : (
-                <div className="items-grid">
-                    {items.map(item => (
-                        <ItemCard key={item.id} item={item} isReturned={true} />
-                    ))}
-                    {items.length === 0 && <p className="no-items">No returned items to display.</p>}
+        <div className="page-container">
+            <div className="container returned-items-page">
+                <div className="pretty-header">
+                    <h1 className="pretty-title">Verified Handovers</h1>
+                    <p className="auth-subtitle">A history of items successfully reconnected with their owners.</p>
+                    <div className="title-underline"></div>
                 </div>
-            )}
+
+                <SearchBar onSearch={(q) => fetchItems(q)} />
+
+                {loading ? (
+                    <div className="loading-state">Loading history...</div>
+                ) : (
+                    <div className="returned-list">
+                        {items.map(item => (
+                            <Card key={item.id} className="returned-item-card" hover={false}>
+                                <div className="returned-marker">VERIFIED RETURN</div>
+                                <div className="returned-grid">
+                                    <div className="returned-img-container">
+                                        <img src={item.main_picture || '/assets/logo.png'} alt={item.item_type} />
+                                    </div>
+                                    <div className="returned-info">
+                                        <h3>{item.item_type}</h3>
+                                        <div className="meta-grid">
+                                            <div className="meta-item">
+                                                <label>Category</label>
+                                                <span>{item.category}</span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <label>Location Found</label>
+                                                <span>{item.found_location}</span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <label>Date Found</label>
+                                                <span>{new Date(item.found_datetime).toLocaleDateString()}</span>
+                                            </div>
+                                            <div className="meta-item">
+                                                <label>Resolution</label>
+                                                <span className="success-text">Returned to Owner</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        ))}
+                        {items.length === 0 && (
+                            <div className="empty-state">
+                                <p>No completed returns to display yet.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
         </div>
     );
 };
 
 export default ReturnedItems;
-

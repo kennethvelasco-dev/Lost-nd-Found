@@ -7,24 +7,27 @@ const LostItems = () => {
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [search, setSearch] = useState('');
+    const [filter, setFilter] = useState('');
 
-    const fetchItems = async (query = '', filter = '') => {
+    const fetchItems = async (query = '', sort = '') => {
         try {
             setLoading(true);
             let endpoint = '/items/found';
-            const params = {};
+            const params = { status: 'found' };
 
             if (query) {
                 endpoint = '/items/search';
                 params.query = query;
             }
 
-            if (filter) {
-                params.sort = filter; // Backend sort/filter logic
+            if (sort) {
+                params.sort = sort;
             }
 
             const response = await api.get(endpoint, { params });
-            setItems(response.data.data.items || []);
+            // The search endpoint might return data.items, found endpoint returns data.items
+            setItems(response.data.data.items || response.data.data || []);
             setError(null);
         } catch (err) {
             setError('Failed to fetch items. Please try again later.');
@@ -35,44 +38,46 @@ const LostItems = () => {
     };
 
     useEffect(() => {
-        fetchItems();
-    }, []);
+        fetchItems(search, filter);
+    }, [search, filter]);
 
     return (
-        <div className="container lost-items-page">
-            <div className="page-header">
-                <h1 className="page-title">Items Discovery</h1>
-                <p className="auth-subtitle">Browse items found on campus or report a lost one</p>
+        <div className="page-container">
+            <div className="container">
+                <div className="pretty-header">
+                    <h1 className="pretty-title">Lost & Found Directory</h1>
+                    <p className="auth-subtitle">Search for items reported across campus.</p>
+                    <div className="title-underline"></div>
+                </div>
+
+                <SearchBar 
+                    onSearch={(q) => setSearch(q)}
+                    onFilter={(f) => setFilter(f)}
+                />
+
+                {loading ? (
+                    <div className="loading-container" style={{ textAlign: 'center', padding: '40px' }}>
+                        <p>Searching for items...</p>
+                    </div>
+                ) : error ? (
+                    <div className="error-message" style={{ textAlign: 'center', color: 'var(--danger)', padding: '40px' }}>
+                        {error}
+                    </div>
+                ) : (
+                    <div className="items-grid">
+                        {items.map(item => (
+                            <ItemCard key={item.id} item={item} />
+                        ))}
+                        {items.length === 0 && (
+                            <div className="no-items" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>
+                                <p>No items found matching your search.</p>
+                            </div>
+                        )}
+                    </div>
+                )}
             </div>
-
-            <SearchBar
-                onSearch={(q) => fetchItems(q)}
-                onFilter={(f) => fetchItems('', f)}
-            />
-
-            {loading ? (
-                <div className="loading-container">
-                    <p>Searching for items...</p>
-                </div>
-            ) : error ? (
-                <div className="error-message" style={{ textAlign: 'center', color: 'var(--danger)' }}>
-                    {error}
-                </div>
-            ) : (
-                <div className="items-grid">
-                    {items.map(item => (
-                        <ItemCard key={item.id} item={item} />
-                    ))}
-                    {items.length === 0 && (
-                        <div className="no-items">
-                            <p>No lost items found matching your search.</p>
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 };
 
 export default LostItems;
-
