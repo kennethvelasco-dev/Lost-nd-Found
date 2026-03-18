@@ -1,5 +1,10 @@
 .navbar {
-  background: var(--background);
+  /* Glassmorphism Effect */
+  background: rgba(236, 241, 237, 0.7); /* Slightly transparent background */
+  backdrop-filter: blur(15px) saturate(180%);
+  -webkit-backdrop-filter: blur(15px) saturate(180%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  
   width: 100%;
   height: var(--navbar-height);
   position: sticky;
@@ -7,7 +12,7 @@
   z-index: 1000;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 15px rgba(163, 177, 198, 0.4);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-inner {
@@ -24,36 +29,38 @@
 }
 
 .brand-pill {
-  background: var(--primary);
-  padding: 10px 30px;
+  /* Vibrant Mesh-like pill */
+  background: linear-gradient(135deg, var(--primary) 0%, #166534 50%, #4ade80 100%);
+  padding: 10px 32px;
   border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   gap: 15px;
-  box-shadow: 6px 6px 15px rgba(45, 80, 22, 0.4);
-  transition: transform 0.2s ease;
+  box-shadow: 6px 6px 20px rgba(45, 80, 22, 0.4);
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .brand-pill:hover {
-  transform: scale(1.02);
+  transform: scale(1.05) translateY(-2px);
 }
 
 .brand-pill img {
-  height: 40px;
+  height: 42px;
   filter: brightness(0) invert(1);
 }
 
 .brand-name {
   color: white;
-  font-size: 1.8rem;
-  font-weight: 900;
-  letter-spacing: -1px;
+  font-size: 1.85rem;
+  font-weight: 950;
+  letter-spacing: -1.5px;
 }
 
 .user-welcome {
-  margin-right: var(--space-3);
-  font-size: 0.9rem;
-  color: var(--text-muted);
+  margin-right: var(--space-4);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--primary);
 }
 
 .navbar-links-row {
@@ -64,25 +71,28 @@
 
 .nav-tabs {
   display: flex;
-  background: var(--background);
-  padding: 6px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(5px);
+  padding: 8px;
   border-radius: var(--radius-md);
   box-shadow: var(--nm-inset);
-  gap: 8px;
+  gap: 10px;
 }
 
 .nav-tab {
   text-decoration: none;
   color: var(--text-muted);
-  font-weight: 700;
-  padding: 10px 24px;
+  font-weight: 800;
+  padding: 10px 28px;
   border-radius: var(--radius-sm);
-  transition: all 0.2s ease;
-  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+  letter-spacing: -0.5px;
 }
 
 .nav-tab:hover {
   color: var(--primary);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .nav-tab.active {
@@ -91,14 +101,11 @@
   box-shadow: var(--nm-flat-sm);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 900px) {
   .brand-name {
     display: none;
   }
   .brand-pill {
-    padding: 10px 15px;
-  }
-  .user-welcome {
-    display: none;
+    padding: 8px 16px;
   }
 }

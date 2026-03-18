@@ -1,13 +1,15 @@
 .card {
-  background: var(--background);
+  /* Slightly tinted background to match the the mesh gradient */
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(5px);
   border-radius: var(--radius-md);
   box-shadow: var(--nm-flat);
   padding: var(--space-4);
-  transition: all 0.3s ease;
-  border: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.card-hover:hover {
-  box-shadow: var(--nm-flat-sm);
-  transform: translateY(2px);
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 12px 12px 24px rgba(163, 177, 198, 0.4), -12px -12px 24px rgba(255, 255, 255, 0.8);
 }
