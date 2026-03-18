@@ -7,6 +7,8 @@ import SignupPage from './pages/Auth/SignupPage';
 import LostItems from './pages/Discovery/LostItems';
 import ReturnedItems from './pages/Discovery/ReturnedItems';
 import ItemDetail from './pages/Discovery/ItemDetail';
+import ClaimForm from './pages/Discovery/ClaimForm';
+import ConfirmationPage from './pages/Discovery/ConfirmationPage';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminReports from './pages/Admin/AdminReports';
 import './index.css';
@@ -41,6 +43,8 @@ function App() {
           <Route path="/lost-items" element={<ProtectedRoute><Layout><LostItems /></Layout></ProtectedRoute>} />
           <Route path="/returned-items" element={<ProtectedRoute><Layout><ReturnedItems /></Layout></ProtectedRoute>} />
           <Route path="/items/:id" element={<ProtectedRoute><Layout><ItemDetail /></Layout></ProtectedRoute>} />
+          <Route path="/items/:id/claim" element={<ProtectedRoute><Layout><ClaimForm /></Layout></ProtectedRoute>} />
+          <Route path="/claim-confirmation" element={<ProtectedRoute><Layout><ConfirmationPage /></Layout></ProtectedRoute>} />
 
           {/* Admin Routes - Protected */}
           <Route path="/admin/dashboard" element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />
