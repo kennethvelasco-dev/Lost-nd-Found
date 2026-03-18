@@ -1,24 +1,23 @@
 .navbar {
-  /* Glassmorphism against Image Background */
-  background: rgba(230, 241, 232, 0.6);
-  backdrop-filter: blur(20px) saturate(160%);
-  -webkit-backdrop-filter: blur(20px) saturate(160%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(230, 241, 232, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 2px solid rgba(45, 80, 22, 0.1);
   
   width: 100%;
-  height: var(--navbar-height);
+  height: 220px; /* Increased for bold branding */
   position: sticky;
   top: 0;
   z-index: 1000;
   display: flex;
   align-items: center;
-  box-shadow: 0 4px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
 }
 
 .navbar-inner {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-4);
   width: 100%;
 }
 
@@ -29,44 +28,72 @@
   width: 100%;
 }
 
-.brand-pill.large {
-  background: linear-gradient(135deg, var(--primary) 0%, #166534 50%, #4ade80 100%);
-  padding: 12px 48px;
-  border-radius: var(--radius-lg);
+.branding-left {
   display: flex;
   align-items: center;
-  gap: 20px;
-  box-shadow: 8px 8px 25px rgba(45, 80, 22, 0.45);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.brand-pill.large:hover {
-  transform: scale(1.04) translateY(-3px);
-  box-shadow: 10px 10px 30px rgba(45, 80, 22, 0.5);
+.navbar-logo-link {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  text-decoration: none;
+  transition: transform 0.3s ease;
 }
 
-.brand-pill.large img {
-  height: 55px; /* Bigger logo */
-  filter: brightness(0) invert(1);
+.navbar-logo-link:hover {
+  transform: translateX(5px);
 }
 
-.brand-name {
-  color: white;
-  font-size: 2.2rem; /* Bigger title */
+.main-logo {
+  height: 90px; /* Large logo as requested */
+  width: auto;
+  object-fit: contain;
+  /* Ensure icon/circle is replaced by logo if any styling exists */
+  border-radius: 0; 
+  box-shadow: 6px 6px 15px rgba(0,0,0,0.1);
+  background: white;
+  padding: 10px;
+  border-radius: var(--radius-sm);
+}
+
+.main-brand-title {
+  color: var(--primary);
+  font-size: 3rem; /* Large title as requested */
   font-weight: 950;
-  letter-spacing: -2px;
+  letter-spacing: -2.5px;
+  margin: 0;
+  background: linear-gradient(135deg, var(--primary), #166534);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.controls-right {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.user-info-pill {
+  background: var(--background);
+  padding: 8px 24px;
+  border-radius: 30px;
+  box-shadow: var(--nm-inset);
 }
 
 .user-welcome {
-  margin-right: var(--space-4);
+  color: var(--text-muted);
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--primary);
 }
 
-.raised {
+.raised-pill {
   box-shadow: var(--nm-flat-sm) !important;
+  border-radius: 30px !important;
   font-weight: 800 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 12px 28px !important;
 }
 
 .navbar-links-row {
@@ -75,12 +102,12 @@
   justify-content: center;
 }
 
-.nav-tabs.floating {
+.glass-tabs {
   display: flex;
-  background: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   padding: 10px;
-  border-radius: var(--radius-md);
+  border-radius: 40px;
   box-shadow: var(--nm-inset);
   gap: 12px;
 }
@@ -89,30 +116,38 @@
   text-decoration: none;
   color: var(--text-muted);
   font-weight: 800;
-  padding: 12px 32px;
-  border-radius: var(--radius-sm);
+  padding: 14px 40px;
+  border-radius: 30px;
   transition: all 0.3s ease;
-  font-size: 1.1rem;
+  font-size: 1.15rem;
   letter-spacing: -0.5px;
 }
 
 .nav-tab:hover {
   color: var(--primary);
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
 }
 
 .nav-tab.active {
   background: var(--primary);
   color: white;
-  box-shadow: 4px 4px 12px rgba(45, 80, 22, 0.3);
+  box-shadow: 6px 6px 15px rgba(45, 80, 22, 0.4);
 }
 
-@media (max-width: 1024px) {
-  .brand-pill.large {
-    padding: 10px 24px;
-    gap: 12px;
+@media (max-width: 1200px) {
+  .main-brand-title {
+    font-size: 1.8rem;
   }
-  .brand-name {
-    font-size: 1.5rem;
+  .main-logo {
+    height: 60px;
+  }
+}
+
+@media (max-width: 768px) {
+  .user-welcome {
+    display: none;
+  }
+  .navbar-logo-link {
+    gap: 10px;
   }
 }

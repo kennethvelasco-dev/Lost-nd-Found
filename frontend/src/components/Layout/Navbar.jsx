@@ -20,20 +20,22 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       <div className="container navbar-inner">
-        {/* Top Row: Split Branding & Controls */}
+        {/* Top Row: Full-width Brand & Controls */}
         <div className="navbar-brand-row">
-            <Link to="/" className="navbar-logo">
-                <div className="brand-pill large">
-                    <img src="/assets/logo.png" alt="Logo" />
-                    <span className="brand-name">Campus Lost & Found</span>
-                </div>
-            </Link>
+            <div className="branding-left">
+                <Link to="/" className="navbar-logo-link">
+                    <img src="/assets/logo.png" alt="University Logo" className="main-logo" />
+                    <h1 className="main-brand-title">Campus Lost & Found</h1>
+                </Link>
+            </div>
             
             {user && (
-            <div className="user-control high-contrast">
-                <span className="user-welcome">Welcome, <strong>{user.username}</strong></span>
-                <Button variant="secondary" size="sm" onClick={handleLogout} className="logout-btn raised">
-                Sign Out
+            <div className="controls-right user-control">
+                <div className="user-info-pill">
+                    <span className="user-welcome">Hello, <strong>{user.username}</strong></span>
+                </div>
+                <Button variant="secondary" size="sm" onClick={handleLogout} className="logout-btn raised-pill">
+                Sign Out from Portal
                 </Button>
             </div>
             )}
@@ -43,17 +45,17 @@ const Navbar = () => {
         {user && (
             <div className="navbar-links-row">
                 {!isAdmin ? (
-                <div className="nav-tabs floating">
-                    <Link to="/lost-items" className={`nav-tab ${isActive('/lost-items')}`}>Discovery</Link>
-                    <Link to="/report-item" className={`nav-tab ${isActive('/report-item')}`}>Report Lost</Link>
-                    <Link to="/returned-items" className={`nav-tab ${isActive('/returned-items')}`}>Verified Handovers</Link>
+                <div className="nav-tabs glass-tabs">
+                    <Link to="/lost-items" className={`nav-tab ${isActive('/lost-items')}`}>Search Directory</Link>
+                    <Link to="/report-item" className={`nav-tab ${isActive('/report-item')}`}>Report Lost Item</Link>
+                    <Link to="/returned-items" className={`nav-tab ${isActive('/returned-items')}`}>Released Items</Link>
                 </div>
                 ) : (
-                <div className="nav-tabs floating">
-                    <Link to="/admin/dashboard" className={`nav-tab ${isActive('/admin/dashboard')}`}>Console</Link>
+                <div className="nav-tabs glass-tabs">
+                    <Link to="/admin/dashboard" className={`nav-tab ${isActive('/admin/dashboard')}`}>Admin Console</Link>
                     <Link to="/admin/claims" className={`nav-tab ${isActive('/admin/claims')}`}>Review Claims</Link>
                     <Link to="/admin/return-item" className={`nav-tab ${isActive('/admin/return-item')}`}>Log Return</Link>
-                    <Link to="/admin/reports" className={`nav-tab ${isActive('/admin/reports')}`}>Analytics</Link>
+                    <Link to="/admin/reports" className={`nav-tab ${isActive('/admin/reports')}`}>System Analytics</Link>
                 </div>
                 )}
             </div>
