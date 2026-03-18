@@ -7,16 +7,17 @@ const AuthLayout = ({ children }) => {
             {/* Left Section: Image Area (75%) */}
             <div className="auth-image-section">
                 <div className="image-overlay"></div>
-                <img src="/auth-bg.png" alt="Campus Backdrop" className="auth-bg-img" />
+                <img src="/assets/auth-bg.jpg" alt="Campus Backdrop" className="auth-bg-img" />
                 <div className="auth-branding-overlay">
-                    <h2>Campus Lost & Found</h2>
-                    <p>Reconnecting the community with what matters.</p>
+                    <h2>Lost & Found</h2>
+                    <p>Reconnecting our campus community, one item at a time.</p>
                 </div>
             </div>
 
             {/* Right Section: Auth Panel (25%) */}
             <div className="auth-form-section">
-                <div className="glass-panel auth-glass-form">
+                <div className="auth-container">
+                    <img src="/assets/logo.png" alt="Lost & Found Logo" className="auth-logo" />
                     {children}
                 </div>
             </div>
