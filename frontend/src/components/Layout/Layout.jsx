@@ -7,13 +7,11 @@ const Layout = ({ children }) => {
         <div className="layout">
             <Navbar />
             <main className="main-content">
-                <div className="container">
-                    {children}
-                </div>
+                {/* Removed redundant .container here to allow pages to manage their own layout */}
+                {children}
             </main>
         </div>
     );
 };
 
 export default Layout;
-

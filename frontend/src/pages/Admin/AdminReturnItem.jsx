@@ -25,7 +25,7 @@ const AdminReturnItem = () => {
         setError('');
         try {
             const response = await api.get(`/items/found/${formData.item_id}`);
-            setItemDetails(response.data.data.item);
+            setItemDetails(response.data.data.item || response.data.data);
         } catch (err) {
             setError('Item not found. Please check the ID.');
             setItemDetails(null);
@@ -40,11 +40,11 @@ const AdminReturnItem = () => {
         setError('');
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise(resolve => setTimeout(resolve, 800));
             navigate('/confirmation', { 
                 state: { 
                     title: 'Return Logged!', 
-                    message: `Item #${formData.item_id} (${itemDetails?.item_type}) has been marked as returned to ${formData.owner_name} by admin ${adminUser.username}.` 
+                    message: `Item #${formData.item_id} has been marked as returned to ${formData.owner_name} by admin ${adminUser.username}.` 
                 } 
             });
         } catch (err) {
@@ -58,13 +58,14 @@ const AdminReturnItem = () => {
         <div className="page-container">
             <div className="container">
                 <div className="pretty-header">
-                    <h1 className="pretty-title">Return Item to Owner</h1>
+                    <h1 className="pretty-title">Process Handover</h1>
+                    <p className="auth-subtitle">Verify recipient identity and log item resolution.</p>
                     <div className="title-underline"></div>
                 </div>
 
-                <div className="admin-return-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-                    <Card className="return-form-card">
-                        <form onSubmit={handleSubmit} className="report-form">
+                <div className="admin-return-grid" style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 1fr', gap: 'var(--space-4)' }}>
+                    <Card>
+                        <form onSubmit={handleSubmit} className="report-form" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                             <div className="form-row" style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                                 <div style={{ flex: 1 }}>
                                     <Input
@@ -81,8 +82,8 @@ const AdminReturnItem = () => {
                             </div>
 
                             <Input
-                                label="Owner Name / Recipient"
-                                placeholder="Full name of the person receiving"
+                                label="Recipient Name"
+                                placeholder="Full name from ID verification"
                                 value={formData.owner_name}
                                 onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
                                 required
@@ -97,10 +98,10 @@ const AdminReturnItem = () => {
                             />
 
                             <div className="form-group">
-                                <label className="form-label">Admin Notes (ID Verification, etc.)</label>
+                                <label className="form-label">Handover Notes</label>
                                 <textarea
                                     className="form-textarea"
-                                    placeholder="e.g. Verified via Student ID #12345..."
+                                    placeholder="Verified via Student Card #12345..."
                                     value={formData.handover_notes}
                                     onChange={(e) => setFormData({ ...formData, handover_notes: e.target.value })}
                                     style={{ height: '100px' }}
@@ -109,34 +110,37 @@ const AdminReturnItem = () => {
                             </div>
 
                             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
-                                Recorded by: <strong>{adminUser.username || 'System Admin'}</strong>
+                                Authorized by: <strong>{adminUser.username}</strong>
                             </p>
 
                             <Button type="submit" variant="primary" disabled={loading || !itemDetails} style={{ width: '100%' }}>
-                                {loading ? 'Processing...' : 'Confirm Handover'}
+                                {loading ? 'Logging Resolution...' : 'Complete Return'}
                             </Button>
                         </form>
                     </Card>
 
-                    <Card className="item-preview-card" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                    <Card style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--background)', boxShadow: 'var(--nm-inset)', padding: 'var(--space-4)' }}>
                         {itemDetails ? (
                             <div className="item-detail-preview">
-                                <h2 style={{ color: 'var(--primary)', marginBottom: 'var(--space-2)' }}>Item Preview</h2>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
+                                    <h2 style={{ color: 'var(--primary)', margin: 0 }}>Item Preview</h2>
+                                    <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)' }}>ID: #{itemDetails.id}</span>
+                                </div>
                                 {itemDetails.main_picture && (
-                                    <img src={itemDetails.main_picture} alt="Preview" style={{ width: '100%', borderRadius: '12px', marginBottom: 'var(--space-2)' }} />
+                                    <img src={itemDetails.main_picture} alt="Preview" style={{ width: '100%', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-3)', boxShadow: 'var(--nm-flat-sm)' }} />
                                 )}
-                                <div className="detail-row"><strong>Type:</strong> <span>{itemDetails.item_type}</span></div>
-                                <div className="detail-row"><strong>Category:</strong> <span>{itemDetails.category}</span></div>
-                                <div className="detail-row"><strong>Color:</strong> <span>{itemDetails.color || 'N/A'}</span></div>
-                                <div className="detail-row"><strong>Found at:</strong> <span>{itemDetails.found_location}</span></div>
-                                <div className="detail-row" style={{ marginTop: 'var(--space-2)', borderTop: '1px solid #ddd', paddingTop: 'var(--space-2)' }}>
-                                    <strong>Description:</strong>
-                                    <p style={{ fontSize: '14px', marginTop: '4px' }}>{itemDetails.public_description}</p>
+                                <div className="preview-info" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>Type:</strong> <span>{itemDetails.item_type}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>Category:</strong> <span>{itemDetails.category}</span></div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>Color:</strong> <span>{itemDetails.color || 'N/A'}</span></div>
+                                    <div style={{ marginTop: '10px', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '10px' }}>
+                                        <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{itemDetails.public_description}</p>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
-                            <div className="empty-preview" style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                <p>Enter a valid Item ID to preview details here.</p>
+                            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
+                                <p>Enter a valid Item ID and click <strong>Fetch</strong> to preview details before resolving.</p>
                                 {error && <p style={{ color: 'var(--danger)', marginTop: '8px' }}>{error}</p>}
                             </div>
                         )}

@@ -1,28 +1,32 @@
 .btn {
   padding: 12px 24px;
   border-radius: var(--radius-sm);
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   background: var(--background);
+  color: var(--text);
   box-shadow: var(--nm-flat-sm);
-  color: var(--primary);
 }
 
 .btn:active {
   box-shadow: var(--nm-inset);
-  transform: scale(0.98);
+  transform: translateY(2px);
 }
 
 .btn-primary {
   background: var(--primary);
   color: white;
-  box-shadow: 4px 4px 8px rgba(0,0,0,0.2), -4px -4px 8px rgba(255,255,255,0.1);
+  box-shadow: 4px 4px 10px rgba(45, 80, 22, 0.3);
 }
 
 .btn-primary:active {
-  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.3);
+  box-shadow: inset 4px 4px 8px rgba(0,0,0,0.2);
 }
 
 .btn-secondary {
@@ -34,8 +38,13 @@
   font-size: 0.875rem;
 }
 
+.btn-lg {
+  padding: 16px 32px;
+  font-size: 1.1rem;
+}
+
 .btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
   box-shadow: none;
 }

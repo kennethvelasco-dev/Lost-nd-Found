@@ -4,7 +4,6 @@ import api from '../../services/api';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Card from '../../components/UI/Card';
-import './ReportItem.css';
 
 const CATEGORIES = ['Personal Items', 'Electronics', 'Books & Documents', 'Keys & Cards', 'Clothing', 'Other'];
 const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
@@ -42,24 +41,19 @@ const ReportItem = () => {
 
     return (
         <div className="page-container">
-            <div className="container report-container">
+            <div className="container" style={{ maxWidth: '900px' }}>
                 <div className="pretty-header">
                     <h1 className="pretty-title">Report Lost Item</h1>
+                    <p className="auth-subtitle">Help the community find your lost belongings.</p>
                     <div className="title-underline"></div>
                 </div>
 
-                <Card className="report-card">
-                    <p className="auth-subtitle" style={{ textAlign: 'center', marginBottom: 'var(--space-4)' }}>
-                        Precision reports lead to faster reunions. Please be as descriptive as possible.
-                    </p>
-
-                    {error && <div className="error-message">{error}</div>}
-
-                    <form className="report-form" onSubmit={handleSubmit}>
+                <Card>
+                    <form className="report-form" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
                         <div className="form-row">
                             <Input
-                                label="What did you lose?"
-                                placeholder="e.g. iPhone 13, Leather Wallet"
+                                label="Item Name"
+                                placeholder="e.g. Blue HydroFlask"
                                 value={formData.item_type}
                                 onChange={(e) => setFormData({ ...formData, item_type: e.target.value })}
                                 required
@@ -89,46 +83,46 @@ const ReportItem = () => {
                             </div>
                             <Input
                                 label="Last Seen Location"
-                                placeholder="e.g. Student Center Lounge"
+                                placeholder="e.g. Gym Locker Room"
                                 value={formData.last_seen_location}
                                 onChange={(e) => setFormData({ ...formData, last_seen_location: e.target.value })}
                                 required
                             />
                         </div>
 
-                        <div className="form-row">
-                            <Input
-                                label="Last Seen Date/Time"
-                                type="datetime-local"
-                                value={formData.last_seen_datetime}
-                                onChange={(e) => setFormData({ ...formData, last_seen_datetime: e.target.value })}
-                                required
-                            />
-                        </div>
+                        <Input
+                            label="Last Seen Date/Time"
+                            type="datetime-local"
+                            value={formData.last_seen_datetime}
+                            onChange={(e) => setFormData({ ...formData, last_seen_datetime: e.target.value })}
+                            required
+                        />
 
                         <div className="form-group">
                             <label className="form-label">Public Description</label>
                             <textarea
                                 className="form-textarea"
-                                placeholder="Visible to anyone searching. Mention brand, visible damage, or stickers..."
+                                placeholder="Mention visible marks, stickers, or case details..."
                                 value={formData.public_description}
                                 onChange={(e) => setFormData({ ...formData, public_description: e.target.value })}
                                 required
+                                style={{ minHeight: '100px' }}
                             ></textarea>
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Private Details (Ownership Proof)</label>
+                            <label className="form-label">Private Ownership Details</label>
                             <textarea
                                 className="form-textarea"
-                                placeholder="NOT visible to other users. Contents of wallet, serial numbers, wallpapers..."
+                                placeholder="Mention contents or unique serials NOT visible to others..."
                                 value={formData.private_details}
                                 onChange={(e) => setFormData({ ...formData, private_details: e.target.value })}
+                                style={{ minHeight: '80px' }}
                             ></textarea>
                         </div>
 
-                        <Button type="submit" variant="primary" disabled={loading} style={{ width: '100%', marginTop: 'var(--space-3)' }}>
-                            {loading ? 'Submitting Report...' : 'Publish Lost Report'}
+                        <Button type="submit" variant="primary" disabled={loading} style={{ width: '100%', padding: '16px' }}>
+                            {loading ? 'Publishing...' : 'Submit Lost Item Report'}
                         </Button>
                     </form>
                 </Card>

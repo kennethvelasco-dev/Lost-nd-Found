@@ -26,7 +26,6 @@ const LostItems = () => {
             }
 
             const response = await api.get(endpoint, { params });
-            // The search endpoint might return data.items, found endpoint returns data.items
             setItems(response.data.data.items || response.data.data || []);
             setError(null);
         } catch (err) {
@@ -56,21 +55,21 @@ const LostItems = () => {
                 />
 
                 {loading ? (
-                    <div className="loading-container" style={{ textAlign: 'center', padding: '40px' }}>
-                        <p>Searching for items...</p>
+                    <div className="loading-container" style={{ textAlign: 'center', padding: '100px' }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '1.2rem' }}>Scanning for matching items...</p>
                     </div>
                 ) : error ? (
-                    <div className="error-message" style={{ textAlign: 'center', color: 'var(--danger)', padding: '40px' }}>
+                    <div className="error-message" style={{ textAlign: 'center', padding: '60px' }}>
                         {error}
                     </div>
                 ) : (
-                    <div className="items-grid">
+                    <div className="grid-layout">
                         {items.map(item => (
                             <ItemCard key={item.id} item={item} />
                         ))}
                         {items.length === 0 && (
-                            <div className="no-items" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>
-                                <p>No items found matching your search.</p>
+                            <div className="no-items" style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px' }}>
+                                <p style={{ color: 'var(--text-muted)' }}>No items found matching your search.</p>
                             </div>
                         )}
                     </div>

@@ -5,37 +5,40 @@
 }
 
 .form-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  margin-bottom: 8px;
-  color: var(--primary);
+  font-size: 0.85rem;
+  font-weight: 800;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   padding-left: 4px;
 }
 
 .form-input, .form-textarea, .form-select {
   width: 100%;
-  padding: 14px;
+  padding: 14px 18px;
   background: var(--background);
   border: none;
   border-radius: var(--radius-sm);
   box-shadow: var(--nm-inset);
   font-size: 1rem;
   color: var(--text);
-  transition: box-shadow 0.3s ease;
+  transition: all 0.3s ease;
 }
 
 .form-input:focus, .form-textarea:focus, .form-select:focus {
   outline: none;
   box-shadow: var(--nm-flat-sm);
+  color: var(--primary);
 }
 
 .input-error {
-  box-shadow: inset 2px 2px 5px rgba(239, 68, 68, 0.2);
+  box-shadow: inset 3px 3px 6px rgba(239, 68, 68, 0.15);
 }
 
 .error-message {
   color: var(--danger);
   font-size: 0.75rem;
-  margin-top: 4px;
-  padding-left: 4px;
+  margin-top: 6px;
+  font-weight: 600;
 }

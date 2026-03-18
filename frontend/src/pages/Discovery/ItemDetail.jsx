@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import Button from '../../components/UI/Button';
 import Card from '../../components/UI/Card';
-import './ItemDetail.css';
 
 const ItemDetail = () => {
     const { id } = useParams();
@@ -33,103 +32,83 @@ const ItemDetail = () => {
         item.additional_picture_3
     ].filter(Boolean) : [];
 
-    const handleClaim = () => {
-        navigate(`/items/${id}/claim`);
-    };
-
-    if (loading) return <div className="page-container"><div className="container" style={{ textAlign: 'center', padding: '100px' }}>Loading...</div></div>;
-    if (!item) return <div className="page-container"><div className="container" style={{ textAlign: 'center', padding: '100px' }}>Item not found</div></div>;
+    if (loading) return <div className="page-container"><div className="container" style={{ textAlign: 'center', padding: '100px' }}>Analyzing item records...</div></div>;
+    if (!item) return <div className="page-container"><div className="container" style={{ textAlign: 'center', padding: '100px' }}>Item not found in our database.</div></div>;
 
     return (
         <div className="page-container">
-            <div className="container" style={{ maxWidth: '1000px' }}>
+            <div className="container">
                 <div className="pretty-header">
                     <h1 className="pretty-title">{item.item_type}</h1>
                     <div className="title-underline"></div>
                 </div>
 
-                <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1fr', gap: 'var(--space-4)' }}>
-                    <div className="detail-image-section">
-                        <Card className="image-card" style={{ position: 'relative', padding: 'var(--space-2)' }}>
+                <div className="detail-layout" style={{ display: 'grid', gridTemplateColumns: 'minmax(350px, 1fr) 1.2fr', gap: 'var(--space-5)', alignItems: 'start' }}>
+                    <div className="image-section">
+                        <Card style={{ padding: '10px' }}>
                             <img 
                                 src={images[currentImageIndex] || '/assets/logo.png'} 
                                 alt={item.item_type} 
-                                style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 'var(--radius-md)' }}
+                                style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 'var(--radius-md)', boxShadow: 'var(--nm-inset)' }}
                             />
                             {images.length > 1 && (
-                                <div className="image-nav" style={{ position: 'absolute', width: '100%', top: '50%', transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', padding: '0 10px', pointerEvents: 'none' }}>
-                                    <button 
-                                        onClick={() => setCurrentImageIndex((prev) => (prev - 1 + images.length) % images.length)}
-                                        style={{ pointerEvents: 'auto', background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}
-                                    >
-                                        ‹
-                                    </button>
-                                    <button 
-                                        onClick={() => setCurrentImageIndex((prev) => (prev + 1) % images.length)}
-                                        style={{ pointerEvents: 'auto', background: 'rgba(255,255,255,0.7)', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer' }}
-                                    >
-                                        ›
-                                    </button>
+                                <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'center' }}>
+                                    {images.map((img, idx) => (
+                                        <Card 
+                                            key={idx} 
+                                            onClick={() => setCurrentImageIndex(idx)}
+                                            style={{ padding: '4px', cursor: 'pointer', opacity: idx === currentImageIndex ? 1 : 0.5 }}
+                                        >
+                                            <img src={img} alt="thumb" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                                        </Card>
+                                    ))}
                                 </div>
                             )}
                         </Card>
-                        <div className="thumbnail-strip" style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
-                            {images.map((img, idx) => (
-                                <Card 
-                                    key={idx} 
-                                    className={`thumbnail ${idx === currentImageIndex ? 'active' : ''}`}
-                                    onClick={() => setCurrentImageIndex(idx)}
-                                    style={{ padding: '4px', cursor: 'pointer', opacity: idx === currentImageIndex ? 1 : 0.6 }}
-                                >
-                                    <img src={img} alt="thumbnail" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
-                                </Card>
-                            ))}
-                        </div>
                     </div>
 
-                    <div className="detail-info-section">
-                        <Card style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
+                    <div className="info-section">
+                        <Card style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h2 style={{ color: 'var(--primary)', margin: 0 }}>Item Details</h2>
-                                <span className="status-badge" style={{ background: '#dcfce7', color: '#166534', padding: '4px 12px', borderRadius: '20px', fontSize: '12px', fontWeight: 700 }}>
-                                    {item.status.toUpperCase()}
-                                </span>
+                                <div>
+                                    <h2 style={{ color: 'var(--primary)', fontSize: '2rem', margin: 0 }}>{item.item_type}</h2>
+                                    <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px' }}>ID: #{item.id}</span>
+                                </div>
+                                <span style={{ background: '#dcfce7', color: '#166534', padding: '6px 16px', borderRadius: '25px', fontSize: '13px', fontWeight: 800 }}>{item.status.toUpperCase()}</span>
                             </div>
 
-                            <div className="info-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
-                                <div className="info-item">
-                                    <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Category</label>
-                                    <p style={{ fontWeight: 600 }}>{item.category}</p>
+                            <div className="specs-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-3)' }}>
+                                <div className="spec-item">
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Category</label>
+                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.category}</p>
                                 </div>
-                                <div className="info-item">
-                                    <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Color</label>
-                                    <p style={{ fontWeight: 600 }}>{item.color || 'N/A'}</p>
+                                <div className="spec-item">
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Primary Color</label>
+                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.color || 'N/A'}</p>
                                 </div>
-                                <div className="info-item">
-                                    <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Last Seen At</label>
-                                    <p style={{ fontWeight: 600 }}>{item.found_location || item.last_seen_location}</p>
+                                <div className="spec-item">
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Location Discovered</label>
+                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.found_location || item.last_seen_location}</p>
                                 </div>
-                                <div className="info-item">
-                                    <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Date Reported</label>
-                                    <p style={{ fontWeight: 600 }}>{new Date(item.found_datetime || item.last_seen_datetime).toLocaleDateString()}</p>
+                                <div className="spec-item">
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '4px' }}>Date Reported</label>
+                                    <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{new Date(item.found_datetime || item.last_seen_datetime).toLocaleDateString()}</p>
                                 </div>
                             </div>
 
-                            <div className="description-block" style={{ borderTop: '1px solid #eee', paddingTop: 'var(--space-3)' }}>
-                                <label style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Description</label>
-                                <p style={{ marginTop: '4px', lineHeight: '1.5' }}>{item.public_description || 'No description provided.'}</p>
+                            <div style={{ background: 'var(--background)', padding: 'var(--space-3)', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-inset)' }}>
+                                <label style={{ display: 'block', fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', marginBottom: '8px' }}>Public Description</label>
+                                <p style={{ margin: 0, lineHeight: 1.6 }}>{item.public_description || 'No specific description provided by the reporter.'}</p>
                             </div>
 
-                            <div className="action-block" style={{ marginTop: 'auto' }}>
-                                <Button 
-                                    variant="primary" 
-                                    size="lg" 
-                                    style={{ width: '100%' }}
-                                    onClick={handleClaim}
-                                >
-                                    This belongs to me
-                                </Button>
-                            </div>
+                            <Button 
+                                variant="primary" 
+                                size="lg" 
+                                style={{ width: '100%', marginTop: 'var(--space-2)' }}
+                                onClick={() => navigate(`/items/${id}/claim`)}
+                            >
+                                This Belongs to Me
+                            </Button>
                         </Card>
                     </div>
                 </div>

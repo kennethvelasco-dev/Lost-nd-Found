@@ -1,139 +1,116 @@
 :root {
-  /* Green Theme Colors from Dummy */
+  /* True Neumorphic Palette */
+  --background: #e0e5ec;
   --primary: #2d5016;
   --primary-light: #4ade80;
   --secondary: #fbbf24;
-  --secondary-dark: #f59e0b;
-  --background: #f5f5f5;
-  --text: #1f2937;
-  --text-muted: #6b7280;
+  --text: #31456a;
+  --text-muted: #7a8ba9;
   --danger: #ef4444;
   --success: #22c55e;
+  --white: #ffffff;
   
-  /* Layout */
-  --navbar-height: 120px;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
+  /* Layout Constants */
+  --navbar-height: 160px; /* Increased for two-row neumorphic nav */
+  --radius-sm: 12px;
+  --radius-md: 20px;
+  --radius-lg: 30px;
+  
+  /* Neumorphic Shadows */
+  --nm-flat: 9px 9px 16px rgba(163, 177, 198, 0.6), -9px -9px 16px rgba(255, 255, 255, 0.5);
+  --nm-inset: inset 6px 6px 12px rgba(163, 177, 198, 0.6), inset -6px -6px 12px rgba(255, 255, 255, 0.5);
+  --nm-flat-sm: 4px 4px 8px rgba(163, 177, 198, 0.6), -4px -4px 8px rgba(255, 255, 255, 0.5);
   
   /* Spacing */
   --space-1: 8px;
   --space-2: 16px;
   --space-3: 24px;
   --space-4: 32px;
-  
-  /* Shadows */
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.15);
-
-  /* Gradients */
-  --nav-gradient: linear-gradient(135deg, #2d5016, #4ade80);
-  --btn-gradient: linear-gradient(135deg, #fbbf24, #f59e0b);
+  --space-5: 48px;
+  --space-6: 64px;
 }
 
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
 }
 
 body {
-  background-image: url("/assets/auth-bg.jpg");
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
+  background-color: var(--background);
   color: var(--text);
-  line-height: 1.5;
+  line-height: 1.6;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 #root {
   min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
 
-/* Glass effect for pages */
 .page-container {
-  flex: 1;
-  background: var(--background);
-  padding: var(--space-6) var(--space-2);
+  padding-top: 40px; /* Space after navbar */
+  padding-bottom: var(--space-6);
   min-height: calc(100vh - var(--navbar-height));
   display: flex;
   flex-direction: column;
 }
 
 .container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   width: 100%;
+  padding: 0 var(--space-3);
 }
 
-/* Card Base */
-.card {
-  background: var(--card-bg);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  overflow: hidden;
-}
-
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-hover);
-}
-
-/* Responsive Grid */
-.grid-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: var(--space-3);
-  padding: var(--space-3) 0;
-}
-
-button {
-  cursor: pointer;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-family: inherit;
-  font-weight: 500;
-  transition: all 0.2s ease;
-}
-
-a {
-  text-decoration: none;
-  color: inherit;
-  transition: color 0.2s ease;
-}
-
-input, textarea, select {
-  font-family: inherit;
-  border: 1px solid #e5e7eb; /* gray-200 */
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  font-size: 1rem;
-  width: 100%;
-  transition: border-color 0.2s ease, ring 0.2s ease;
-}
-
-input:focus {
-  outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
-}
-
-/* Page Control (similar to dummy but React-friendly) */
-.page-header {
-  margin-bottom: var(--space-4);
+/* Pretty Header Design */
+.pretty-header {
   text-align: center;
+  margin-bottom: var(--space-5);
 }
 
-.page-title {
-  font-size: 2rem;
-  font-weight: 700;
-  color: var(--dark);
-  margin-bottom: var(--space-1);
+.pretty-title {
+  font-size: 3rem;
+  font-weight: 800;
+  color: var(--primary);
+  letter-spacing: -1.5px;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--primary), #4ade80);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+}
+
+.title-underline {
+  height: 5px;
+  width: 80px;
+  background: var(--secondary);
+  margin: 0 auto;
+  border-radius: 10px;
+  box-shadow: 2px 2px 5px rgba(251, 191, 36, 0.3);
+}
+
+.auth-subtitle {
+  color: var(--text-muted);
+  font-size: 1.15rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Form Shared Styles */
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  .pretty-title {
+    font-size: 2rem;
+  }
 }
