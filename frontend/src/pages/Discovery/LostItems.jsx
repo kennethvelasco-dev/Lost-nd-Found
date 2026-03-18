@@ -39,22 +39,35 @@ const LostItems = () => {
     }, []);
 
     return (
-        <div className="lost-items-page">
+        <div className="container lost-items-page">
+            <div className="page-header">
+                <h1 className="page-title">Items Discovery</h1>
+                <p className="auth-subtitle">Browse items found on campus or report a lost one</p>
+            </div>
+
             <SearchBar
                 onSearch={(q) => fetchItems(q)}
                 onFilter={(f) => fetchItems('', f)}
             />
 
             {loading ? (
-                <div className="loading-spinner">Loading items...</div>
+                <div className="loading-container">
+                    <p>Searching for items...</p>
+                </div>
             ) : error ? (
-                <div className="error-message">{error}</div>
+                <div className="error-message" style={{ textAlign: 'center', color: 'var(--danger)' }}>
+                    {error}
+                </div>
             ) : (
                 <div className="items-grid">
                     {items.map(item => (
                         <ItemCard key={item.id} item={item} />
                     ))}
-                    {items.length === 0 && <p className="no-items">No items found.</p>}
+                    {items.length === 0 && (
+                        <div className="no-items">
+                            <p>No lost items found matching your search.</p>
+                        </div>
+                    )}
                 </div>
             )}
         </div>

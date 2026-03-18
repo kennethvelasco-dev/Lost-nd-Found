@@ -5,19 +5,19 @@ const SearchBar = ({ onSearch, onFilter }) => {
     return (
         <div className="search-section">
             <div className="search-bar-container">
-                <div className="search-input-wrapper glass-panel">
+                <div className="search-input-wrapper">
                     <span className="search-icon">🔍</span>
                     <input
                         type="text"
-                        placeholder="Search lost items..."
+                        placeholder="Search lost items by name, color, or location..."
                         className="search-input"
                         onChange={(e) => onSearch(e.target.value)}
                     />
                 </div>
 
                 <div className="filter-dropdown-container">
-                    <select className="filter-select glass-panel" onChange={(e) => onFilter(e.target.value)}>
-                        <option value="">Filter</option>
+                    <select className="filter-select" onChange={(e) => onFilter(e.target.value)}>
+                        <option value="">Sort By</option>
                         <option value="item_type">Item Type</option>
                         <option value="found_datetime">Date Found</option>
                         <option value="created_at">Date Reported</option>
