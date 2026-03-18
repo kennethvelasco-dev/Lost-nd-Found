@@ -1,4 +1,5 @@
 from flask import Flask, request
+from flask_cors import CORS
 from flask_jwt_extended import JWTManager
 
 from backend.config.config import Config
@@ -12,6 +13,7 @@ from backend.extensions import jwt, limiter
 
 def create_app():
     app = Flask(__name__)
+    CORS(app)
     app.config.from_object(Config)
 
     jwt.init_app(app)

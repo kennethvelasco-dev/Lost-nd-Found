@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import AuthLayout from './AuthLayout';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
@@ -10,13 +11,33 @@ const LoginPage = () => {
         password: '',
         role: 'user'
     });
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+    
+    const { login } = useAuth();
     const navigate = useNavigate();
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log('Login attempt:', formData);
-        // TODO: Integrate with AuthContext
-        navigate('/lost-items');
+        setError('');
+        setLoading(true);
+
+        try {
+            const result = await login(formData.username, formData.password, formData.role);
+            if (result.success) {
+                if (formData.role === 'admin') {
+                    navigate('/admin/dashboard');
+                } else {
+                    navigate('/lost-items');
+                }
+            } else {
+                setError(result.message || 'Invalid credentials');
+            }
+        } catch (err) {
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -25,6 +46,8 @@ const LoginPage = () => {
                 <h1 className="auth-title">Welcome Back</h1>
                 <p className="auth-subtitle">Log in to manage your items</p>
             </div>
+
+            {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: 'var(--space-2)', textAlign: 'center', fontSize: '0.875rem' }}>{error}</div>}
 
             <form className="auth-form" onSubmit={handleSubmit}>
                 <Input
@@ -64,8 +87,8 @@ const LoginPage = () => {
                     </select>
                 </div>
 
-                <Button type="submit" variant="primary" style={{ marginTop: 'var(--space-2)' }}>
-                    Log In
+                <Button type="submit" variant="primary" style={{ marginTop: 'var(--space-2)' }} disabled={loading}>
+                    {loading ? 'Logging in...' : 'Log In'}
                 </Button>
             </form>
 

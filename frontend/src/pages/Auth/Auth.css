@@ -16,11 +16,6 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 10s ease;
-}
-
-.auth-image-section:hover .auth-bg-img {
-  transform: scale(1.05);
 }
 
 .image-overlay {
