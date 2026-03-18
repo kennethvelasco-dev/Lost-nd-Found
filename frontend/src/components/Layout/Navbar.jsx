@@ -24,7 +24,7 @@ const Navbar = () => {
         <div className="navbar-brand-row">
             <Link to="/" className="navbar-logo">
                 <div className="brand-pill">
-                    <img src="/assets/logo.png" alt="Logo" />
+                    <img src="/assets/logo.png" alt="Logo" onError={(e) => e.target.src = '/assets/logo.png'} />
                     <span className="brand-name">Campus Lost & Found</span>
                 </div>
             </Link>

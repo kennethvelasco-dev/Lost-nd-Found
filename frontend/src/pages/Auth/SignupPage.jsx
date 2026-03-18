@@ -7,90 +7,86 @@ import Input from '../../components/UI/Input';
 
 const SignupPage = () => {
     const [formData, setFormData] = useState({
-        name: '',
-        email: '',
         username: '',
+        email: '',
         password: '',
         confirmPassword: '',
-        role: 'user',
-        admin_id: ''
+        role: 'user'
     });
     const [error, setError] = useState('');
-    const [isLoading, setIsLoading] = useState(false);
+    const [loading, setLoading] = useState(false);
+    
+    const { signup } = useAuth();
     const navigate = useNavigate();
-    const { register } = useAuth();
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
+        
         if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return;
+            return setError('Passwords do not match');
         }
 
-        setIsLoading(true);
-        const { confirmPassword, ...submitData } = formData;
+        setLoading(true);
 
-        if (submitData.role !== 'admin') {
-            delete submitData.admin_id;
+        try {
+            const result = await signup(formData.username, formData.email, formData.password, formData.role);
+            if (result.success) {
+                navigate('/login');
+            } else {
+                setError(result.message || 'Registration failed');
+            }
+        } catch (err) {
+            setError('An unexpected error occurred. Please try again.');
+        } finally {
+            setLoading(false);
         }
-
-        const result = await register(submitData);
-
-        if (result.success) {
-            alert('Registration successful! Please login.');
-            navigate('/login');
-        } else {
-            setError(result.message);
-        }
-        setIsLoading(false);
     };
 
     return (
         <AuthLayout>
             <div className="auth-header">
-                <h1 className="auth-title">Join Community</h1>
-                <p className="auth-subtitle">Create an account to get started</p>
+                <h1 className="auth-title">Create Account</h1>
+                <p className="auth-subtitle">Join the Campus Lost & Found community</p>
             </div>
 
-            {error && (
-                <div className="error-message" style={{ 
-                    color: 'var(--danger)', 
-                    marginBottom: 'var(--space-2)', 
-                    textAlign: 'center',
-                    fontSize: '0.875rem',
-                    fontWeight: '500'
-                }}>
-                    {error}
-                </div>
-            )}
+            {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: 'var(--space-2)', textAlign: 'center', fontSize: '0.875rem' }}>{error}</div>}
 
             <form className="auth-form" onSubmit={handleSubmit}>
+                <div className="role-selector-container">
+                    <label className="form-label" style={{ textAlign: 'center', display: 'block', width: '100%', marginBottom: '12px' }}>Register as</label>
+                    <div className="role-selector">
+                        <button 
+                            type="button" 
+                            className={`role-tab ${formData.role === 'user' ? 'active' : ''}`}
+                            onClick={() => setFormData({ ...formData, role: 'user' })}
+                        >
+                            User
+                        </button>
+                        <button 
+                            type="button" 
+                            className={`role-tab ${formData.role === 'admin' ? 'active' : ''}`}
+                            onClick={() => setFormData({ ...formData, role: 'admin' })}
+                        >
+                            Admin
+                        </button>
+                    </div>
+                </div>
+
                 <Input
-                    label="Full Name"
-                    type="text"
-                    placeholder="John Doe"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    label="Username"
+                    placeholder="Choose a unique username"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     required
                 />
 
                 <Input
                     label="Email"
                     type="email"
-                    placeholder="john@campus.edu"
+                    placeholder="yourname@university.edu"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                />
-
-                <Input
-                    label="Username"
-                    type="text"
-                    placeholder="jdoe"
-                    value={formData.username}
-                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                     required
                 />
 
@@ -112,45 +108,15 @@ const SignupPage = () => {
                     required
                 />
 
-                <div className="form-group">
-                    <label className="form-label">Role</label>
-                    <select
-                        style={{
-                            width: '100%',
-                            padding: '10px 14px',
-                            borderRadius: 'var(--radius-sm)',
-                            border: '1px solid #e5e7eb',
-                            backgroundColor: 'white',
-                            fontSize: '1rem'
-                        }}
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-
-                {formData.role === 'admin' && (
-                    <Input
-                        label="Admin School ID"
-                        type="text"
-                        placeholder="ADM-XXXX"
-                        value={formData.admin_id}
-                        onChange={(e) => setFormData({ ...formData, admin_id: e.target.value })}
-                        required
-                    />
-                )}
-
-                <Button type="submit" variant="primary" disabled={isLoading} style={{ marginTop: 'var(--space-2)' }}>
-                    {isLoading ? 'Creating Account...' : 'Create Account'}
+                <Button type="submit" variant="primary" style={{ marginTop: 'var(--space-2)', width: '100%', padding: '16px' }} disabled={loading}>
+                    {loading ? 'Creating Account...' : 'Sign Up Now'}
                 </Button>
             </form>
 
             <div className="auth-footer">
                 <p>
                     Already have an account?
-                    <Link to="/login" className="auth-switch-link">Login</Link>
+                    <Link to="/login" className="auth-switch-link">Sign In</Link>
                 </p>
             </div>
         </AuthLayout>
@@ -158,4 +124,3 @@ const SignupPage = () => {
 };
 
 export default SignupPage;
-

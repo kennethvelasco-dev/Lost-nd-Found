@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LostndFound - Return Item</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+<div class="header-top">
+<img src="../images/Logo_bg.png" class="logo">
+<div class="title">LostndFound</div>
+<button class="sign-out" onclick="window.location.href='../login.html'">Sign Out</button>
+</div>
+<div class="nav-links">
+<a href="admin_claim_requests.html">Claim Requests</a>
+<a href="admin_report_item.html">Report Item</a>
+<a href="admin_return_item.html" class="active">Return Item</a>
+</div>
+</nav>
+
+<section class="page active">
+<h1>Return Item to Owner</h1>
+<form class="report-form" action="admin_confirmation.html">
+<input type="text" placeholder="Item Name" required>
+<input type="text" placeholder="Owner Name" required>
+<input type="date" placeholder="Date Returned" required>
+<textarea placeholder="Notes" required></textarea>
+<button type="submit">Confirm Return</button>
+</form>
+</section>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LostndFound - User Home</title>
+<link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+<div class="header-top">
+<img src="../images/Logo_bg.png" class="logo">
+<div class="title">LostndFound</div>
+<button class="sign-out" onclick="window.location.href='../login.html'">Sign Out</button>
+</div>
+<div class="nav-links">
+<a href="user_lost_list.html">Lost List</a>
+<a href="user_returned_list.html">Returned List</a>
+<a href="user_report_item.html">Report Item</a>
+</div>
+</nav>
+
+<section class="page active">
+<h1>Recently Found Items</h1>
+<div class="items-grid">
+<div class="item-card" onclick="window.location.href='user_lost_detail.html'">
+<img src="../images/Logo_bg.png">
+<p>Wallet</p>
+<p>Found in library</p>
+</div>
+<div class="item-card" onclick="window.location.href='user_lost_detail.html'">
+<img src="../images/Logo_bg.png">
+<p>Phone</p>
+<p>Found in cafeteria</p>
+</div>
+</div>
+</section>
+
+<script src="../js/script.js"></script>
+</body>
+</html>

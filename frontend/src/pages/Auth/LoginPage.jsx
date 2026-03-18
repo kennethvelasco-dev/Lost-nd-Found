@@ -50,6 +50,26 @@ const LoginPage = () => {
             {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: 'var(--space-2)', textAlign: 'center', fontSize: '0.875rem' }}>{error}</div>}
 
             <form className="auth-form" onSubmit={handleSubmit}>
+                <div className="role-selector-container">
+                    <label className="form-label" style={{ textAlign: 'center', display: 'block', width: '100%', marginBottom: '12px' }}>Sign in as</label>
+                    <div className="role-selector">
+                        <button 
+                            type="button" 
+                            className={`role-tab ${formData.role === 'user' ? 'active' : ''}`}
+                            onClick={() => setFormData({ ...formData, role: 'user' })}
+                        >
+                            User
+                        </button>
+                        <button 
+                            type="button" 
+                            className={`role-tab ${formData.role === 'admin' ? 'active' : ''}`}
+                            onClick={() => setFormData({ ...formData, role: 'admin' })}
+                        >
+                            Admin
+                        </button>
+                    </div>
+                </div>
+
                 <Input
                     label="Username"
                     type="text"
@@ -68,34 +88,15 @@ const LoginPage = () => {
                     required
                 />
 
-                <div className="form-group">
-                    <label className="form-label">Login as</label>
-                    <select
-                        style={{
-                            width: '100%',
-                            padding: '10px 14px',
-                            borderRadius: 'var(--radius-sm)',
-                            border: '1px solid #e5e7eb',
-                            backgroundColor: 'white',
-                            fontSize: '1rem'
-                        }}
-                        value={formData.role}
-                        onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    >
-                        <option value="user">User</option>
-                        <option value="admin">Admin</option>
-                    </select>
-                </div>
-
-                <Button type="submit" variant="primary" style={{ marginTop: 'var(--space-2)' }} disabled={loading}>
-                    {loading ? 'Logging in...' : 'Log In'}
+                <Button type="submit" variant="primary" style={{ marginTop: 'var(--space-2)', width: '100%', padding: '16px' }} disabled={loading}>
+                    {loading ? 'Authenticating...' : 'Sign In Now'}
                 </Button>
             </form>
 
             <div className="auth-footer">
                 <p>
                     Don't have an account?
-                    <Link to="/signup" className="auth-switch-link">Sign up</Link>
+                    <Link to="/signup" className="auth-switch-link">Create Account</Link>
                 </p>
             </div>
         </AuthLayout>
@@ -103,4 +104,3 @@ const LoginPage = () => {
 };
 
 export default LoginPage;
-

@@ -1,56 +1,90 @@
 .item-card {
+  padding: 12px;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   height: 100%;
 }
 
-.item-img-container {
+.item-image-container {
   width: 100%;
-  aspect-ratio: 4/3;
-  margin-bottom: var(--space-3);
+  aspect-ratio: 16/10;
+  border-radius: var(--radius-md);
   overflow: hidden;
-  border-radius: var(--radius-sm);
+  position: relative;
   box-shadow: var(--nm-inset);
+  margin-bottom: var(--space-3);
 }
 
-.item-img-container img {
+.item-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
   transition: transform 0.3s ease;
 }
 
-.item-card:hover img {
+.item-card:hover .item-image {
   transform: scale(1.05);
 }
 
-.item-content h3 {
-  margin-bottom: var(--space-1);
-  color: var(--primary);
-  font-size: 1.125rem;
+.status-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
 
-.item-category {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin-bottom: var(--space-2);
+.status-badge.lost {
+  background: var(--danger);
+  color: white;
+}
+
+.status-badge.returned {
+  background: var(--success);
+  color: white;
 }
 
 .item-details {
-  font-size: 0.875rem;
-  color: var(--text);
-  margin-bottom: var(--space-4);
-}
-
-.detail-line {
+  padding: 4px;
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 4px;
+  flex-direction: column;
 }
 
-.item-actions {
-  margin-top: auto;
+.item-type {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  margin-bottom: 12px;
+  letter-spacing: -0.5px;
+}
+
+.item-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.item-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.info-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
 }
