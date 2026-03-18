@@ -41,12 +41,26 @@ const Navbar = () => {
                         Returned Items
                     </NavLink>
                     {user?.role === 'admin' && (
-                        <NavLink
-                            to="/admin/dashboard"
-                            className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
-                        >
-                            Admin Dashboard
-                        </NavLink>
+                        <>
+                            <NavLink
+                                to="/admin/dashboard"
+                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                            >
+                                Dashboard
+                            </NavLink>
+                            <NavLink
+                                to="/admin/claims"
+                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                            >
+                                Claims
+                            </NavLink>
+                            <NavLink
+                                to="/admin/reports"
+                                className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
+                            >
+                                Reports
+                            </NavLink>
+                        </>
                     )}
                 </div>
                 <div className="nav-auth-container">

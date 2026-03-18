@@ -11,6 +11,7 @@ import ClaimForm from './pages/Discovery/ClaimForm';
 import ConfirmationPage from './pages/Discovery/ConfirmationPage';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminReports from './pages/Admin/AdminReports';
+import AdminClaimList from './pages/Admin/AdminClaimList';
 import './index.css';
 
 // A generic ProtectedRoute that requires the user to be logged in
@@ -48,6 +49,7 @@ function App() {
 
           {/* Admin Routes - Protected */}
           <Route path="/admin/dashboard" element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />
+          <Route path="/admin/claims" element={<AdminRoute><Layout><AdminClaimList /></Layout></AdminRoute>} />
           <Route path="/admin/reports" element={<AdminRoute><Layout><AdminReports /></Layout></AdminRoute>} />
 
           {/* Placeholder for Report Item */}
