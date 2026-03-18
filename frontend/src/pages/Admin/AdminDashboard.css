@@ -1,114 +1,151 @@
 .admin-dashboard {
-    padding: 1rem 0;
+  padding: var(--space-4) 0;
 }
 
-.admin-title {
-    font-size: 2.2rem;
-    color: var(--accent-color);
-    margin-bottom: 2rem;
-    border-bottom: 1px solid var(--glass-border);
-    padding-bottom: 1rem;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
 }
 
-.claims-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+.stat-card {
+  padding: var(--space-3);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.claim-card {
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
+.stat-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  margin-bottom: 4px;
 }
 
-.claim-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding-bottom: 0.8rem;
+.stat-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-.claim-header h3 {
-    color: var(--text-main);
-    font-size: 1.4rem;
+.admin-section-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: var(--space-2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.status-badge {
-    padding: 0.4rem 0.8rem;
-    border-radius: 20px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    text-transform: uppercase;
+.claims-container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 }
 
-.status-badge.pending {
-    background: #f59e0b;
-    color: #fff;
+.admin-claim-card {
+  padding: 0;
+  overflow: hidden;
 }
 
-.status-badge.approved {
-    background: #10b981;
-    color: #fff;
+.claim-card-header {
+  padding: 12px 20px;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.status-badge.rejected {
-    background: #ef4444;
-    color: #fff;
+.claim-id {
+  font-weight: 700;
+  color: var(--text-muted);
+  font-size: 0.875rem;
 }
 
-.status-badge.completed {
-    background: #3b82f6;
-    color: #fff;
+.admin-status-badge {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
-.claim-body p {
-    color: var(--text-muted);
-    line-height: 1.6;
+.admin-status-badge.pending { background-color: #fef3c7; color: #92400e; }
+.admin-status-badge.approved { background-color: #d1fae5; color: #065f46; }
+.admin-status-badge.rejected { background-color: #fee2e2; color: #991b1b; }
+.admin-status-badge.completed { background-color: #dbeafe; color: #1e40af; }
+
+.claim-card-body {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
 }
 
-.claim-body strong {
-    color: var(--text-main);
+@media (min-width: 768px) {
+  .claim-card-body {
+    grid-template-columns: 1fr 2fr;
+  }
 }
 
-.claim-body a {
-    color: var(--accent-color);
-    text-decoration: underline;
+.claim-main-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.score {
-    font-weight: 700;
-    color: var(--accent-color);
+.claim-info-row {
+  font-size: 0.875rem;
 }
 
-.claim-actions {
-    display: flex;
-    gap: 1rem;
-    margin-top: 1rem;
+.claim-info-row span {
+  font-weight: 600;
+  color: var(--dark);
 }
 
-.approve-btn {
-    background: #10b981;
+.claim-proof-section {
+  background-color: #f9fafb;
+  padding: 12px;
+  border-radius: var(--radius-md);
 }
 
-.approve-btn:hover {
-    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+.proof-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  margin-bottom: 4px;
 }
 
-.reject-btn {
-    border-color: #ef4444;
-    color: #ef4444;
+.proof-text {
+  font-size: 0.875rem;
+  color: var(--text-main);
+  line-height: 1.5;
 }
 
-.reject-btn:hover {
-    background: rgba(239, 68, 68, 0.1);
+.claim-card-footer {
+  padding: 12px 20px;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-2);
 }
 
-.complete-btn {
-    border-color: #3b82f6;
-    color: #3b82f6;
-}
-
+.match-score-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
 }
