@@ -25,7 +25,7 @@ const LostItems = () => {
         fetchItems(search, filter);
     }, [search, filter, fetchItems]);
 
-    const items = data || [];
+    const items = data?.items || (Array.isArray(data) ? data : []);
 
     return (
         <div className="page-container">

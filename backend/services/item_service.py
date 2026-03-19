@@ -122,3 +122,13 @@ def get_pending_reports_service() -> tuple:
         return {"pending": lost + found}, 200
     finally:
         conn.close()
+
+def resolve_item_service(data: dict, admin_username: str) -> tuple:
+    """Service to handle administrative item resolution."""
+    from backend.helpers.input_validation import validate_int
+    item_id = validate_int(data.get("item_id"), "item_id")
+    recipient_name = data.get("owner_name", "Unknown")
+    notes = data.get("handover_notes", "")
+    
+    from backend.models.items import resolve_item_db
+    return resolve_item_db(item_id, recipient_name, notes, admin_username)

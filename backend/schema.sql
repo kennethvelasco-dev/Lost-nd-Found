@@ -116,5 +116,6 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     entity_type TEXT NOT NULL,
     entity_id INTEGER NOT NULL,
     performed_by TEXT NOT NULL,
-    timestamp TEXT NOT NULL
+    timestamp TEXT NOT NULL,
+    notes TEXT
 );

@@ -36,3 +36,31 @@ def process_claim_verification(claim_id: int, data: dict, admin_username: str):
         handover_notes=data.get("handover_notes")
     )
     return result, status
+
+def get_admin_stats_service():
+    """Return counts for the admin dashboard"""
+    from backend.models.base import get_db_connection
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'lost'")
+        total_lost = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found'")
+        total_found = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM claims WHERE decision = 'pending'")
+        pending_claims = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")
+        resolved_items = cursor.fetchone()[0]
+        
+        return {
+            "total_lost": total_lost,
+            "total_found": total_found,
+            "pending_claims": pending_claims,
+            "resolved_items": resolved_items
+        }, 200
+    finally:
+        conn.close()

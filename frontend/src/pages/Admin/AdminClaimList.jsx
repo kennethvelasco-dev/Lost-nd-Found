@@ -17,7 +17,7 @@ const AdminClaimList = () => {
         fetchClaims();
     }, [fetchClaims]);
 
-    const claims = data?.claims || [];
+    const claims = data?.claims || (Array.isArray(data?.items) ? data.items : []);
 
     const handleAction = async (claimId, action) => {
         setVerifying(claimId);

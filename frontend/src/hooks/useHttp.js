@@ -11,11 +11,21 @@ export const useHttp = () => {
         setError(null);
         try {
             const response = await api(config);
-            setData(response.data.data || response.data);
-            return response.data.data || response.data;
+            // Defensive data extraction: Ensure we always get the inner payload if wrapped
+            const payload = response.data?.data !== undefined ? response.data.data : response.data;
+            setData(payload);
+            return payload;
         } catch (err) {
-            const message = err.response?.data?.message || err.message || 'Something went wrong';
-            setError(message);
+            const errorMsg = err.response?.data?.message || err.message || 'An unexpected error occurred';
+            const errorCode = err.response?.data?.error_code || 'NETWORK_ERROR';
+            
+            console.error(`[API Error] ${config.method?.toUpperCase() || 'GET'} ${config.url}:`, {
+                code: errorCode,
+                message: errorMsg,
+                details: err.response?.data
+            });
+
+            setError(errorMsg);
             throw err;
         } finally {
             setLoading(false);

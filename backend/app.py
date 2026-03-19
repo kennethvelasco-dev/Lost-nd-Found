@@ -37,6 +37,19 @@ def missing_token_callback(error):
     print(f"DEBUG: Missing Authorization Header. Error: {error}")
     return jsonify({"error": "Request does not contain an access token", "sub_status": "TOKEN_MISSING"}), 401
 
+@app.errorhandler(Exception)
+def handle_unexpected_error(e):
+    """Global handler for catching all unhandled exceptions."""
+    import traceback
+    # Log detailed error for developers
+    print(f"CRITICAL ERROR: {str(e)}\n{traceback.format_exc()}")
+    # Return friendly error to users
+    return jsonify({
+        "success": False,
+        "message": "A critical server error occurred. Please try again later.",
+        "error_code": "INTERNAL_SERVER_ERROR"
+    }), 500
+
 @jwt.revoked_token_loader
 def revoked_token_response(jwt_header, jwt_payload):
     print(f"DEBUG: Token revoked. JTI: {jwt_payload.get('jti')}")

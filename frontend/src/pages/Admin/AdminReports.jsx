@@ -18,7 +18,7 @@ const AdminReports = () => {
         fetchPending();
     }, [fetchPending]);
 
-    const pendingReports = data?.pending || [];
+    const pendingReports = data?.pending || (Array.isArray(data?.items) ? data.items : []);
 
     const handleVerify = async (reportId, type, decision) => {
         if (decision === 'rejected' && !rejectionReason) {
@@ -37,6 +37,7 @@ const AdminReports = () => {
             fetchPending();
         } catch (err) {
             console.error('Verification failed', err);
+            alert('Failed to update report status. ' + (err.response?.data?.message || 'Please check your connection.'));
         } finally {
             setVerifying(null);
         }

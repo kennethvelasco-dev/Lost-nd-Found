@@ -9,19 +9,24 @@ from backend.services.item_service import (
 from backend.helpers.response import error_response, success_response
 from backend.models import ValidationError
 
+from backend.helpers.production_safety import require_json_fields
+
 item_bp = Blueprint("items", __name__)
 
 @item_bp.route("/lost", methods=["GET", "POST"])
 @jwt_required()
 def lost_items_route():
     if request.method == "POST":
-        data = request.json or {}
-        try:
-            identity = get_jwt_identity()
-            result, status = submit_lost_item(data, identity)
-            return jsonify(success_response(result)), status
-        except ValidationError as ve:
-            return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
+        @require_json_fields(["category", "last_seen_location", "last_seen_datetime"])
+        def process_post():
+            data = request.json or {}
+            try:
+                identity = get_jwt_identity()
+                result, status = submit_lost_item(data, identity)
+                return jsonify(success_response(result)), status
+            except ValidationError as ve:
+                return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
+        return process_post()
     
     # GET logic
     filters = request.args.to_dict()
@@ -75,6 +80,7 @@ def get_pending_reports():
 
 @item_bp.route("/reports/<int:id>/verify", methods=["POST"])
 @jwt_required()
+@require_json_fields(["decision", "type"])
 def verify_report_route(id):
     """Approve or reject a report. Admin only."""
     from flask_jwt_extended import get_jwt
@@ -82,7 +88,6 @@ def verify_report_route(id):
         return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
     
     data = request.json or {}
-    require_fields(data, ["decision", "type"])
     
     from backend.services.item_service import verify_report_service
     admin_username = get_jwt_identity()
@@ -103,3 +108,15 @@ def get_my_activities():
     from backend.services.item_service import get_user_activities_service
     result, status = get_user_activities_service(user_id)
     return jsonify(success_response(result)), status
+
+@item_bp.route("/returned", methods=["GET"])
+@jwt_required()
+def get_returned_items_route():
+    """Get all items marked as 'returned'."""
+    filters = request.args.to_dict()
+    filters["status"] = "returned"
+    try:
+        result, status = search_items_service(filters)
+        return jsonify(success_response(result)), status
+    except Exception as e:
+        return jsonify(error_response("INTERNAL_ERROR", str(e))), 500

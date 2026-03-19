@@ -86,3 +86,25 @@ def get_transaction_report(claim_id):
     """Get detailed report for one transaction."""
     report, status = get_transaction_summary(claim_id)
     return jsonify(success_response(report) if status == 200 else report), status
+
+@admin_bp.route("/resolve-item", methods=["POST"])
+@jwt_required()
+@admin_required
+def resolve_item_route():
+    """Manually log an item as returned. Admin only."""
+    data = request.json or {}
+    admin_username = get_jwt_identity()
+    from backend.services.item_service import resolve_item_service
+    result, status = resolve_item_service(data, admin_username)
+    if status >= 400:
+        return jsonify(error_response("RESOLUTION_ERROR", result.get("error", "Error"))), status
+    return jsonify(success_response(result)), status
+
+@admin_bp.route("/stats", methods=["GET"])
+@jwt_required()
+@admin_required
+def get_stats_route():
+    """Get system-wide stats for admin dashboard."""
+    from backend.services.admin_service import get_admin_stats_service
+    result, status = get_admin_stats_service()
+    return jsonify(success_response(result)), status

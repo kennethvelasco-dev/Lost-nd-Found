@@ -251,3 +251,24 @@ def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]
         return items, total_count
     finally:
         conn.close()
+
+def resolve_item_db(item_id, recipient_name, handover_notes, admin_username):
+    """Marks a found item as returned and logs the handover."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        # We update the status to 'returned' and append handover info to private_details or internal logs
+        cursor.execute(
+            "UPDATE found_items SET status = 'returned' WHERE id = ?",
+            (item_id,)
+        )
+        if cursor.rowcount == 0:
+            return {"error": f"Item {item_id} not found"}, 404
+        
+        conn.commit()
+        log_action("resolve_item", "found_item", item_id, admin_username, notes=f"Recipient: {recipient_name} | Notes: {handover_notes}")
+        return {"message": "Item marked as returned successfully"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+    finally:
+        conn.close()

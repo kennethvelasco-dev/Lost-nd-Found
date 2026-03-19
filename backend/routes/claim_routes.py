@@ -14,11 +14,14 @@ from backend.models.claims import (
 )
 from backend.helpers.response import success_response, error_response
 
+from backend.helpers.production_safety import require_json_fields
+
 claim_bp = Blueprint("claims", __name__)
 
 @claim_bp.route("/submit", methods=["POST"])
 @claim_bp.route("/", methods=["POST"]) # Alias for fallback/compatibility
 @jwt_required()
+@require_json_fields(["found_item_id", "description", "color"])
 def post_claim():
     """Submit a claim for a found item or a general report."""
     user_id = get_jwt_identity()
@@ -37,10 +40,12 @@ def get_pending():
 
 @claim_bp.route("/<int:claim_id>/verify", methods=["POST"])
 @jwt_required()
+@require_json_fields(["decision"])
 def post_verify_claim(claim_id):
     """Approve or reject a claim. Admin only."""
-    claims = get_jwt()
-    if claims.get("role") != "admin":
+    # Note: Using get_jwt() instead of re-importing in function for consistency
+    jwt_claims = get_jwt()
+    if jwt_claims.get("role") != "admin":
         return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
 
     data = request.get_json()

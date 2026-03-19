@@ -68,7 +68,7 @@ def validate_item_payload(data: dict, mode: str) -> bool:
     pic_fields = ["main_picture", "additional_picture_1", "additional_picture_2", "additional_picture_3"]
     for field in pic_fields:
         url = data.get(field)
-        if url and not (url.startswith("http://") or url.startswith("https://") or url.startswith("/")):
+        if url and not (url.startswith("http://") or url.startswith("https://") or url.startswith("/") or url.startswith("data:")):
             raise ValidationError(f"Invalid URL for {field}", 400)
 
     return True

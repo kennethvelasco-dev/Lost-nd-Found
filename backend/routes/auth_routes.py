@@ -5,10 +5,13 @@ from backend.helpers.response import success_response, error_response
 from backend.models import ValidationError
 from backend.extensions import limiter
 
+from backend.helpers.production_safety import require_json_fields
+
 auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
 @limiter.limit("5 per minute")
+@require_json_fields(["username", "password", "role"])
 def register():
     data = request.get_json() or {}
     try:
@@ -18,7 +21,8 @@ def register():
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 400
 
 @auth_bp.route("/login", methods=["POST"])
-@limiter.limit("5 per minute")
+@limiter.limit("10 per minute")
+@require_json_fields(["username", "password"])
 def login():
     data = request.get_json() or {}
     try:

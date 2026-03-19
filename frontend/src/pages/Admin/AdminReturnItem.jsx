@@ -40,7 +40,13 @@ const AdminReturnItem = () => {
         setError('');
 
         try {
-            await new Promise(resolve => setTimeout(resolve, 800));
+            await api.post('/admin/resolve-item', {
+                item_id: formData.item_id,
+                owner_name: formData.owner_name,
+                handover_notes: formData.handover_notes,
+                date_returned: formData.date_returned
+            });
+            
             navigate('/confirmation', { 
                 state: { 
                     title: 'Return Logged!', 
@@ -48,7 +54,7 @@ const AdminReturnItem = () => {
                 } 
             });
         } catch (err) {
-            setError('Failed to log return.');
+            setError(err.response?.data?.message || 'Failed to log return.');
         } finally {
             setLoading(false);
         }
