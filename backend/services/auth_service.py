@@ -45,21 +45,34 @@ def login_user(data: dict):
     if not user or not verify_password(password, user["password_hash"]):
         raise ValidationError("Invalid username or password.")
 
+from flask_jwt_extended import create_access_token, create_refresh_token
+from backend.helpers.input_validation import validate_registration_data
+
+def login_user(data: dict):
+    # ... (omitted for brevity, assume valid user)
     # Use string ID as identity, role in additional claims
     user_id_str = str(user["id"])
-    token = create_access_token(
+    access_token = create_access_token(
         identity=user_id_str,
         additional_claims={"role": user["role"]}
     )
-    return {"access_token": token, "message": "Login successful"}, 200
+    refresh_token = create_refresh_token(
+        identity=user_id_str,
+        additional_claims={"role": user["role"]}
+    )
+    return {
+        "access_token": access_token, 
+        "refresh_token": refresh_token,
+        "message": "Login successful"
+    }, 200
 
-def refresh_token(user_id: str, role: str):
+def refresh_token_service(user_id: str, role: str):
     """Generate a new access token"""
     new_access_token = create_access_token(
         identity=user_id,
         additional_claims={"role": role}
     )
-    return {"access_token": new_access_token, "message": "Access token refreshed"}, 200
+    return {"access_token": new_access_token}, 200
 
 def logout_token(jti: str):
     """Revoke a JWT"""

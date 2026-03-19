@@ -16,16 +16,39 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-// Response interceptor for handling 401
+// Response interceptor for handling 401 and token refresh
 api.interceptors.response.use(
     response => response,
-    error => {
-        if (error.response?.status === 401) {
-            localStorage.removeItem('access_token');
-            localStorage.removeItem('user');
-            // Force reload to clear context/state or redirect
-            if (!window.location.pathname.includes('/login')) {
-                window.location.href = '/login?session_expired=true';
+    async error => {
+        const originalRequest = error.config;
+        
+        // If 401 error and not already retried
+        if (error.response?.status === 401 && !originalRequest._retry) {
+            originalRequest._retry = true;
+            const refreshToken = localStorage.getItem('refresh_token');
+            
+            if (refreshToken) {
+                try {
+                    // Try to get a new access token
+                    const response = await axios.post('http://localhost:5000/api/auth/refresh', {}, {
+                        headers: { Authorization: `Bearer ${refreshToken}` }
+                    });
+                    
+                    const { access_token } = response.data.data;
+                    localStorage.setItem('access_token', access_token);
+                    
+                    // Update header and retry
+                    originalRequest.headers.Authorization = `Bearer ${access_token}`;
+                    return axios(originalRequest);
+                } catch (refreshError) {
+                    // Refresh token failed, force logout
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login?session_expired=true';
+                }
+            } else {
+                window.location.href = '/login';
             }
         }
         return Promise.reject(error);
