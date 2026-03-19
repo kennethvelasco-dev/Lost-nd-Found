@@ -17,7 +17,7 @@ const ClaimForm = () => {
     const [formData, setFormData] = useState({
         color: 'Black',
         description: '',
-        proof: ''
+        images: [] // Changed from proof to images array
     });
     const [otherColor, setOtherColor] = useState('');
 
@@ -42,13 +42,21 @@ const ClaimForm = () => {
         const finalColor = formData.color === 'Other' && otherColor ? otherColor : formData.color;
 
         try {
-            await api.post('/claims', {
+            const claimData = {
                 found_item_id: id,
                 description: formData.description,
-                proof: formData.proof,
-                color: finalColor,
-                declared_value: 0 // Provide default to satisfy backend
-            });
+                declared_value: 0,
+                color: finalColor
+            };
+
+            // Map images
+            if (formData.images && formData.images.length > 0) {
+                claimData.receipt_proof = formData.images[0];
+                claimData.additional_proof_1 = formData.images[1] || '';
+                claimData.additional_proof_2 = formData.images[2] || '';
+            }
+
+            await api.post('/claims', claimData);
             navigate('/confirmation', { 
                 state: { title: 'Claim Submitted!', message: 'The administrator will review your claim and notify you soon.' } 
             });
@@ -110,9 +118,9 @@ const ClaimForm = () => {
 
                         <div className="form-group">
                             <FileUpload 
-                                label="Proof of Ownership (Photo of receipt, item, etc.)"
-                                value={formData.proof}
-                                onFileSelect={(base64) => setFormData({ ...formData, proof: base64 })}
+                                label="Proof of Ownership Photos"
+                                initialFiles={formData.images || []}
+                                onFilesChange={(files) => setFormData({ ...formData, images: files })}
                             />
                         </div>
 

@@ -69,13 +69,23 @@ const AdminReports = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr 300px', gap: 'var(--space-4)' }}>
                                     {/* Image Section */}
                                     <div className="report-image-box">
-                                        {report.main_picture ? (
-                                            <img src={report.main_picture} alt="Report item" style={{ width: '100%', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-flat-sm)' }} />
-                                        ) : (
-                                            <div style={{ width: '100%', aspectRatio: '1', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '1px dashed var(--text-muted)' }}>
-                                                No Image
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
+                                            {report.main_picture ? (
+                                                <img src={report.main_picture} alt="Primary" style={{ width: '100%', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-flat-sm)' }} />
+                                            ) : (
+                                                <div style={{ width: '100%', aspectRatio: '1', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '1px dashed var(--text-muted)' }}>
+                                                    No Image
+                                                </div>
+                                            )}
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                {report.additional_picture_1 && (
+                                                    <img src={report.additional_picture_1} alt="Add. 1" style={{ width: '100%', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-flat-sm)' }} />
+                                                )}
+                                                {report.additional_picture_2 && (
+                                                    <img src={report.additional_picture_2} alt="Add. 2" style={{ width: '100%', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-flat-sm)' }} />
+                                                )}
                                             </div>
-                                        )}
+                                        </div>
                                     </div>
 
                                     {/* Info Section */}

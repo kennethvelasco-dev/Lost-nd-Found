@@ -18,7 +18,7 @@ const ReportItem = () => {
         last_seen_datetime: '',
         public_description: '',
         private_details: '',
-        main_picture: '' // Added main_picture
+        images: [] // Changed from main_picture to images array
     });
     const [otherCategory, setOtherCategory] = useState('');
     const [otherColor, setOtherColor] = useState('');
@@ -37,6 +37,13 @@ const ReportItem = () => {
         }
         if (formData.color === 'Other' && otherColor) {
             submissionData.color = otherColor;
+        }
+
+        // Map multi-images to backend columns
+        if (Array.isArray(formData.images)) {
+            submissionData.main_picture = formData.images[0] || '';
+            submissionData.additional_picture_1 = formData.images[1] || '';
+            submissionData.additional_picture_2 = formData.images[2] || '';
         }
 
         try {
@@ -137,9 +144,9 @@ const ReportItem = () => {
                             </div>
                             <div style={{ flex: 1 }}>
                                 <FileUpload 
-                                    label="Evidence Photo"
-                                    value={formData.main_picture}
-                                    onFileSelect={(base64) => setFormData({ ...formData, main_picture: base64 })}
+                                    label="Evidence Photos"
+                                    initialFiles={formData.images || []}
+                                    onFilesChange={(files) => setFormData({ ...formData, images: files })}
                                 />
                             </div>
                         </div>

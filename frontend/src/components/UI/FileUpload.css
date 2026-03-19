@@ -1,40 +1,42 @@
 .file-upload-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 12px;
     width: 100%;
+}
+
+.upload-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
 }
 
 .upload-zone {
     width: 100%;
-    height: 200px;
+    aspect-ratio: 1;
     border: 2px dashed var(--text-muted);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    overflow: hidden;
     background: var(--background);
     box-shadow: var(--nm-inset-sm);
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
 }
 
 .upload-zone:hover {
     border-color: var(--primary);
-    background: var(--primary)05;
+    transform: translateY(-2px);
 }
 
-.upload-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    color: var(--text-muted);
-}
-
-.upload-icon {
-    font-size: 2rem;
+.preview-item {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    box-shadow: var(--nm-flat-sm);
 }
 
 .upload-preview {
@@ -43,7 +45,31 @@
     object-fit: cover;
 }
 
-.has-preview {
-    border-style: solid;
-    border-color: var(--primary);
+.remove-file-btn {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    line-height: 1;
+    z-index: 2;
+}
+
+.upload-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.upload-icon {
+    font-size: 1.5rem;
+    font-weight: bold;
 }

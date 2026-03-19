@@ -1,51 +1,75 @@
 import React, { useState, useRef } from 'react';
 import './FileUpload.css';
 
-const FileUpload = ({ label, onFileSelect, value }) => {
-    const [preview, setPreview] = useState(value || null);
+const FileUpload = ({ label, onFilesChange, maxFiles = 3, initialFiles = [] }) => {
+    const [previews, setPreviews] = useState(initialFiles);
     const fileInputRef = useRef(null);
 
     const handleFileChange = (e) => {
-        const file = e.target.files[0];
-        if (file) {
+        const files = Array.from(e.target.files);
+        const availableSlots = maxFiles - previews.length;
+        const filesToProcess = files.slice(0, availableSlots);
+
+        filesToProcess.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
                 const base64String = reader.result;
-                setPreview(base64String);
-                onFileSelect(base64String);
+                setPreviews(prev => {
+                    const next = [...prev, base64String];
+                    onFilesChange(next);
+                    return next;
+                });
             };
             reader.readAsDataURL(file);
-        }
+        });
+        
+        // Reset input for same file re-selection if needed
+        e.target.value = '';
     };
 
-    const triggerInput = () => {
-        fileInputRef.current.click();
+    const removeFile = (index, e) => {
+        e.stopPropagation();
+        const next = previews.filter((_, i) => i !== index);
+        setPreviews(next);
+        onFilesChange(next);
     };
 
     return (
         <div className="file-upload-container">
-            <label className="form-label">{label}</label>
-            <div 
-                className={`upload-zone ${preview ? 'has-preview' : ''}`} 
-                onClick={triggerInput}
-            >
-                {preview ? (
-                    <img src={preview} alt="Upload preview" className="upload-preview" />
-                ) : (
-                    <div className="upload-placeholder">
-                        <span className="upload-icon">📷</span>
-                        <p>Click to capture or select photo</p>
+            <label className="form-label">{label} ({previews.length}/{maxFiles})</label>
+            
+            <div className="upload-grid">
+                {previews.map((src, index) => (
+                    <div key={index} className="preview-item">
+                        <img src={src} alt={`Upload ${index + 1}`} className="upload-preview" />
+                        <button 
+                            type="button" 
+                            className="remove-file-btn"
+                            onClick={(e) => removeFile(index, e)}
+                        >
+                            ×
+                        </button>
+                    </div>
+                ))}
+
+                {previews.length < maxFiles && (
+                    <div className="upload-zone" onClick={() => fileInputRef.current.click()}>
+                        <div className="upload-placeholder">
+                            <span className="upload-icon">+</span>
+                            <p style={{ fontSize: '12px' }}>Add Photo</p>
+                        </div>
                     </div>
                 )}
-                <input 
-                    type="file" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    accept="image/*" 
-                    style={{ display: 'none' }}
-                    required={!value}
-                />
             </div>
+
+            <input 
+                type="file" 
+                ref={fileInputRef} 
+                onChange={handleFileChange} 
+                accept="image/*" 
+                multiple
+                style={{ display: 'none' }}
+            />
         </div>
     );
 };
