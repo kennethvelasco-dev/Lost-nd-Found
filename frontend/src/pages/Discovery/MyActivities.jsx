@@ -1,10 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import api from '../../services/api';
+import React, { useEffect } from 'react';
 import Card from '../../components/UI/Card';
-import './Discovery.css';
-
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
+import './Discovery.css';
 
 const MyActivities = () => {
     const { loading, error, data, request } = useHttp();
@@ -16,7 +14,7 @@ const MyActivities = () => {
     const activities = data || { reports: [], claims: [] };
 
     const getStatusColor = (status) => {
-        switch (status) {
+        switch (status?.toLowerCase()) {
             case 'pending': 
             case 'pending_approval': return 'var(--secondary-dark)';
             case 'approved':
@@ -28,7 +26,7 @@ const MyActivities = () => {
         }
     };
 
-    const renderStatusBadge = (status) => (
+    const StatusBadge = ({ status }) => (
         <span style={{ 
             fontSize: '10px', 
             fontWeight: 800, 
@@ -39,77 +37,88 @@ const MyActivities = () => {
             textTransform: 'uppercase',
             letterSpacing: '0.5px'
         }}>
-            {status.replace('_', ' ')}
+            {(status || 'unknown').replace('_', ' ')}
         </span>
     );
 
-    if (loading) return <div className="page-container"><p>Loading your activities...</p></div>;
+    const ActivityCard = ({ item, type }) => (
+        <Card>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center' }}>
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
+                    {type === 'report' ? item.item_type : `Claim #${item.claim_id}`}
+                </h3>
+                <StatusBadge status={item.status || item.decision || 'pending'} />
+            </div>
+            <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '4px 0' }}>
+                {type === 'report' 
+                    ? `${item.category} • ${item.last_seen_location || item.found_location}`
+                    : `Linked to: ${item.found_item_type || 'Unknown Item'}`
+                }
+            </p>
+            {(item.rejection_reason || item.decision_reason) && (
+                <div style={{ 
+                    marginTop: '12px', 
+                    padding: '12px', 
+                    borderRadius: 'var(--radius-sm)', 
+                    backgroundColor: 'rgba(231, 76, 60, 0.08)', 
+                    borderLeft: '4px solid var(--danger)' 
+                }}>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--danger)', fontWeight: 700 }}>Admin Feedback:</p>
+                    <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text)' }}>
+                        {item.rejection_reason || item.decision_reason}
+                    </p>
+                </div>
+            )}
+        </Card>
+    );
+
+    const hasAnyActivity = activities.reports.length > 0 || activities.claims.length > 0;
 
     return (
         <div className="page-container">
             <div className="container">
                 <div className="pretty-header">
                     <h1 className="pretty-title">My Activities</h1>
-                    <p className="auth-subtitle">Track the status of your reports and claims.</p>
+                    <p className="auth-subtitle">Track the status of your reports and claims in real-time.</p>
                     <div className="title-underline"></div>
                 </div>
 
-                <div className="activities-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-                    {/* MY REPORTS */}
-                    <div className="activity-section">
-                        <h2 style={{ marginBottom: 'var(--space-3)', color: 'var(--text)' }}>My Reports</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                            {activities.reports.length > 0 ? activities.reports.map(report => (
-                                <Card key={report.id}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>{report.item_type}</h3>
-                                        {renderStatusBadge(report.status)}
-                                    </div>
-                                    <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: '4px 0' }}>{report.category} • Observed at {report.last_seen_location || report.found_location}</p>
-                                    {report.rejection_reason && (
-                                        <div style={{ marginTop: '12px', padding: '10px', borderRadius: 'var(--radius-sm)', backgroundColor: 'var(--danger)10', borderLeft: '4px solid var(--danger)' }}>
-                                            <p style={{ margin: 0, fontSize: '12px', color: 'var(--danger)', fontWeight: 600 }}>Reason for rejection:</p>
-                                            <p style={{ margin: '4px 0 0 0', fontSize: '13px', color: 'var(--text)' }}>{report.rejection_reason}</p>
-                                        </div>
-                                    )}
-                                </Card>
-                            )) : <p style={{ color: 'var(--text-muted)' }}>No reports filed yet.</p>}
-                        </div>
-                    </div>
-
-                    {/* MY CLAIMS */}
-                    <div className="activity-section">
-                        <h2 style={{ marginBottom: 'var(--space-3)', color: 'var(--text)' }}>My Claims</h2>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                            {activities.claims.length > 0 ? activities.claims.map(claim => (
-                                <Card key={claim.claim_id}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-                                        <h3 style={{ margin: 0, fontSize: '1.1rem' }}>Claim #{claim.claim_id}</h3>
-                <StatusState
-                    loading={loading}
-                    error={error}
-                    isEmpty={allActivities.length === 0}
+                <StatusState 
+                    loading={loading} 
+                    error={error} 
+                    isEmpty={!hasAnyActivity} 
                     emptyMessage="You haven't reported or claimed any items yet."
                     onRetry={() => request({ url: '/items/my-activities' })}
                 >
-                    <div className="activities-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
-                        {/* MY REPORTS */}
+                    <div className="activities-layout" style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
+                        gap: 'var(--space-5)',
+                        marginTop: 'var(--space-4)'
+                    }}>
+                        {/* Reports Section */}
                         <div className="activity-section">
-                            <h2 style={{ marginBottom: 'var(--space-3)', color: 'var(--text)' }}>My Reports</h2>
+                            <h2 style={{ marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                📋 My Reports
+                            </h2>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                                {activities.reports.length > 0 ? activities.reports.map(report => (
-                                    <ActivityCard key={`report-${report.id}`} item={{ ...report, type: 'report' }} />
-                                )) : <p style={{ color: 'var(--text-muted)' }}>No reports filed yet.</p>}
+                                {activities.reports.map(report => (
+                                    <ActivityCard key={report.id} item={report} type="report" />
+                                ))}
+                                {activities.reports.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No reports filed.</p>}
                             </div>
                         </div>
 
-                        {/* MY CLAIMS */}
+                        {/* Claims Section */}
                         <div className="activity-section">
-                            <h2 style={{ marginBottom: 'var(--space-3)', color: 'var(--text)' }}>My Claims</h2>
+                            <h2 style={{ marginBottom: 'var(--space-3)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                📑 My Claims
+                            </h2>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-3)' }}>
-                                {activities.claims.length > 0 ? activities.claims.map(claim => (
-                                    <ActivityCard key={`claim-${claim.claim_id}`} item={{ ...claim, type: 'claim' }} />
-                                )) : <p style={{ color: 'var(--text-muted)' }}>No claims submitted yet.</p>}
+                                {activities.claims.map(claim => (
+                                    <ActivityCard key={claim.claim_id} item={claim} type="claim" />
+                                ))}
+                                {activities.claims.length === 0 && <p style={{ color: 'var(--text-muted)' }}>No claims submitted.</p>}
                             </div>
                         </div>
                     </div>
