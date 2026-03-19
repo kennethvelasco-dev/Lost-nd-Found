@@ -1,6 +1,6 @@
 from backend.helpers.user_helpers import create_user, get_user, verify_password
 from backend.models import ValidationError
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 from backend.helpers.input_validation import validate_registration_data
 
 # Simple in-memory revoked tokens store
@@ -29,7 +29,6 @@ def register_user(data: dict):
 
     raise ValidationError(result.get("error", "Registration failed"))
 
-
 def login_user(data: dict):
     """Handles login"""
     if not data:
@@ -45,11 +44,6 @@ def login_user(data: dict):
     if not user or not verify_password(password, user["password_hash"]):
         raise ValidationError("Invalid username or password.")
 
-from flask_jwt_extended import create_access_token, create_refresh_token
-from backend.helpers.input_validation import validate_registration_data
-
-def login_user(data: dict):
-    # ... (omitted for brevity, assume valid user)
     # Use string ID as identity, role in additional claims
     user_id_str = str(user["id"])
     access_token = create_access_token(
