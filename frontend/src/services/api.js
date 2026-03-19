@@ -16,5 +16,21 @@ api.interceptors.request.use(config => {
     return config;
 });
 
+// Response interceptor for handling 401
+api.interceptors.response.use(
+    response => response,
+    error => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('user');
+            // Force reload to clear context/state or redirect
+            if (!window.location.pathname.includes('/login')) {
+                window.location.href = '/login?session_expired=true';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;
 

@@ -16,6 +16,9 @@ const LoginPage = () => {
     
     const { login } = useAuth();
     const navigate = useNavigate();
+    const [expiredMsg, setExpiredMsg] = useState(
+        window.location.search.includes('session_expired') ? 'Your session has expired. Please log in again.' : ''
+    );
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -47,6 +50,7 @@ const LoginPage = () => {
                 <p className="auth-subtitle">Log in to manage your items</p>
             </div>
 
+            {expiredMsg && <div className="info-message" style={{ color: 'var(--primary)', marginBottom: 'var(--space-1)', textAlign: 'center', fontSize: '0.875rem' }}>{expiredMsg}</div>}
             {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: 'var(--space-2)', textAlign: 'center', fontSize: '0.875rem' }}>{error}</div>}
 
             <form className="auth-form" onSubmit={handleSubmit}>
