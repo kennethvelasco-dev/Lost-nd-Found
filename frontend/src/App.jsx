@@ -9,18 +9,19 @@ import ReturnedItems from './pages/Discovery/ReturnedItems';
 import ItemDetail from './pages/Discovery/ItemDetail';
 import ClaimForm from './pages/Discovery/ClaimForm';
 import ConfirmationPage from './pages/Discovery/ConfirmationPage';
-import ReportItem from './pages/Discovery/ReportItem'; // Added import
+import ReportItem from './pages/Discovery/ReportItem';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminReports from './pages/Admin/AdminReports';
 import AdminClaimList from './pages/Admin/AdminClaimList';
-import AdminReturnItem from './pages/Admin/AdminReturnItem'; // Added import
-import MyActivities from './pages/Discovery/MyActivities'; // Added import
+import AdminReturnItem from './pages/Admin/AdminReturnItem';
+import MyActivities from './pages/Discovery/MyActivities';
+import GlobalErrorBoundary from './components/Layout/GlobalErrorBoundary';
 import './index.css';
 
 // A generic ProtectedRoute that requires the user to be logged in
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div className="page-container"><p>Loading session...</p></div>;
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
@@ -28,43 +29,46 @@ const ProtectedRoute = ({ children }) => {
 // Admin route protection
 const AdminRoute = ({ children }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div>Loading...</div>;
-  if (!user || user.role !== 'admin') return <Navigate to="/lost-items" replace />;
+  if (loading) return <div className="page-container"><p>Loading session...</p></div>;
+  if (!user || (user.role !== 'admin' && user.role !== 'Admin')) return <Navigate to="/lost-items" replace />;
   return children;
 };
 
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Routes>
-          {/* Auth Routes */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/signup" element={<SignupPage />} />
+      <GlobalErrorBoundary>
+        <AuthProvider>
+          <Layout>
+            <Routes>
+              {/* Public Routes */}
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
+              <Route path="/" element={<Navigate to="/lost-items" replace />} />
+              
+              {/* Lost & Found Routes */}
+              <Route path="/lost-items" element={<LostItems />} />
+              <Route path="/returned-items" element={<ProtectedRoute><ReturnedItems /></ProtectedRoute>} />
+              <Route path="/items/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
+              <Route path="/items/:id/claim" element={<ProtectedRoute><ClaimForm /></ProtectedRoute>} />
+              <Route path="/claim-confirmation" element={<ProtectedRoute><ConfirmationPage /></ProtectedRoute>} />
+              <Route path="/report-item" element={<ProtectedRoute><ReportItem /></ProtectedRoute>} />
+              <Route path="/my-activities" element={<ProtectedRoute><MyActivities /></ProtectedRoute>} />
 
-          {/* Main Application Routes - Protected */}
-          <Route path="/" element={<Navigate to="/lost-items" replace />} />
-          <Route path="/lost-items" element={<ProtectedRoute><Layout><LostItems /></Layout></ProtectedRoute>} />
-          <Route path="/returned-items" element={<ProtectedRoute><Layout><ReturnedItems /></Layout></ProtectedRoute>} />
-          <Route path="/items/:id" element={<ProtectedRoute><Layout><ItemDetail /></Layout></ProtectedRoute>} />
-          <Route path="/items/:id/claim" element={<ProtectedRoute><Layout><ClaimForm /></Layout></ProtectedRoute>} />
-          <Route path="/claim-confirmation" element={<ProtectedRoute><Layout><ConfirmationPage /></Layout></ProtectedRoute>} />
-          <Route path="/report-item" element={<ProtectedRoute><Layout><ReportItem /></Layout></ProtectedRoute>} />
-          <Route path="/my-activities" element={<ProtectedRoute><Layout><MyActivities /></Layout></ProtectedRoute>} />
+              {/* Admin Routes - Protected */}
+              <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+              <Route path="/admin/claims" element={<AdminRoute><AdminClaimList /></AdminRoute>} />
+              <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
+              <Route path="/admin/return-item" element={<AdminRoute><AdminReturnItem /></AdminRoute>} />
 
-          {/* Admin Routes - Protected */}
-          <Route path="/admin/dashboard" element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />
-          <Route path="/admin/claims" element={<AdminRoute><Layout><AdminClaimList /></Layout></AdminRoute>} />
-          <Route path="/admin/reports" element={<AdminRoute><Layout><AdminReports /></Layout></AdminRoute>} />
-          <Route path="/admin/return-item" element={<AdminRoute><Layout><AdminReturnItem /></Layout></AdminRoute>} />
-
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </AuthProvider>
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
+          </Layout>
+        </AuthProvider>
+      </GlobalErrorBoundary>
     </Router>
   );
 }
 
 export default App;
-

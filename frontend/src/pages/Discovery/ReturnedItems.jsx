@@ -1,27 +1,15 @@
+```javascript
 import React, { useState, useEffect } from 'react';
 import Card from '../../components/UI/Card';
 import SearchBar from '../../components/UI/SearchBar';
 import api from '../../services/api';
 
-const ReturnedItems = () => {
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+import { useHttp } from '../../hooks/useHttp';
+import StatusState from '../../components/UI/StatusState';
 
-    const fetchItems = async (query = '') => {
-        try {
-            setLoading(true);
-            const response = await api.get('/items/found', {
-                params: { query, status: 'returned' }
-            });
-            setItems(response.data.data.items || []);
-            setError(null);
-        } catch (err) {
-            setError('Failed to fetch transaction history.');
-        } finally {
-            setLoading(false);
-        }
-    };
+const ReturnedItems = () => {
+    const [searchQuery, setSearchQuery] = useState('');
+    const { loading, error, data, request } = useHttp();
 
     useEffect(() => {
         fetchItems();
