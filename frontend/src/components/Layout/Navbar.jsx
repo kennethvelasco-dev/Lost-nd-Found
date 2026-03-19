@@ -48,14 +48,15 @@ const Navbar = () => {
                 <div className="nav-tabs glass-tabs">
                     <Link to="/lost-items" className={`nav-tab ${isActive('/lost-items')}`}>Search Directory</Link>
                     <Link to="/report-item" className={`nav-tab ${isActive('/report-item')}`}>Report Lost Item</Link>
+                    <Link to="/my-activities" className={`nav-tab ${isActive('/my-activities')}`}>My Activities</Link>
                     <Link to="/returned-items" className={`nav-tab ${isActive('/returned-items')}`}>Released Items</Link>
                 </div>
                 ) : (
                 <div className="nav-tabs glass-tabs">
                     <Link to="/admin/dashboard" className={`nav-tab ${isActive('/admin/dashboard')}`}>Admin Console</Link>
                     <Link to="/admin/claims" className={`nav-tab ${isActive('/admin/claims')}`}>Review Claims</Link>
+                    <Link to="/admin/reports" className={`nav-tab ${isActive('/admin/reports')}`}>Approve Reports</Link>
                     <Link to="/admin/return-item" className={`nav-tab ${isActive('/admin/return-item')}`}>Log Return</Link>
-                    <Link to="/admin/reports" className={`nav-tab ${isActive('/admin/reports')}`}>System Analytics</Link>
                 </div>
                 )}
             </div>

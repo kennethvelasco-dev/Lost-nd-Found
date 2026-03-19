@@ -14,6 +14,7 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminReports from './pages/Admin/AdminReports';
 import AdminClaimList from './pages/Admin/AdminClaimList';
 import AdminReturnItem from './pages/Admin/AdminReturnItem'; // Added import
+import MyActivities from './pages/Discovery/MyActivities'; // Added import
 import './index.css';
 
 // A generic ProtectedRoute that requires the user to be logged in
@@ -49,6 +50,7 @@ function App() {
           <Route path="/items/:id/claim" element={<ProtectedRoute><Layout><ClaimForm /></Layout></ProtectedRoute>} />
           <Route path="/claim-confirmation" element={<ProtectedRoute><Layout><ConfirmationPage /></Layout></ProtectedRoute>} />
           <Route path="/report-item" element={<ProtectedRoute><Layout><ReportItem /></Layout></ProtectedRoute>} />
+          <Route path="/my-activities" element={<ProtectedRoute><Layout><MyActivities /></Layout></ProtectedRoute>} />
 
           {/* Admin Routes - Protected */}
           <Route path="/admin/dashboard" element={<AdminRoute><Layout><AdminDashboard /></Layout></AdminRoute>} />

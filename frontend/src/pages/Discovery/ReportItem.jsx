@@ -16,7 +16,8 @@ const ReportItem = () => {
         last_seen_location: '',
         last_seen_datetime: '',
         public_description: '',
-        private_details: ''
+        private_details: '',
+        main_picture: '' // Added main_picture
     });
     const [otherCategory, setOtherCategory] = useState('');
     const [otherColor, setOtherColor] = useState('');
@@ -40,7 +41,10 @@ const ReportItem = () => {
         try {
             await api.post('/items/lost', submissionData);
             navigate('/confirmation', { 
-                state: { title: 'Report Submitted!', message: 'We will notify you if a matching item is found.' } 
+                state: { 
+                    title: 'Report Submitted!', 
+                    message: 'Your report is now pending administrator approval. You can track its status in "My Activities".' 
+                } 
             });
         } catch (err) {
             setError(err.response?.data?.message || 'An error occurred during submission.');
@@ -120,13 +124,27 @@ const ReportItem = () => {
                             />
                         )}
 
-                        <Input
-                            label="Last Seen Date/Time"
-                            type="datetime-local"
-                            value={formData.last_seen_datetime}
-                            onChange={(e) => setFormData({ ...formData, last_seen_datetime: e.target.value })}
-                            required
-                        />
+                        <div className="form-row">
+                            <div style={{ flex: 1 }}>
+                                <Input
+                                    label="Last Seen Date/Time"
+                                    type="datetime-local"
+                                    value={formData.last_seen_datetime}
+                                    onChange={(e) => setFormData({ ...formData, last_seen_datetime: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <Input
+                                    label="Item Picture (URL)"
+                                    placeholder="https://example.com/item.jpg"
+                                    type="url"
+                                    value={formData.main_picture}
+                                    onChange={(e) => setFormData({ ...formData, main_picture: e.target.value })}
+                                    required
+                                />
+                            </div>
+                        </div>
 
                         <div className="form-group">
                             <label className="form-label">Public Description</label>
@@ -147,9 +165,12 @@ const ReportItem = () => {
                                 placeholder="Mention contents or unique serials NOT visible to others..."
                                 value={formData.private_details}
                                 onChange={(e) => setFormData({ ...formData, private_details: e.target.value })}
+                                required
                                 style={{ minHeight: '80px' }}
                             ></textarea>
                         </div>
+
+                        {error && <p style={{ color: 'var(--danger)', fontSize: '14px' }}>{error}</p>}
 
                         <Button type="submit" variant="primary" disabled={loading} style={{ width: '100%', padding: '16px' }}>
                             {loading ? 'Publishing...' : 'Submit Lost Item Report'}

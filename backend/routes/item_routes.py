@@ -52,3 +52,47 @@ def search_items_route():
         return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500
+
+@item_bp.route("/pending", methods=["GET"])
+@jwt_required()
+def get_pending_reports():
+    """Get reports awaiting approval. Admin only."""
+    # Note: Role check should ideally be in a decorator or service
+    from flask_jwt_extended import get_jwt
+    if get_jwt().get("role") != "admin":
+        return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
+    
+    from backend.services.item_service import get_pending_reports_service
+    result, status = get_pending_reports_service()
+    return jsonify(success_response(result)), status
+
+@item_bp.route("/reports/<int:id>/verify", methods=["POST"])
+@jwt_required()
+def verify_report_route(id):
+    """Approve or reject a report. Admin only."""
+    from flask_jwt_extended import get_jwt
+    if get_jwt().get("role") != "admin":
+        return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
+    
+    data = request.json or {}
+    require_fields(data, ["decision", "type"])
+    
+    from backend.services.item_service import verify_report_service
+    admin_username = get_jwt_identity()
+    result, status = verify_report_service(
+        id, 
+        data["type"], 
+        data["decision"], 
+        data.get("reason", ""), 
+        admin_username
+    )
+    return jsonify(success_response(result)), status
+
+@item_bp.route("/my-activities", methods=["GET"])
+@jwt_required()
+def get_my_activities():
+    """Get reports and claims for the current user."""
+    user_id = get_jwt_identity()
+    from backend.services.item_service import get_user_activities_service
+    result, status = get_user_activities_service(user_id)
+    return jsonify(success_response(result)), status

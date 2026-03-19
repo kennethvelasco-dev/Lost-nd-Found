@@ -85,3 +85,40 @@ def search_items_service(filters: dict) -> tuple:
             "offset": filters.get("offset", 0)
         }
     }, 200
+
+def get_user_activities_service(user_id: str) -> tuple:
+    """
+    Combined service to get all reports and claims for a user.
+    """
+    from backend.models.items import get_user_reports_db
+    from backend.models.claims import get_pending_claims
+    
+    reports = get_user_reports_db(user_id)
+    all_claims = get_pending_claims()
+    user_claims = [c for c in all_claims if str(c["user_id"]) == str(user_id)]
+    
+    return {
+        "reports": reports,
+        "claims": user_claims
+    }, 200
+
+def verify_report_service(report_id: int, entity_type: str, decision: str, reason: str, admin_username: str) -> tuple:
+    """
+    Service to approve/reject a report.
+    """
+    from backend.models.items import verify_report_db
+    return verify_report_db(report_id, entity_type, decision, reason, admin_username)
+
+def get_pending_reports_service() -> tuple:
+    """Gets all reports awaiting approval."""
+    from backend.models.base import get_db_connection
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE status = 'pending_approval'")
+        lost = [dict(row) for row in cursor.fetchall()]
+        cursor.execute("SELECT *, 'found' as type FROM found_items WHERE status = 'pending_approval'")
+        found = [dict(row) for row in cursor.fetchall()]
+        return {"pending": lost + found}, 200
+    finally:
+        conn.close()

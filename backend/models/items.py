@@ -37,7 +37,7 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
             data.get("additional_picture_2"),
             data.get("additional_picture_3"),
             data.get("reporter_id"),
-            "lost", # Default status
+            "pending_approval", # Default status for user reports
             datetime.now(timezone.utc).isoformat()
         ))
 
@@ -94,7 +94,7 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
             data.get("additional_picture_2"),
             data.get("additional_picture_3"),
             data.get("reporter_id"),
-            "found", # Default status
+            "pending_approval", # Default status
             datetime.now(timezone.utc).isoformat()
         ))
 
@@ -158,6 +158,41 @@ def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
             return None
 
         return dict(row)
+    finally:
+        conn.close()
+
+# Verify Report (Admin)
+def verify_report_db(report_id, entity_type, decision, reason, admin_username):
+    """Approve or reject a report. entity_type is 'lost' or 'found'."""
+    table = "lost_items" if entity_type == "lost" else "found_items"
+    approved_status = "lost" if entity_type == "lost" else "found"
+    new_status = approved_status if decision == "approved" else "rejected"
+
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE {table} SET status = ?, rejection_reason = ? WHERE id = ?", (new_status, reason, report_id))
+        conn.commit()
+        log_action(f"verify_report_{decision}", entity_type, report_id, admin_username, notes=reason)
+        return {"message": f"Report {decision} successfully"}, 200
+    except Exception as e:
+        return {"error": str(e)}, 500
+    finally:
+        conn.close()
+
+# Get User Reports
+def get_user_reports_db(user_id):
+    """Retrieve all reports (lost and found) for a specific user."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE reporter_id = ?", (user_id,))
+        lost = [dict(row) for row in cursor.fetchall()]
+        
+        cursor.execute("SELECT *, 'found' as type FROM found_items WHERE reporter_id = ?", (user_id,))
+        found = [dict(row) for row in cursor.fetchall()]
+        
+        return lost + found
     finally:
         conn.close()
 
