@@ -20,12 +20,27 @@ app = create_app()
 @jwt.token_in_blocklist_loader
 def check_if_token_revoked(jwt_header, jwt_payload):
     jti = jwt_payload.get("jti")
-    return is_token_revoked(jti)  # True if revoked, False if valid
+    return is_token_revoked(jti)
 
-# Callback response for revoked tokens
+@jwt.expired_token_loader
+def expired_token_callback(jwt_header, jwt_payload):
+    print(f"DEBUG: Token expired. Payload: {jwt_payload}")
+    return jsonify({"error": "The token has expired", "sub_status": "TOKEN_EXPIRED"}), 401
+
+@jwt.invalid_token_loader
+def invalid_token_callback(error):
+    print(f"DEBUG: Invalid token provided. Error: {error}")
+    return jsonify({"error": "Signature verification failed", "sub_status": "TOKEN_INVALID"}), 401
+
+@jwt.unauthorized_loader
+def missing_token_callback(error):
+    print(f"DEBUG: Missing Authorization Header. Error: {error}")
+    return jsonify({"error": "Request does not contain an access token", "sub_status": "TOKEN_MISSING"}), 401
+
 @jwt.revoked_token_loader
 def revoked_token_response(jwt_header, jwt_payload):
-    return jsonify({"error": "Token has been revoked"}), 401
+    print(f"DEBUG: Token revoked. JTI: {jwt_payload.get('jti')}")
+    return jsonify({"error": "Token has been revoked", "sub_status": "TOKEN_REVOKED"}), 401
 
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0", port=5000)
