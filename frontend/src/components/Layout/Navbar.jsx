@@ -17,6 +17,11 @@ const Navbar = () => {
 
   const isActive = (path) => location.pathname === path ? 'active' : '';
 
+  // QA Audit Fix: Hide Navbar on Auth Pages to ensure a focused user journey.
+  if (['/login', '/signup'].includes(location.pathname)) {
+    return null;
+  }
+
   return (
     <nav className="navbar">
       <div className="container navbar-inner">

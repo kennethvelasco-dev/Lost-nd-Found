@@ -39,14 +39,14 @@ function App() {
     <Router>
       <GlobalErrorBoundary>
         <AuthProvider>
-          <Layout>
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/signup" element={<SignupPage />} />
+          <Routes>
+            {/* Public Auth Routes - Full Screen */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            
+            {/* Main Application Shell */}
+            <Route element={<Layout />}>
               <Route path="/" element={<Navigate to="/lost-items" replace />} />
-              
-              {/* Lost & Found Routes */}
               <Route path="/lost-items" element={<LostItems />} />
               <Route path="/returned-items" element={<ProtectedRoute><ReturnedItems /></ProtectedRoute>} />
               <Route path="/items/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
@@ -55,16 +55,16 @@ function App() {
               <Route path="/report-item" element={<ProtectedRoute><ReportItem /></ProtectedRoute>} />
               <Route path="/my-activities" element={<ProtectedRoute><MyActivities /></ProtectedRoute>} />
 
-              {/* Admin Routes - Protected */}
+              {/* Admin Routes */}
               <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/claims" element={<AdminRoute><AdminClaimList /></AdminRoute>} />
               <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
               <Route path="/admin/return-item" element={<AdminRoute><AdminReturnItem /></AdminRoute>} />
+            </Route>
 
-              {/* Fallback */}
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Layout>
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </AuthProvider>
       </GlobalErrorBoundary>
     </Router>
