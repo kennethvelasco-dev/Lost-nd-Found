@@ -4,6 +4,7 @@ import api from '../../services/api';
 import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
+import FileUpload from '../../components/UI/FileUpload';
 
 const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
 
@@ -108,14 +109,11 @@ const ClaimForm = () => {
                         </div>
 
                         <div className="form-group">
-                            <label className="form-label">Proof of Ownership (Optional)</label>
-                            <textarea 
-                                className="form-textarea"
-                                placeholder="Serial numbers, specific photos you have, or other proof..."
+                            <FileUpload 
+                                label="Proof of Ownership (Photo of receipt, item, etc.)"
                                 value={formData.proof}
-                                onChange={(e) => setFormData({ ...formData, proof: e.target.value })}
-                                style={{ minHeight: '80px' }}
-                            ></textarea>
+                                onFileSelect={(base64) => setFormData({ ...formData, proof: base64 })}
+                            />
                         </div>
 
                         <Button type="submit" variant="primary" disabled={submitting} style={{ width: '100%', marginTop: 'var(--space-3)' }}>

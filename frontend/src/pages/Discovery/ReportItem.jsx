@@ -4,6 +4,7 @@ import api from '../../services/api';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Card from '../../components/UI/Card';
+import FileUpload from '../../components/UI/FileUpload';
 
 const CATEGORIES = ['Personal Items', 'Electronics', 'Books & Documents', 'Keys & Cards', 'Clothing', 'Other'];
 const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
@@ -135,13 +136,10 @@ const ReportItem = () => {
                                 />
                             </div>
                             <div style={{ flex: 1 }}>
-                                <Input
-                                    label="Item Picture (URL)"
-                                    placeholder="https://example.com/item.jpg"
-                                    type="url"
+                                <FileUpload 
+                                    label="Evidence Photo"
                                     value={formData.main_picture}
-                                    onChange={(e) => setFormData({ ...formData, main_picture: e.target.value })}
-                                    required
+                                    onFileSelect={(base64) => setFormData({ ...formData, main_picture: base64 })}
                                 />
                             </div>
                         </div>
