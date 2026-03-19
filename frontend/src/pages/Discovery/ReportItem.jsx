@@ -9,10 +9,11 @@ import FileUpload from '../../components/UI/FileUpload';
 const CATEGORIES = ['Personal Items', 'Electronics', 'Books & Documents', 'Keys & Cards', 'Clothing', 'Other'];
 const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
 
-import useLocalStorage from '../../hooks/useLocalStorage';
+import { DraftService } from '../../services/DraftService';
 
 const ReportItem = () => {
-    const [formData, setFormData] = useLocalStorage('report_draft', {
+    const navigate = useNavigate();
+    const [formData, setFormData] = useState({
         item_type: '',
         category: 'Personal Items',
         color: 'Black',
@@ -24,6 +25,24 @@ const ReportItem = () => {
     });
     const [otherCategory, setOtherCategory] = useState('');
     const [otherColor, setOtherColor] = useState('');
+    const [loadingDraft, setLoadingDraft] = useState(true);
+
+    // Initial draft load from IndexedDB
+    useEffect(() => {
+        const load = async () => {
+            const draft = await DraftService.getDraft('report_draft');
+            if (draft) setFormData(prev => ({ ...prev, ...draft }));
+            setLoadingDraft(false);
+        };
+        load();
+    }, []);
+
+    // Save draft to IndexedDB on change
+    useEffect(() => {
+        if (!loadingDraft) {
+            DraftService.saveDraft('report_draft', formData);
+        }
+    }, [formData, loadingDraft]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -50,7 +69,7 @@ const ReportItem = () => {
 
         try {
             await api.post('/items/lost', submissionData);
-            window.localStorage.removeItem('report_draft'); // Clear draft
+            await DraftService.deleteDraft('report_draft'); // Clear draft
             navigate('/confirmation', { 
                 state: { 
                     title: 'Report Submitted!', 

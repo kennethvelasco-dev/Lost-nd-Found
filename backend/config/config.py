@@ -17,8 +17,8 @@ class Config:
     # JWT Configuration
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret")
 
-    # Explicit token behavior (Longer for dev stability)
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(days=1)
+    # Explicit token behavior (Hardened for Production UX)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
 
     JWT_ALGORITHM = "HS256"

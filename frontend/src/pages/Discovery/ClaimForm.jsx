@@ -5,6 +5,7 @@ import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import FileUpload from '../../components/UI/FileUpload';
+import { DraftService } from '../../services/DraftService';
 
 const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
 
@@ -14,12 +15,30 @@ const ClaimForm = () => {
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [formData, setFormData] = useLocalStorage(`claim_draft_${id}`, {
+    const [formData, setFormData] = useState({
         color: 'Black',
         description: '',
-        images: [] // Changed from proof to images array
+        images: []
     });
     const [otherColor, setOtherColor] = useState('');
+    const [loadingDraft, setLoadingDraft] = useState(true);
+
+    // Initial draft load from IndexedDB
+    useEffect(() => {
+        const load = async () => {
+            const draft = await DraftService.getDraft(`claim_draft_${id}`);
+            if (draft) setFormData(prev => ({ ...prev, ...draft }));
+            setLoadingDraft(false);
+        };
+        load();
+    }, [id]);
+
+    // Save draft to IndexedDB on change
+    useEffect(() => {
+        if (!loadingDraft) {
+            DraftService.saveDraft(`claim_draft_${id}`, formData);
+        }
+    }, [formData, loadingDraft, id]);
 
     useEffect(() => {
         const fetchItem = async () => {
@@ -57,7 +76,7 @@ const ClaimForm = () => {
             }
 
             await api.post('/claims', claimData);
-            window.localStorage.removeItem(`claim_draft_${id}`); // Clear draft
+            await DraftService.deleteDraft(`claim_draft_${id}`); // Clear draft
             navigate('/confirmation', { 
                 state: { title: 'Claim Submitted!', message: 'The administrator will review your claim and notify you soon.' } 
             });
