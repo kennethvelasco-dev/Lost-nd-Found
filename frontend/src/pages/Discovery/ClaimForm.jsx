@@ -14,7 +14,7 @@ const ClaimForm = () => {
     const [item, setItem] = useState(null);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useLocalStorage(`claim_draft_${id}`, {
         color: 'Black',
         description: '',
         images: [] // Changed from proof to images array
@@ -57,6 +57,7 @@ const ClaimForm = () => {
             }
 
             await api.post('/claims', claimData);
+            window.localStorage.removeItem(`claim_draft_${id}`); // Clear draft
             navigate('/confirmation', { 
                 state: { title: 'Claim Submitted!', message: 'The administrator will review your claim and notify you soon.' } 
             });

@@ -9,8 +9,10 @@ import FileUpload from '../../components/UI/FileUpload';
 const CATEGORIES = ['Personal Items', 'Electronics', 'Books & Documents', 'Keys & Cards', 'Clothing', 'Other'];
 const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yellow', 'Brown', 'Other'];
 
+import useLocalStorage from '../../hooks/useLocalStorage';
+
 const ReportItem = () => {
-    const [formData, setFormData] = useState({
+    const [formData, setFormData] = useLocalStorage('report_draft', {
         item_type: '',
         category: 'Personal Items',
         color: 'Black',
@@ -18,7 +20,7 @@ const ReportItem = () => {
         last_seen_datetime: '',
         public_description: '',
         private_details: '',
-        images: [] // Changed from main_picture to images array
+        images: []
     });
     const [otherCategory, setOtherCategory] = useState('');
     const [otherColor, setOtherColor] = useState('');
@@ -48,6 +50,7 @@ const ReportItem = () => {
 
         try {
             await api.post('/items/lost', submissionData);
+            window.localStorage.removeItem('report_draft'); // Clear draft
             navigate('/confirmation', { 
                 state: { 
                     title: 'Report Submitted!', 
