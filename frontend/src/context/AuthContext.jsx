@@ -21,12 +21,12 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password, role) => {
         try {
             const response = await api.post('/auth/login', { username, password });
-            const { access_token, refresh_token } = response.data.data;
+            const { access_token, refresh_token, user: serverUser } = response.data.data;
 
             localStorage.setItem('access_token', access_token);
             localStorage.setItem('refresh_token', refresh_token);
-            localStorage.setItem('user', JSON.stringify({ username, role }));
-            setUser({ username, role });
+            localStorage.setItem('user', JSON.stringify(serverUser));
+            setUser(serverUser);
             return { success: true };
         } catch (err) {
             return { success: false, message: err.response?.data?.message || 'Login failed' };

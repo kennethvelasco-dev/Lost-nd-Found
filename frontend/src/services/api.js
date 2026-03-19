@@ -51,6 +51,15 @@ api.interceptors.response.use(
                 window.location.href = '/login';
             }
         }
+        // Handle generic Network Errors (Server offline)
+        if (!error.response) {
+            console.error("Network Error: Backend is unreachable.");
+            // If we have an access token, it might be a connectivity issue. 
+            // We'll let the component handle the specific message, 
+            // but we ensure the interceptor doesn't hang.
+            return Promise.reject(new Error("Network Error: Server unreachable. Please check your connection or try again later."));
+        }
+
         return Promise.reject(error);
     }
 );

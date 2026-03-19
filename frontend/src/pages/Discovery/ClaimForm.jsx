@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useHttp } from '../../hooks/useHttp';
+import StatusState from '../../components/UI/StatusState';
 import api from '../../services/api';
 import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
@@ -12,9 +14,9 @@ const COLORS = ['Black', 'White', 'Silver', 'Gold', 'Red', 'Blue', 'Green', 'Yel
 const ClaimForm = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [item, setItem] = useState(null);
-    const [loading, setLoading] = useState(true);
+    const { loading, error, data, request } = useHttp();
     const [submitting, setSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState('');
     const [formData, setFormData] = useState({
         color: 'Black',
         description: '',
@@ -22,6 +24,13 @@ const ClaimForm = () => {
     });
     const [otherColor, setOtherColor] = useState('');
     const [loadingDraft, setLoadingDraft] = useState(true);
+
+    // Fetch Item details
+    useEffect(() => {
+        request({ url: `/items/found/${id}` });
+    }, [id, request]);
+
+    const item = data?.item || data;
 
     // Initial draft load from IndexedDB
     useEffect(() => {
@@ -33,30 +42,17 @@ const ClaimForm = () => {
         load();
     }, [id]);
 
-    // Save draft to IndexedDB on change
+    // Save draft on change
     useEffect(() => {
         if (!loadingDraft) {
             DraftService.saveDraft(`claim_draft_${id}`, formData);
         }
     }, [formData, loadingDraft, id]);
 
-    useEffect(() => {
-        const fetchItem = async () => {
-            try {
-                const response = await api.get(`/items/found/${id}`);
-                setItem(response.data.data.item || response.data.data);
-            } catch (err) {
-                console.error(err);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchItem();
-    }, [id]);
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
+        setSubmitError('');
 
         const finalColor = formData.color === 'Other' && otherColor ? otherColor : formData.color;
 
@@ -68,7 +64,6 @@ const ClaimForm = () => {
                 color: finalColor
             };
 
-            // Map images
             if (formData.images && formData.images.length > 0) {
                 claimData.receipt_proof = formData.images[0];
                 claimData.additional_proof_1 = formData.images[1] || '';
@@ -76,79 +71,99 @@ const ClaimForm = () => {
             }
 
             await api.post('/claims', claimData);
-            await DraftService.deleteDraft(`claim_draft_${id}`); // Clear draft
+            await DraftService.deleteDraft(`claim_draft_${id}`);
             navigate('/confirmation', { 
-                state: { title: 'Claim Submitted!', message: 'The administrator will review your claim and notify you soon.' } 
+                state: { 
+                    title: 'Claim Submitted!', 
+                    message: 'Our administration team will review your proof of ownership and contact you shortly.' 
+                } 
             });
         } catch (err) {
-            console.error(err);
+            setSubmitError(err.response?.data?.message || 'Submission failed. Please try again.');
         } finally {
             setSubmitting(false);
         }
     };
 
-    if (loading) return <div className="page-container"><p>Loading item details...</p></div>;
-
     return (
         <div className="page-container">
             <div className="container" style={{ maxWidth: '800px' }}>
-                <div className="pretty-header">
-                    <h1 className="pretty-title">Submit Ownership Claim</h1>
-                    <div className="title-underline"></div>
-                </div>
+                <StatusState 
+                    loading={loading} 
+                    error={error} 
+                    onRetry={() => request({ url: `/items/found/${id}` })}
+                >
+                    {item && (
+                        <>
+                            <div className="pretty-header">
+                                <h1 className="pretty-title">Ownership Verification</h1>
+                                <p className="auth-subtitle">Provide details to verify this item belongs to you.</p>
+                                <div className="title-underline"></div>
+                            </div>
 
-                <Card className="claim-form-card">
-                    <h2 style={{ color: 'var(--primary)', marginBottom: 'var(--space-3)' }}>
-                        Claiming: {item?.item_type}
-                    </h2>
-                    
-                    <form onSubmit={handleSubmit} className="report-form">
-                        <div className="form-group">
-                            <label className="form-label">Primary Color of your item</label>
-                            <select 
-                                className="form-select"
-                                value={formData.color}
-                                onChange={(e) => setFormData({ ...formData, color: e.target.value })}
-                            >
-                                {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
-                        </div>
+                            <Card className="claim-form-card">
+                                <div style={{ marginBottom: 'var(--space-4)', borderBottom: '1px solid rgba(0,0,0,0.05)', paddingBottom: 'var(--space-3)' }}>
+                                    <h2 style={{ color: 'var(--primary)', margin: 0, fontSize: '1.4rem' }}>
+                                        Verification for: {item.item_type}
+                                    </h2>
+                                    <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: '4px 0 0 0' }}>Category: {item.category}</p>
+                                </div>
+                                
+                                <form onSubmit={handleSubmit} className="report-form" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+                                    <div className="form-group">
+                                        <label className="form-label">Primary Color of your item</label>
+                                        <select 
+                                            className="form-select"
+                                            value={formData.color}
+                                            onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                                        >
+                                            {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
+                                        </select>
+                                    </div>
 
-                        {formData.color === 'Other' && (
-                            <Input
-                                label="Specify Color"
-                                placeholder="Describe the color(s)..."
-                                value={otherColor}
-                                onChange={(e) => setOtherColor(e.target.value)}
-                                required
-                            />
-                        )}
+                                    {formData.color === 'Other' && (
+                                        <Input
+                                            label="Specify Color"
+                                            placeholder="e.g. Neon Green with stripes"
+                                            value={otherColor}
+                                            onChange={(e) => setOtherColor(e.target.value)}
+                                            required
+                                        />
+                                    )}
 
-                        <div className="form-group">
-                            <label className="form-label">Detailed Description</label>
-                            <textarea 
-                                className="form-textarea"
-                                placeholder="Describe unique features, markings, or contents..."
-                                value={formData.description}
-                                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                required
-                                style={{ minHeight: '120px' }}
-                            ></textarea>
-                        </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Private Identification Details</label>
+                                        <textarea 
+                                            className="form-textarea"
+                                            placeholder="Describe unique markings, serial numbers, case details, orContents..."
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                            required
+                                            style={{ minHeight: '140px' }}
+                                        ></textarea>
+                                        <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '6px' }}>
+                                            💡 Be as specific as possible. This information is private and only seen by admins.
+                                        </p>
+                                    </div>
 
-                        <div className="form-group">
-                            <FileUpload 
-                                label="Proof of Ownership Photos"
-                                initialFiles={formData.images || []}
-                                onFilesChange={(files) => setFormData({ ...formData, images: files })}
-                            />
-                        </div>
+                                    <div className="form-group">
+                                        <FileUpload 
+                                            label="Ownership Evidence (Photos/Receipts)"
+                                            initialFiles={formData.images || []}
+                                            onFilesChange={(files) => setFormData({ ...formData, images: files })}
+                                        />
+                                    </div>
 
-                        <Button type="submit" variant="primary" disabled={submitting} style={{ width: '100%', marginTop: 'var(--space-3)' }}>
-                            {submitting ? 'Submitting Claim...' : 'Submit Claim'}
-                        </Button>
-                    </form>
-                </Card>
+                                    {submitError && <p style={{ color: 'var(--danger)', fontSize: '14px' }}>{submitError}</p>}
+
+                                    <Button type="submit" variant="primary" disabled={submitting} style={{ width: '100%', padding: '16px', marginTop: 'var(--space-2)' }}>
+                                        {submitting ? 'Verifying & Submitting...' : 'Submit Claim Request'}
+                                    </Button>
+                                </form>
+                            </Card>
+                        </>
+                    )}
+                </StatusState>
             </div>
         </div>
     );
