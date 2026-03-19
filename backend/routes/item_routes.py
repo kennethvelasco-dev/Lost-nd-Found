@@ -11,16 +11,23 @@ from backend.models import ValidationError
 
 item_bp = Blueprint("items", __name__)
 
-@item_bp.route("/lost", methods=["POST"])
+@item_bp.route("/lost", methods=["GET", "POST"])
 @jwt_required()
-def report_lost_item():
-    data = request.json or {}
-    try:
-        identity = get_jwt_identity()
-        result, status = submit_lost_item(data, identity)
-        return jsonify(success_response(result)), status
-    except ValidationError as ve:
-        return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
+def lost_items_route():
+    if request.method == "POST":
+        data = request.json or {}
+        try:
+            identity = get_jwt_identity()
+            result, status = submit_lost_item(data, identity)
+            return jsonify(success_response(result)), status
+        except ValidationError as ve:
+            return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
+    
+    # GET logic
+    filters = request.args.to_dict()
+    filters["status"] = "lost" 
+    result, status = search_items_service(filters)
+    return jsonify(success_response(result)), status
 
 @item_bp.route("/found", methods=["GET", "POST"])
 @jwt_required()
