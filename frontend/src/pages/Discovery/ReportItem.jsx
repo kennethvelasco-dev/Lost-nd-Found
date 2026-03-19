@@ -18,6 +18,8 @@ const ReportItem = () => {
         public_description: '',
         private_details: ''
     });
+    const [otherCategory, setOtherCategory] = useState('');
+    const [otherColor, setOtherColor] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const navigate = useNavigate();
@@ -27,8 +29,16 @@ const ReportItem = () => {
         setLoading(true);
         setError('');
 
+        const submissionData = { ...formData };
+        if (formData.category === 'Other' && otherCategory) {
+            submissionData.category = otherCategory;
+        }
+        if (formData.color === 'Other' && otherColor) {
+            submissionData.color = otherColor;
+        }
+
         try {
-            await api.post('/items/lost', formData);
+            await api.post('/items/lost', submissionData);
             navigate('/confirmation', { 
                 state: { title: 'Report Submitted!', message: 'We will notify you if a matching item is found.' } 
             });
@@ -70,6 +80,16 @@ const ReportItem = () => {
                             </div>
                         </div>
 
+                        {formData.category === 'Other' && (
+                            <Input
+                                label="Specify Category"
+                                placeholder="What kind of item is it?"
+                                value={otherCategory}
+                                onChange={(e) => setOtherCategory(e.target.value)}
+                                required
+                            />
+                        )}
+
                         <div className="form-row">
                             <div className="form-group">
                                 <label className="form-label">Primary Color</label>
@@ -89,6 +109,16 @@ const ReportItem = () => {
                                 required
                             />
                         </div>
+
+                        {formData.color === 'Other' && (
+                            <Input
+                                label="Specify Color"
+                                placeholder="Describe the color(s)..."
+                                value={otherColor}
+                                onChange={(e) => setOtherColor(e.target.value)}
+                                required
+                            />
+                        )}
 
                         <Input
                             label="Last Seen Date/Time"

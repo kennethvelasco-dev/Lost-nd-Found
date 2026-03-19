@@ -1,4 +1,15 @@
-from backend.__init__ import create_app
+import sys
+import os
+
+# Ensure the project root is in sys.path for robust module resolution
+# This allows running the app from either the root or inside 'backend/'
+current_dir = os.path.dirname(os.path.abspath(__file__))
+project_root = os.path.dirname(current_dir)
+if project_root not in sys.path:
+    sys.path.insert(0, project_root)
+
+from backend import create_app
+
 from flask import jsonify
 from backend.services.auth_service import is_token_revoked
 from backend.extensions import jwt

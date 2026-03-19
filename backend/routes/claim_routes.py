@@ -17,6 +17,7 @@ from backend.helpers.response import success_response, error_response
 claim_bp = Blueprint("claims", __name__)
 
 @claim_bp.route("/submit", methods=["POST"])
+@claim_bp.route("/", methods=["POST"]) # Alias for fallback/compatibility
 @jwt_required()
 def post_claim():
     """Submit a claim for a found item or a general report."""

@@ -29,13 +29,17 @@ def submit_claim(data: dict, user_id: str) -> tuple:
     """
     Validates and creates a claim. found_item_id can be null for general reports.
     """
+    # Normalize fields from frontend
+    description = data.get("description")
+    declared_value = data.get("declared_value", 0) # Default to 0
+    receipt_proof = data.get("receipt_proof") or data.get("proof") # Support 'proof' alias
+
     if data.get("found_item_id"):
-        require_fields(data, ["description", "declared_value", "receipt_proof"])
         validate_found_item_id(data["found_item_id"])
         
         # Validate declared_value
         try:
-            val = float(data["declared_value"])
+            val = float(declared_value)
             if val < 0:
                 raise ValueError()
         except (TypeError, ValueError):
@@ -45,11 +49,11 @@ def submit_claim(data: dict, user_id: str) -> tuple:
     data["user_id"] = user_id
     
     # Store other metadata in 'answers' if not already there
-    if "answers" not in data:
+    if "answers" not in data or not data["answers"]:
         data["answers"] = {
-            "description": data.get("description"),
-            "declared_value": data.get("declared_value"),
-            "receipt_proof": data.get("receipt_proof"),
+            "description": description,
+            "declared_value": declared_value,
+            "receipt_proof": receipt_proof,
             "claimant_name": data.get("claimant_name"),
             "claimant_email": data.get("claimant_email"),
             "claimed_category": data.get("category"),

@@ -18,12 +18,13 @@ const ClaimForm = () => {
         description: '',
         proof: ''
     });
+    const [otherColor, setOtherColor] = useState('');
 
     useEffect(() => {
         const fetchItem = async () => {
             try {
                 const response = await api.get(`/items/found/${id}`);
-                setItem(response.data.data.item);
+                setItem(response.data.data.item || response.data.data);
             } catch (err) {
                 console.error(err);
             } finally {
@@ -36,14 +37,16 @@ const ClaimForm = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSubmitting(true);
+
+        const finalColor = formData.color === 'Other' && otherColor ? otherColor : formData.color;
+
         try {
             await api.post('/claims', {
                 found_item_id: id,
-                answers: {
-                    color: formData.color,
-                    description: formData.description,
-                    proof: formData.proof
-                }
+                description: formData.description,
+                proof: formData.proof,
+                color: finalColor,
+                declared_value: 0 // Provide default to satisfy backend
             });
             navigate('/confirmation', { 
                 state: { title: 'Claim Submitted!', message: 'The administrator will review your claim and notify you soon.' } 
@@ -81,6 +84,16 @@ const ClaimForm = () => {
                                 {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
                         </div>
+
+                        {formData.color === 'Other' && (
+                            <Input
+                                label="Specify Color"
+                                placeholder="Describe the color(s)..."
+                                value={otherColor}
+                                onChange={(e) => setOtherColor(e.target.value)}
+                                required
+                            />
+                        )}
 
                         <div className="form-group">
                             <label className="form-label">Detailed Description</label>
