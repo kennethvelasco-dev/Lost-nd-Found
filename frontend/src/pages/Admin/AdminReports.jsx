@@ -63,19 +63,19 @@ const AdminReports = () => {
                         {pendingReports.map(report => (
                             <Card key={`${report.type}-${report.id}`} style={{ padding: 'var(--space-4)' }}>
                                 <div style={{ display: 'grid', gridTemplateColumns: '250px 1fr 300px', gap: 'var(--space-4)' }}>
-                                    {/* Image Section */}
-                                    <div className="report-image-box">
+                                    <div className="report-image-box" style={{ flexShrink: 0 }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: 'bold', textTransform: 'uppercase' }}>Photos uploaded from the report</div>
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
                                             {report.main_picture ? (
-                                                <img src={report.main_picture} alt="Primary" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-flat-sm)' }} />
+                                                <img src={report.main_picture} alt="Primary" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)', boxShadow: 'var(--nm-flat-sm)', border: '2px solid var(--primary)' }} />
                                             ) : (
                                                 <div style={{ width: '100%', aspectRatio: '1', backgroundColor: 'var(--background)', borderRadius: 'var(--radius-sm)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', border: '1px dashed var(--text-muted)' }}>
                                                     No Primary Image
                                                 </div>
                                             )}
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                                {report.additional_picture_1 && <img src={report.additional_picture_1} alt="Alt 1" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />}
-                                                {report.additional_picture_2 && <img src={report.additional_picture_2} alt="Alt 2" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)' }} />}
+                                                {report.additional_picture_1 && <img src={report.additional_picture_1} alt="Alt 1" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)' }} />}
+                                                {report.additional_picture_2 && <img src={report.additional_picture_2} alt="Alt 2" style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--primary)' }} />}
                                             </div>
                                         </div>
                                     </div>

@@ -1,0 +1,47 @@
+{
+  "found_items": [],
+  "lost_items": [
+    {
+      "id": 1,
+      "report_id": "dcc8c280-509a-42b4-847b-37879f023df7",
+      "status": "found",
+      "recipient_name": null,
+      "recipient_id": null,
+      "resolved_at": null
+    }
+  ],
+  "claims": [
+    {
+      "id": 1,
+      "found_item_id": null,
+      "lost_item_id": null,
+      "decision": "rejected",
+      "handover_notes": null,
+      "completed_at": null
+    },
+    {
+      "id": 2,
+      "found_item_id": null,
+      "lost_item_id": 1,
+      "decision": "rejected",
+      "handover_notes": null,
+      "completed_at": null
+    },
+    {
+      "id": 3,
+      "found_item_id": null,
+      "lost_item_id": 1,
+      "decision": "completed",
+      "handover_notes": "ID: 0123456789 | Verified   Rubik Cube  (Personal Items). Recipient presented valid ID matching claimant name.",
+      "completed_at": "2026-03-26T12:23:00.538877+00:00"
+    },
+    {
+      "id": 4,
+      "found_item_id": null,
+      "lost_item_id": 1,
+      "decision": "rejected",
+      "handover_notes": null,
+      "completed_at": null
+    }
+  ]
+}

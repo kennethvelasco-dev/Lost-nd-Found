@@ -41,7 +41,7 @@ def missing_token_callback(error):
 def handle_unexpected_error(e):
     """Global handler for catching all unhandled exceptions."""
     import traceback
-    # Log detailed error for developers
+    # Log detailed error for developers (console only)
     print(f"CRITICAL ERROR: {str(e)}\n{traceback.format_exc()}")
     # Return friendly error to users
     return jsonify({
@@ -56,4 +56,5 @@ def revoked_token_response(jwt_header, jwt_payload):
     return jsonify({"error": "Token has been revoked", "sub_status": "TOKEN_REVOKED"}), 401
 
 if __name__ == "__main__":
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(debug=True, host="0.0.0.0", port=port)

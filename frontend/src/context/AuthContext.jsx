@@ -10,9 +10,11 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('access_token');
+        // We no longer check for tokens in JS. 
+        // We trust the 'user' object for UI state. 
+        // Real validation happens via Http-only cookies on first API call.
         const storedUser = localStorage.getItem('user');
-        if (token && storedUser) {
+        if (storedUser) {
             setUser(JSON.parse(storedUser));
         }
         setLoading(false);
@@ -21,10 +23,9 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password, role) => {
         try {
             const response = await api.post('/auth/login', { username, password });
-            const { access_token, refresh_token, user: serverUser } = response.data.data;
+            const { user: serverUser } = response.data.data;
 
-            localStorage.setItem('access_token', access_token);
-            localStorage.setItem('refresh_token', refresh_token);
+            // Tokens are set in Http-only cookies by the backend
             localStorage.setItem('user', JSON.stringify(serverUser));
             setUser(serverUser);
             return { success: true };
@@ -42,12 +43,45 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        setUser(null);
+    const logout = async () => {
+        try {
+            await api.post('/auth/logout');
+        } catch (err) {
+            console.error("Logout API failed", err);
+        } finally {
+            localStorage.removeItem('user');
+            localStorage.removeItem('access_token'); // Clean up legacy
+            localStorage.removeItem('refresh_token'); // Clean up legacy
+            setUser(null);
+        }
     };
+
+    // Idle Timeout (15m for users, 30m for admins)
+    useEffect(() => {
+        if (!user) return;
+
+        let idleTimer;
+        const idleLimit = user.role === 'admin' ? 30 * 60 * 1000 : 15 * 60 * 1000;
+
+        const resetTimer = () => {
+            clearTimeout(idleTimer);
+            idleTimer = setTimeout(() => {
+                console.log("Idle timeout reached. Logging out...");
+                logout();
+            }, idleLimit);
+        };
+
+        // Events to track activity
+        const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart'];
+        events.forEach(event => document.addEventListener(event, resetTimer));
+
+        resetTimer(); // Start timer
+
+        return () => {
+            clearTimeout(idleTimer);
+            events.forEach(event => document.removeEventListener(event, resetTimer));
+        };
+    }, [user]);
 
     return (
         <AuthContext.Provider value={{ user, login, register, logout, loading }}>

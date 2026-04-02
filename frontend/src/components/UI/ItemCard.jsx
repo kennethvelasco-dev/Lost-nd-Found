@@ -10,11 +10,12 @@ const ItemCard = ({ item, isReturned }) => {
     // Determine fallback image based on ID
     const placeholder = `/assets/item_${(item.id % 3) + 1}.jpg`;
     const displayImage = item.main_picture || item.image_url || placeholder;
+    const isResolved = isReturned || item.status === 'found';
 
     return (
         <Card 
             className="item-card" 
-            onClick={() => navigate(`/items/${item.id}`)}
+            onClick={() => navigate(`/items/${item.report_id || item.id}`)}
         >
             <div className="item-image-container">
                 <img
@@ -22,8 +23,8 @@ const ItemCard = ({ item, isReturned }) => {
                     alt={item.item_type}
                     className="item-image"
                 />
-                <div className={`status-badge ${isReturned || item.status === 'returned' ? 'returned' : 'lost'}`}>
-                    {isReturned || item.status === 'returned' ? 'VERIFIED' : 'LOST'}
+                <div className={`status-badge ${isResolved ? 'returned' : 'lost'}`}>
+                    {isResolved ? 'VERIFIED' : 'LOST'}
                 </div>
             </div>
 
@@ -32,17 +33,32 @@ const ItemCard = ({ item, isReturned }) => {
                 
                 <div className="item-info-grid">
                     <div className="item-info-row">
-                        <span className="info-label">Where</span>
+                        <span className="info-label">{item.type === 'lost' ? 'Lost at' : 'Found at'}</span>
                         <span className="info-value">{item.found_location || item.last_seen_location}</span>
                     </div>
-                    <div className="item-info-row">
-                        <span className="info-label">Color</span>
-                        <span className="info-value">{item.color}</span>
-                    </div>
-                    <div className="item-info-row">
-                        <span className="info-label">Date</span>
-                        <span className="info-value">{new Date(item.created_at || item.found_datetime || item.last_seen_datetime).toLocaleDateString()}</span>
-                    </div>
+                    {isResolved && item.recipient_name ? (
+                        <>
+                            <div className="item-info-row">
+                                <span className="info-label">Claimed By</span>
+                                <span className="info-value" style={{ color: 'var(--success)', fontWeight: 'bold' }}>{item.recipient_name}</span>
+                            </div>
+                            <div className="item-info-row">
+                                <span className="info-label">Returned On</span>
+                                <span className="info-value">{new Date(item.resolved_at || item.created_at).toLocaleDateString()}</span>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className="item-info-row">
+                                <span className="info-label">Color</span>
+                                <span className="info-value">{item.color || 'N/A'}</span>
+                            </div>
+                            <div className="item-info-row">
+                                <span className="info-label">{item.type === 'lost' ? 'Lost on' : 'Found on'}</span>
+                                <span className="info-value">{new Date(item.created_at || item.found_datetime || item.last_seen_datetime).toLocaleDateString()}</span>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 <div className="card-actions">

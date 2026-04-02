@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     name TEXT,
     admin_id TEXT,
     is_email_verified INTEGER DEFAULT 0,
+    verification_token TEXT,
+    verification_token_expires TEXT,
     created_at TEXT NOT NULL
 );
 
@@ -28,11 +30,12 @@ CREATE TABLE IF NOT EXISTS lost_items (
     additional_picture_1 TEXT,
     additional_picture_2 TEXT,
     additional_picture_3 TEXT,
-    reporter_id INTEGER,
+    reporter_id INTEGER NOT NULL,
     claim_id INTEGER,
     processed_id TEXT,
     score_breakdown TEXT,
-    status TEXT NOT NULL DEFAULT 'lost',
+    status TEXT DEFAULT 'pending_approval',
+    rejection_reason TEXT,
     created_at TEXT NOT NULL,
     FOREIGN KEY (reporter_id) REFERENCES users(id)
 );
@@ -118,4 +121,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
     performed_by TEXT NOT NULL,
     timestamp TEXT NOT NULL,
     notes TEXT
+);
+
+CREATE TABLE IF NOT EXISTS token_blocklist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    jti TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL
 );

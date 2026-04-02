@@ -41,24 +41,33 @@ def compute_claim_score(claim_data: dict, found_item: dict) -> dict:
     breakdown = []
 
     # Map claim fields to found item fields
-    # Note: Added 'date' mapping
+    # Unified mapping to support both 'found_items' and 'lost_items' tables
     field_map = {
         "category": ("claimed_category", "category"),
         "item_type": ("claimed_item_type", "item_type"),
         "brand": ("claimed_brand", "brand"),
         "color": ("claimed_color", "color"),
-        "location": ("claimed_location", "found_location"),
-        "private_details": ("claimed_private_details", "public_description"),
-        "date": ("claimed_datetime", "found_datetime"),
+        "location": ("lost_location_claimed", ["found_location", "last_seen_location"]),
+        "private_details": ("claimed_private_details", ["public_description", "private_details"]),
+        "date": ("lost_datetime_claimed", ["found_datetime", "last_seen_datetime"]),
     }
 
-    for field, (claim_key, found_key) in field_map.items():
+    for field, (claim_key, found_keys) in field_map.items():
         rule = SCORING_RULES.get(field)
         if not rule:
             continue
 
         claim_val = claim_data.get(claim_key)
-        found_val = found_item.get(found_key)
+        
+        # Handle multiple possible found item keys (for lost/found table unification)
+        found_val = None
+        if isinstance(found_keys, list):
+            for k in found_keys:
+                if k in found_item:
+                    found_val = found_item[k]
+                    break
+        else:
+            found_val = found_item.get(found_keys)
 
         matched = match_with_tolerance(
             claim_val,

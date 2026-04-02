@@ -20,34 +20,85 @@ def register():
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 400
 
+from flask_jwt_extended import (
+    jwt_required, 
+    get_jwt_identity, 
+    get_jwt, 
+    set_access_cookies, 
+    set_refresh_cookies, 
+    unset_jwt_cookies
+)
+
 @auth_bp.route("/login", methods=["POST"])
-@limiter.limit("10 per minute")
+@limiter.limit("5 per minute")
 @require_json_fields(["username", "password"])
 def login():
     data = request.get_json() or {}
     try:
         result, status = login_user(data)
-        return jsonify(success_response(result)), status
+        response = jsonify(success_response({
+            "user": result["user"],
+            "message": result["message"]
+        }))
+        
+        # Set tokens in HTTP-only cookies
+        set_access_cookies(response, result["access_token"])
+        set_refresh_cookies(response, result["refresh_token"])
+        
+        return response, status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 401
 
 @auth_bp.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
+@limiter.limit("5 per minute")
 def refresh():
     try:
         user_id = get_jwt_identity()
         role = get_jwt().get("role")
+        old_jti = get_jwt()["jti"]
+        
+        # RTR: Generate new tokens
         result, status = refresh_token_service(user_id, role)
-        return jsonify(success_response(result)), status
+        
+        response = jsonify(success_response({"message": "Token refreshed"}))
+        set_access_cookies(response, result["access_token"])
+        set_refresh_cookies(response, result["refresh_token"])
+        
+        # Revoke the old refresh token
+        logout_token(old_jti)
+        
+        return response, status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 401
 
-@auth_bp.route("/logout", methods=["POST"])
-@jwt_required()
-def logout():
+@auth_bp.route("/verify-email", methods=["GET"])
+def verify_email():
+    token = request.args.get("token")
+    if not token:
+        return jsonify(error_response("VALIDATION_ERROR", "Verification token is required")), 400
+    
+    from backend.services.auth_service import verify_email_service
     try:
-        jti = get_jwt()["jti"]
-        result, status = logout_token(jti)
+        result, status = verify_email_service(token)
         return jsonify(success_response(result)), status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 400
+    except Exception as e:
+        return jsonify(error_response("INTERNAL_ERROR", str(e))), 500
+
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required(optional=True)
+def logout():
+    response = jsonify(success_response({"message": "Logged out successfully"}))
+    unset_jwt_cookies(response)
+    
+    # Revoke current token if it exists
+    try:
+        jwt_data = get_jwt()
+        if jwt_data:
+            logout_token(jwt_data["jti"])
+    except:
+        pass
+        
+    return response, 200

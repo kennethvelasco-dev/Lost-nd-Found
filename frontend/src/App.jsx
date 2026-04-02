@@ -13,6 +13,8 @@ import ReportItem from './pages/Discovery/ReportItem';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminReports from './pages/Admin/AdminReports';
 import AdminClaimList from './pages/Admin/AdminClaimList';
+import AdminApprovedClaims from './pages/Admin/AdminApprovedClaims';
+import AdminClaimDetail from './pages/Admin/AdminClaimDetail';
 import AdminReturnItem from './pages/Admin/AdminReturnItem';
 import MyActivities from './pages/Discovery/MyActivities';
 import GlobalErrorBoundary from './components/Layout/GlobalErrorBoundary';
@@ -51,13 +53,15 @@ function App() {
               <Route path="/returned-items" element={<ProtectedRoute><ReturnedItems /></ProtectedRoute>} />
               <Route path="/items/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
               <Route path="/items/:id/claim" element={<ProtectedRoute><ClaimForm /></ProtectedRoute>} />
-              <Route path="/claim-confirmation" element={<ProtectedRoute><ConfirmationPage /></ProtectedRoute>} />
+              <Route path="/confirmation" element={<ProtectedRoute><ConfirmationPage /></ProtectedRoute>} />
               <Route path="/report-item" element={<ProtectedRoute><ReportItem /></ProtectedRoute>} />
               <Route path="/my-activities" element={<ProtectedRoute><MyActivities /></ProtectedRoute>} />
 
               {/* Admin Routes */}
               <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
               <Route path="/admin/claims" element={<AdminRoute><AdminClaimList /></AdminRoute>} />
+              <Route path="/admin/approved-claims" element={<AdminRoute><AdminApprovedClaims /></AdminRoute>} />
+              <Route path="/admin/claims/:id" element={<AdminRoute><AdminClaimDetail /></AdminRoute>} />
               <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
               <Route path="/admin/return-item" element={<AdminRoute><AdminReturnItem /></AdminRoute>} />
             </Route>

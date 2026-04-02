@@ -6,15 +6,16 @@ from .items import (
     create_lost_item,
     create_found_item,
     get_published_found_items,
-    get_found_item_by_id
+    get_found_item_by_id,
+    get_item_universal_db
 )
 
 # Claims
 from .claims import (
     create_claim,
-    get_pending_claims,
+    get_filtered_claims_db,
     get_completed_claims,
-    get_claim_by_id,
+    get_claim_detail_db,
     update_claim,
     update_claim_status,
     verify_claim

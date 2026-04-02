@@ -1,6 +1,6 @@
-from backend.models.claims import get_claim_by_id 
+from backend.models.claims import get_claim_detail_db 
 from backend.models import (
-    get_pending_claims,
+    get_filtered_claims_db,
     get_completed_claims,
     verify_claim,
     require_fields,
@@ -10,7 +10,7 @@ from backend.models import (
 
 def get_pending_claims_service():
     """Return pending claims"""
-    claims = get_pending_claims()
+    claims = get_filtered_claims_db(status_filter=['pending'])
     return claims, 200
 
 def get_completed_transactions_service():
@@ -24,7 +24,7 @@ def process_claim_verification(claim_id: int, data: dict, admin_username: str):
     validate_claim_decision(data["decision"])
 
     # Check if claim exists
-    claim = get_claim_by_id(claim_id)
+    claim = get_claim_detail_db(claim_id)
     if not claim:
         raise ValidationError(f"Claim ID {claim_id} not found", 404)
 
@@ -55,6 +55,8 @@ def get_admin_stats_service():
         
         cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")
         resolved_items = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'returned'")
+        resolved_items += cursor.fetchone()[0]
         
         return {
             "total_lost": total_lost,

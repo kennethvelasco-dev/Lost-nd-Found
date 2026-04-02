@@ -4,9 +4,9 @@ from backend.models.claims import (
     require_fields,
     validate_found_item_id,
     link_claim_to_found_item,
-    get_claim_by_id,
+    get_claim_detail_db,
     schedule_pickup,
-    get_pending_claims
+    get_filtered_claims_db
 )
 from backend.models.items import get_published_found_items
 from backend.services.scoring_service import compute_claim_score
@@ -16,7 +16,7 @@ def ensure_claim_ownership(claim_id, user_id, role="user"):
     if role == "admin":
         return True
     
-    claim = get_claim_by_id(claim_id)
+    claim = get_claim_detail_db(claim_id)
     if not claim:
         raise ValidationError(f"Claim ID {claim_id} not found", 404)
         
@@ -34,7 +34,7 @@ def submit_claim(data: dict, user_id: str) -> tuple:
     declared_value = data.get("declared_value", 0) # Default to 0
     receipt_proof = data.get("receipt_proof") or data.get("proof") # Support 'proof' alias
 
-    if data.get("found_item_id"):
+    if data.get("found_item_id") is not None:
         validate_found_item_id(data["found_item_id"])
         
         # Validate declared_value
@@ -54,12 +54,15 @@ def submit_claim(data: dict, user_id: str) -> tuple:
             "description": description,
             "declared_value": declared_value,
             "receipt_proof": receipt_proof,
+            "proof": receipt_proof, # Frontend compatibility alias
             "claimant_name": data.get("claimant_name"),
             "claimant_email": data.get("claimant_email"),
             "claimed_category": data.get("category"),
             "claimed_item_type": data.get("item_type"),
             "claimed_brand": data.get("brand"),
             "claimed_color": data.get("color"),
+            "lost_location_claimed": data.get("lost_location"),
+            "lost_datetime_claimed": data.get("lost_datetime"),
             "claimed_location": data.get("location"),
             "claimed_datetime": data.get("datetime")
         }
@@ -67,12 +70,29 @@ def submit_claim(data: dict, user_id: str) -> tuple:
     result, status = create_claim(data)
     return result, status
 
-def get_user_claims_service(user_id: str, role: str) -> tuple:
-    """Returns claims belonging to a user, or all if admin."""
-    claims = get_pending_claims()
-    if role != "admin":
+def get_user_claims_service(user_id: str, role: str, status_filter=None) -> tuple:
+    """Returns claims belonging to a user, or filtered list if admin."""
+    if role == "admin":
+        # Admin can provide a custom filter like ['pending'] or ['approved']
+        # If not provided, default to both for backward compatibility or as requested
+        final_filter = status_filter if status_filter else ['pending', 'approved']
+        claims = get_filtered_claims_db(status_filter=final_filter)
+    else:
+        # Users see all their own claims regardless of status
+        claims = get_filtered_claims_db(status_filter=['pending', 'approved', 'rejected', 'completed'])
         claims = [c for c in claims if str(c["user_id"]) == str(user_id)]
+        
     return claims, 200
+
+def get_claim_detail_service(claim_id: int, user_id: str, role: str) -> tuple:
+    """
+    Retrieves a specific claim detail, ensuring user ownership or admin access.
+    """
+    ensure_claim_ownership(claim_id, user_id, role)
+    claim = get_claim_detail_db(claim_id)
+    if not claim:
+        return {"error": "Claim not found"}, 404
+    return claim, 200
 
 def get_potential_matches_service(claim_id: int, user_id: str, role: str) -> tuple:
     """
@@ -80,7 +100,7 @@ def get_potential_matches_service(claim_id: int, user_id: str, role: str) -> tup
     """
     ensure_claim_ownership(claim_id, user_id, role)
     
-    claim = get_claim_by_id(claim_id)
+    claim = get_claim_detail_db(claim_id)
     if not claim:
         return {"error": "Claim not found"}, 404
         

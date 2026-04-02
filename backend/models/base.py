@@ -3,7 +3,7 @@ import os
 
 from flask import current_app
 
-DEFAULT_DB = os.path.join(os.path.dirname(__file__), "database.db")
+DEFAULT_DB = os.path.join(os.path.dirname(__file__), "..", "lostnfound.db")
 
 def get_db_path():
     if current_app:

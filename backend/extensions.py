@@ -5,7 +5,7 @@ from flask_limiter.util import get_remote_address
 jwt = JWTManager()
 limiter = Limiter(
     key_func=get_remote_address,
-    default_limits=["100 per minute"],
+    default_limits=["100 per 15 minutes"],
     storage_uri="memory://",
     strategy="fixed-window",
 )

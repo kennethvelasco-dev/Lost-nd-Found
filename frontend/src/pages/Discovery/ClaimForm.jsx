@@ -20,6 +20,8 @@ const ClaimForm = () => {
     const [formData, setFormData] = useState({
         color: 'Black',
         description: '',
+        lost_location: '',
+        lost_datetime: '',
         images: []
     });
     const [otherColor, setOtherColor] = useState('');
@@ -27,7 +29,7 @@ const ClaimForm = () => {
 
     // Fetch Item details
     useEffect(() => {
-        request({ url: `/items/found/${id}` });
+        request({ url: `/items/${id}` });
     }, [id, request]);
 
     const item = data?.item || data;
@@ -58,10 +60,15 @@ const ClaimForm = () => {
 
         try {
             const claimData = {
-                found_item_id: id,
+                found_item_id: item.id,
                 description: formData.description,
+                lost_location: formData.lost_location,
+                lost_datetime: formData.lost_datetime,
                 declared_value: 0,
-                color: finalColor
+                color: finalColor,
+                brand: formData.brand,
+                category: item.category, // Pass the category through for verification indexing
+                item_type: item.item_type
             };
 
             if (formData.images && formData.images.length > 0) {
@@ -70,7 +77,7 @@ const ClaimForm = () => {
                 claimData.additional_proof_2 = formData.images[2] || '';
             }
 
-            await api.post('/claims', claimData);
+            await api.post('/claims/submit', claimData);
             await DraftService.deleteDraft(`claim_draft_${id}`);
             navigate('/confirmation', { 
                 state: { 
@@ -79,7 +86,11 @@ const ClaimForm = () => {
                 } 
             });
         } catch (err) {
-            setSubmitError(err.response?.data?.message || 'Submission failed. Please try again.');
+            console.error('Submission Error:', err.response?.data || err);
+            // Better error extraction for the user
+            const backendError = err.response?.data?.error || err.response?.data?.message;
+            const msg = typeof backendError === 'string' ? backendError : 'Submission failed. Please try again.';
+            setSubmitError(msg);
         } finally {
             setSubmitting(false);
         }
@@ -91,7 +102,7 @@ const ClaimForm = () => {
                 <StatusState 
                     loading={loading} 
                     error={error} 
-                    onRetry={() => request({ url: `/items/found/${id}` })}
+                    onRetry={() => request({ url: `/items/${id}` })}
                 >
                     {item && (
                         <>
@@ -132,10 +143,41 @@ const ClaimForm = () => {
                                     )}
 
                                     <div className="form-group">
+                                        <Input
+                                            label="Item Brand (if any)"
+                                            placeholder="e.g. Apple, Nike, etc."
+                                            value={formData.brand || ''}
+                                            onChange={(e) => setFormData({ ...formData, brand: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <label className="form-label">When did you lose it?</label>
+                                        <input 
+                                            type="datetime-local" 
+                                            className="form-input"
+                                            value={formData.lost_datetime}
+                                            onChange={(e) => setFormData({ ...formData, lost_datetime: e.target.value })}
+                                            required
+                                            style={{ width: '100%', padding: '12px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 'var(--radius-sm)' }}
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
+                                        <Input
+                                            label="Where exactly did you last have it?"
+                                            placeholder="e.g. Near the main building lobby"
+                                            value={formData.lost_location}
+                                            onChange={(e) => setFormData({ ...formData, lost_location: e.target.value })}
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="form-group">
                                         <label className="form-label">Private Identification Details</label>
                                         <textarea 
                                             className="form-textarea"
-                                            placeholder="Describe unique markings, serial numbers, case details, orContents..."
+                                            placeholder="Describe unique markings, serial numbers, case details, or contents..."
                                             value={formData.description}
                                             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                             required

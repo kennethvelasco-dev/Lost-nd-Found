@@ -49,7 +49,7 @@ body {
   /* Integrated Authentic Background Image with Atmospheric Overlay */
   background-image: 
     linear-gradient(rgba(230, 241, 232, 0.75), rgba(230, 241, 232, 0.85)),
-    url("/assets/gen_bg.png");
+    url("/assets/farm.jpg");
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

@@ -1,31 +1,46 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Button from '../../components/UI/Button';
 import Input from '../../components/UI/Input';
 import Card from '../../components/UI/Card';
 
+import FileUpload from '../../components/UI/FileUpload';
+
 const AdminReturnItem = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const adminUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // Extract state passed from AdminClaimDetail or AdminApprovedClaims
+    const { itemId, claim_id, claimantName, category, itemType, color, brand, dateLost, dateFound } = location.state || {};
+
     const [formData, setFormData] = useState({
-        item_id: '',
-        owner_name: '',
+        item_id: itemId || '',
+        claim_id: claim_id || '',
+        owner_name: claimantName || '',
+        recipient_id: '', // Student ID / ID Number
         date_returned: new Date().toISOString().split('T')[0],
-        handover_notes: ''
+        handover_notes: (category && itemType) 
+            ? `Verified ${color || ''} ${brand || ''} ${itemType} (${category}). Recipient presented valid ID matching claimant name.`
+            : ''
     });
+
+    const [turnoverProof, setTurnoverProof] = useState([]);
     const [itemDetails, setItemDetails] = useState(null);
     const [loading, setLoading] = useState(false);
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState('');
-    const navigate = useNavigate();
-    const adminUser = JSON.parse(localStorage.getItem('user') || '{}');
 
-    const fetchItemDetails = async () => {
-        if (!formData.item_id) return;
+    const fetchItemDetails = async (idToFetch) => {
+        const id = idToFetch || formData.item_id;
+        if (!id) return;
         setFetching(true);
         setError('');
         try {
-            const response = await api.get(`/items/found/${formData.item_id}`);
-            setItemDetails(response.data.data.item || response.data.data);
+            const response = await api.get(`/items/${id}`);
+            // Check nesting based on API response structure
+            setItemDetails(response.data?.data?.item || response.data?.data || response.data);
         } catch (err) {
             setError('Item not found. Please check the ID.');
             setItemDetails(null);
@@ -34,23 +49,40 @@ const AdminReturnItem = () => {
         }
     };
 
+    // Auto-fetch if itemId is provided via state
+    useEffect(() => {
+        if (itemId) {
+            fetchItemDetails(itemId);
+        }
+    }, [itemId]);
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
+        if (!turnoverProof || turnoverProof.length === 0) {
+            setError('A turnover proof photo is mandatory to finalize the log.');
+            setLoading(false);
+            return;
+        }
+
         try {
             await api.post('/admin/resolve-item', {
                 item_id: formData.item_id,
+                claim_id: formData.claim_id,
                 owner_name: formData.owner_name,
+                recipient_id: formData.recipient_id,
                 handover_notes: formData.handover_notes,
-                date_returned: formData.date_returned
+                date_returned: formData.date_returned,
+                turnover_proof: turnoverProof[0]
             });
             
             navigate('/confirmation', { 
                 state: { 
                     title: 'Return Logged!', 
-                    message: `Item #${formData.item_id} has been marked as returned to ${formData.owner_name} by admin ${adminUser.username}.` 
+                    message: `Item #${formData.item_id} has been officially returned to ${formData.owner_name} (ID: ${formData.recipient_id}). The return log is now finalized.`,
+                    nextSteps: []
                 } 
             });
         } catch (err) {
@@ -64,8 +96,8 @@ const AdminReturnItem = () => {
         <div className="page-container">
             <div className="container">
                 <div className="pretty-header">
-                    <h1 className="pretty-title">Process Handover</h1>
-                    <p className="auth-subtitle">Verify recipient identity and log item resolution.</p>
+                    <h1 className="pretty-title">Process Return Log</h1>
+                    <p className="auth-subtitle">Face-to-face verification and final item handover.</p>
                     <div className="title-underline"></div>
                 </div>
 
@@ -75,57 +107,73 @@ const AdminReturnItem = () => {
                             <div className="form-row" style={{ display: 'flex', gap: '10px', alignItems: 'flex-end' }}>
                                 <div style={{ flex: 1 }}>
                                     <Input
-                                        label="Found Item ID"
+                                        label="Item ID"
                                         placeholder="Enter ID..."
                                         value={formData.item_id}
                                         onChange={(e) => setFormData({ ...formData, item_id: e.target.value })}
                                         required
+                                        // Allow overwrite for admin flexibility
                                     />
                                 </div>
-                                <Button type="button" variant="secondary" onClick={fetchItemDetails} disabled={fetching} style={{ marginBottom: '16px' }}>
+                                <Button type="button" variant="secondary" onClick={() => fetchItemDetails()} disabled={fetching} style={{ marginBottom: '16px' }}>
                                     {fetching ? '...' : 'Fetch'}
                                 </Button>
                             </div>
 
                             <Input
-                                label="Recipient Name"
-                                placeholder="Full name from ID verification"
+                                label="Recipient Full Name"
+                                placeholder="Verified Name from ID"
                                 value={formData.owner_name}
                                 onChange={(e) => setFormData({ ...formData, owner_name: e.target.value })}
                                 required
                             />
 
                             <Input
-                                label="Return Date"
+                                label="Student ID / ID Number"
+                                placeholder="Enter ID Number for audit trail"
+                                value={formData.recipient_id}
+                                onChange={(e) => setFormData({ ...formData, recipient_id: e.target.value })}
+                                required
+                            />
+
+                            <Input
+                                label="Handover Date"
                                 type="date"
                                 value={formData.date_returned}
                                 onChange={(e) => setFormData({ ...formData, date_returned: e.target.value })}
                                 required
                             />
 
+                            <FileUpload 
+                                label="Turnover Proof (Mandatory Photo)"
+                                initialFiles={turnoverProof}
+                                onFilesChange={(files) => setTurnoverProof(files)}
+                                maxFiles={1}
+                            />
+
                             <div className="form-group">
                                 <label className="form-label">Handover Notes</label>
                                 <textarea
                                     className="form-textarea"
-                                    placeholder="Verified via Student Card #12345..."
+                                    placeholder="Verified identity and signed handover receipt..."
                                     value={formData.handover_notes}
                                     onChange={(e) => setFormData({ ...formData, handover_notes: e.target.value })}
-                                    style={{ height: '100px' }}
+                                    style={{ height: '80px' }}
                                     required
                                 ></textarea>
                             </div>
 
                             <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 'var(--space-2)' }}>
-                                Authorized by: <strong>{adminUser.username}</strong>
+                                Handover Processed by Admin: <strong>{adminUser.username}</strong>
                             </p>
 
                             <Button type="submit" variant="primary" disabled={loading || !itemDetails} style={{ width: '100%' }}>
-                                {loading ? 'Logging Resolution...' : 'Complete Return'}
+                                {loading ? 'Filing Log...' : 'File Log Return'}
                             </Button>
                         </form>
                     </Card>
 
-                    <Card style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'var(--background)', boxShadow: 'var(--nm-inset)', padding: 'var(--space-4)' }}>
+                    <Card style={{ display: 'flex', flexDirection: 'column', background: 'rgba(0,0,0,0.02)', padding: 'var(--space-4)' }}>
                         {itemDetails ? (
                             <div className="item-detail-preview">
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 'var(--space-3)' }}>
@@ -133,20 +181,28 @@ const AdminReturnItem = () => {
                                     <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--text-muted)' }}>ID: #{itemDetails.id}</span>
                                 </div>
                                 {itemDetails.main_picture && (
-                                    <img src={itemDetails.main_picture} alt="Preview" style={{ width: '100%', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-3)', boxShadow: 'var(--nm-flat-sm)' }} />
+                                    <img src={itemDetails.main_picture} alt="Preview" style={{ width: '100%', maxHeight: '250px', objectFit: 'cover', borderRadius: 'var(--radius-md)', marginBottom: 'var(--space-3)', border: '1px solid rgba(0,0,0,0.1)' }} />
                                 )}
                                 <div className="preview-info" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>Type:</strong> <span>{itemDetails.item_type}</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>Category:</strong> <span>{itemDetails.category}</span></div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}><strong>Color:</strong> <span>{itemDetails.color || 'N/A'}</span></div>
                                     <div style={{ marginTop: '10px', borderTop: '1px solid rgba(0,0,0,0.05)', paddingTop: '10px' }}>
-                                        <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>{itemDetails.public_description}</p>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <strong>Date Lost (Claimant):</strong> 
+                                            <span>{dateLost ? new Date(dateLost).toLocaleDateString() : (itemDetails.last_seen_datetime ? new Date(itemDetails.last_seen_datetime).toLocaleDateString() : 'N/A')}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                            <strong>Date Found (Report):</strong> 
+                                            <span>{dateFound ? new Date(dateFound).toLocaleDateString() : (itemDetails.found_datetime ? new Date(itemDetails.found_datetime).toLocaleDateString() : 'N/A')}</span>
+                                        </div>
+                                        <p style={{ fontSize: '14px', color: 'var(--text-muted)', fontStyle: 'italic', margin: 0 }}>{itemDetails.public_description}</p>
                                     </div>
                                 </div>
                             </div>
                         ) : (
-                            <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
-                                <p>Enter a valid Item ID and click <strong>Fetch</strong> to preview details before resolving.</p>
+                            <div style={{ textAlign: 'center', color: 'var(--text-muted)', paddingTop: 'var(--space-5)' }}>
+                                <p>Load an item to verify details before filing the return log.</p>
                                 {error && <p style={{ color: 'var(--danger)', marginTop: '8px' }}>{error}</p>}
                             </div>
                         )}

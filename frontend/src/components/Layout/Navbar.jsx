@@ -29,7 +29,7 @@ const Navbar = () => {
         <div className="navbar-brand-row">
             <div className="branding-left">
                 <Link to="/" className="navbar-logo-link">
-                    <img src="/assets/logo.png" alt="University Logo" className="main-logo" />
+                    <img src="/assets/pub_logo.png" alt="University Logo" className="main-logo" />
                     <h1 className="main-brand-title">Campus Lost & Found</h1>
                 </Link>
             </div>
@@ -52,14 +52,15 @@ const Navbar = () => {
                 {!isAdmin ? (
                 <div className="nav-tabs glass-tabs">
                     <Link to="/lost-items" className={`nav-tab ${isActive('/lost-items')}`}>Search Directory</Link>
-                    <Link to="/report-item" className={`nav-tab ${isActive('/report-item')}`}>Report Lost Item</Link>
+                    <Link to="/report-item" className={`nav-tab ${isActive('/report-item')}`}>Report Lost</Link>
                     <Link to="/my-activities" className={`nav-tab ${isActive('/my-activities')}`}>My Activities</Link>
                     <Link to="/returned-items" className={`nav-tab ${isActive('/returned-items')}`}>Released Items</Link>
                 </div>
                 ) : (
                 <div className="nav-tabs glass-tabs">
-                    <Link to="/admin/dashboard" className={`nav-tab ${isActive('/admin/dashboard')}`}>Admin Console</Link>
-                    <Link to="/admin/claims" className={`nav-tab ${isActive('/admin/claims')}`}>Review Claims</Link>
+                    <Link to="/admin/dashboard" className={`nav-tab ${isActive('/admin/dashboard')}`}>Console</Link>
+                    <Link to="/admin/claims" className={`nav-tab ${isActive('/admin/claims')}`}>Review Pending</Link>
+                    <Link to="/admin/approved-claims" className={`nav-tab ${isActive('/admin/approved-claims')}`}>Approved Pickups</Link>
                     <Link to="/admin/reports" className={`nav-tab ${isActive('/admin/reports')}`}>Approve Reports</Link>
                     <Link to="/admin/return-item" className={`nav-tab ${isActive('/admin/return-item')}`}>Log Return</Link>
                 </div>

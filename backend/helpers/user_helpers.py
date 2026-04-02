@@ -3,14 +3,36 @@ from datetime import datetime, timezone
 from werkzeug.security import generate_password_hash, check_password_hash
 from backend.models.base import get_db_connection
 
+import bcrypt
+
 # User Helper Functions
 def hash_password(password: str) -> str:
-    """Hash a password using werkzeug."""
-    return generate_password_hash(password)
+    """Hash a password using bcrypt."""
+    salt = bcrypt.gensalt(rounds=12)
+    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 def verify_password(password: str, password_hash: str) -> bool:
-    """Check a password against its hash."""
-    return check_password_hash(password_hash, password)
+    """Check a password against its hash (handles both bcrypt and legacy werkzeug)."""
+    if not password or not password_hash:
+        return False
+    
+    # Bcrypt hashes typically start with $2
+    if password_hash.startswith('$2'):
+        try:
+            return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+        except Exception:
+            return False
+    
+    # Legacy fallback for werkzeug hashes
+    try:
+        from werkzeug.security import check_password_hash
+        return check_password_hash(password_hash, password)
+    except Exception:
+        return False
+    
+def generate_password_hash_legacy(password: str) -> str:
+    from werkzeug.security import generate_password_hash
+    return generate_password_hash(password)
 
 def create_user(username: str, password: str, role: str = "user", name: str = None, email: str = None, admin_id: str = None):
     """Add a user to the users table safely and handle duplicates."""
@@ -48,7 +70,9 @@ def get_user(username: str):
     try:
         c = conn.cursor()
         c.execute(
-            "SELECT id, username, password_hash, role, name, email, admin_id, is_email_verified, created_at FROM users WHERE username = ?",
+            """SELECT id, username, password_hash, role, name, email, admin_id, 
+                      is_email_verified, failed_login_attempts, lockout_until, created_at 
+               FROM users WHERE username = ?""",
             (username,)
         )
         row = c.fetchone()
@@ -62,7 +86,9 @@ def get_user(username: str):
                 "email": row[5],
                 "admin_id": row[6],
                 "is_email_verified": bool(row[7]),
-                "created_at": row[8]
+                "failed_login_attempts": row[8],
+                "lockout_until": row[9],
+                "created_at": row[10]
             }
         return None
     finally:

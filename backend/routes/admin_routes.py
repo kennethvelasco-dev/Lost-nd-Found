@@ -6,12 +6,13 @@ from backend.services.admin_service import (
     process_claim_verification
 )
 from backend.services.item_service import submit_admin_found_item
+from backend.helpers.response import success_response, error_response
+from backend.models import ValidationError
 from backend.services.reporting_service import (
     get_transaction_summary,
     get_all_completed_transactions_report
 )
-from backend.helpers.response import success_response, error_response
-from backend.models import ValidationError
+from backend.extensions import jwt, limiter
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -36,6 +37,7 @@ def admin_required(fn):
 @admin_bp.route("/claims", methods=["GET"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def view_claims():
     try:
         claims, status = get_pending_claims_service()
@@ -47,6 +49,7 @@ def view_claims():
 @admin_bp.route("/claims/<int:claim_id>/verify", methods=["POST"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def verify_claim_route(claim_id):
     data = request.json or {}
     try:
@@ -61,6 +64,7 @@ def verify_claim_route(claim_id):
 @admin_bp.route("/items/found", methods=["POST"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def admin_report_found_item():
     data = request.json or {}
     try:
@@ -74,6 +78,7 @@ def admin_report_found_item():
 @admin_bp.route("/reports/transactions", methods=["GET"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def get_transactions_list():
     """List all completed transactions."""
     transactions, status = get_all_completed_transactions_report()
@@ -82,6 +87,7 @@ def get_transactions_list():
 @admin_bp.route("/reports/transactions/<int:claim_id>", methods=["GET"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def get_transaction_report(claim_id):
     """Get detailed report for one transaction."""
     report, status = get_transaction_summary(claim_id)
@@ -90,6 +96,7 @@ def get_transaction_report(claim_id):
 @admin_bp.route("/resolve-item", methods=["POST"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def resolve_item_route():
     """Manually log an item as returned. Admin only."""
     data = request.json or {}
@@ -103,6 +110,7 @@ def resolve_item_route():
 @admin_bp.route("/stats", methods=["GET"])
 @jwt_required()
 @admin_required
+@limiter.limit("50 per 15 minutes")
 def get_stats_route():
     """Get system-wide stats for admin dashboard."""
     from backend.services.admin_service import get_admin_stats_service

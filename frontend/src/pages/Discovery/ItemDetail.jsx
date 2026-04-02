@@ -8,12 +8,14 @@ import Card from '../../components/UI/Card';
 const ItemDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const { loading, error, data: item, request } = useHttp();
+    const { loading, error, data, request } = useHttp();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
-        request({ url: `/items/found/${id}` });
+        request({ url: `/items/${id}` });
     }, [id, request]);
+
+    const item = data;
 
     const images = item ? [
         item.main_picture,
@@ -30,7 +32,7 @@ const ItemDetail = () => {
                     error={error} 
                     isEmpty={!item && !loading && !error} 
                     emptyMessage="We couldn't find the item you're looking for. It may have been removed or resolved."
-                    onRetry={() => request({ url: `/items/found/${id}` })}
+                    onRetry={() => request({ url: `/items/${id}` })}
                 >
                     {item && (
                         <>
@@ -49,7 +51,7 @@ const ItemDetail = () => {
                                 <div className="image-section">
                                     <Card style={{ padding: '10px' }}>
                                         <img 
-                                            src={images[currentImageIndex] || '/assets/logo.png'} 
+                                            src={images[currentImageIndex] || '/assets/pub_logo.png'} 
                                             alt={item.item_type} 
                                             style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 'var(--radius-md)', boxShadow: 'var(--nm-inset)' }}
                                         />
@@ -99,12 +101,16 @@ const ItemDetail = () => {
                                                 <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.color || 'No primary color'}</p>
                                             </div>
                                             <div className="spec-item">
-                                                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>Location Context</label>
+                                                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>{item.type === 'lost' ? 'Lost at' : 'Found at'}</label>
                                                 <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.found_location || item.last_seen_location}</p>
                                             </div>
                                             <div className="spec-item">
-                                                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>Last Activity</label>
+                                                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>{item.type === 'lost' ? 'Lost on' : 'Found on'}</label>
                                                 <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{new Date(item.found_datetime || item.last_seen_datetime).toLocaleDateString()}</p>
+                                            </div>
+                                            <div className="spec-item">
+                                                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>Reported on</label>
+                                                <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{new Date(item.created_at).toLocaleDateString()}</p>
                                             </div>
                                         </div>
 
@@ -113,14 +119,16 @@ const ItemDetail = () => {
                                             <p style={{ margin: 0, lineHeight: 1.6 }}>{item.public_description || 'The reporter has not provided a public summary for this item.'}</p>
                                         </div>
 
-                                        <Button 
-                                            variant="primary" 
-                                            size="lg" 
-                                            style={{ width: '100%', marginTop: 'var(--space-2)', padding: '18px' }}
-                                            onClick={() => navigate(`/items/${id}/claim`)}
-                                        >
-                                            Begin Ownership Claim
-                                        </Button>
+                                        {(item.type === 'found' || item.type === 'lost') && (
+                                            <Button 
+                                                variant="primary" 
+                                                size="lg" 
+                                                style={{ width: '100%', marginTop: 'var(--space-2)', padding: '18px' }}
+                                                onClick={() => navigate(`/items/${id}/claim`)}
+                                            >
+                                                Begin Ownership Claim
+                                            </Button>
+                                        )}
                                     </Card>
                                 </div>
                             </div>

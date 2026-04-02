@@ -13,6 +13,14 @@ from backend.helpers.production_safety import require_json_fields
 
 item_bp = Blueprint("items", __name__)
 
+@item_bp.route("/<string:report_id>", methods=["GET"])
+@jwt_required()
+def get_item_detail_route(report_id):
+    """Get unified item detail by UUID."""
+    from backend.services.item_service import get_item_detail_service
+    result, status = get_item_detail_service(report_id)
+    return jsonify(success_response(result)), status
+
 @item_bp.route("/lost", methods=["GET", "POST"])
 @jwt_required()
 def lost_items_route():
@@ -98,7 +106,10 @@ def verify_report_route(id):
         data.get("reason", ""), 
         admin_username
     )
-    return jsonify(success_response(result)), status
+    if status >= 400:
+        return jsonify(error_response("VERIFICATION_ERROR", result.get("error", "Action failed"))), status
+        
+    return jsonify(success_response(result, message=f"Report {data['decision']} successfully")), status
 
 @item_bp.route("/my-activities", methods=["GET"])
 @jwt_required()
@@ -107,6 +118,24 @@ def get_my_activities():
     user_id = get_jwt_identity()
     from backend.services.item_service import get_user_activities_service
     result, status = get_user_activities_service(user_id)
+    return jsonify(success_response(result)), status
+
+@item_bp.route("/reports/<string:type>/<int:id>/dismiss", methods=["POST"])
+@jwt_required()
+def dismiss_report_route(type, id):
+    """Dismiss a report from the user's view."""
+    user_id = get_jwt_identity()
+    from backend.services.item_service import dismiss_activity_service
+    result, status = dismiss_activity_service(id, type, user_id)
+    return jsonify(success_response(result)), status
+
+@item_bp.route("/claims/<int:id>/dismiss", methods=["POST"])
+@jwt_required()
+def dismiss_claim_route(id):
+    """Dismiss a claim from the user's view."""
+    user_id = get_jwt_identity()
+    from backend.services.item_service import dismiss_activity_service
+    result, status = dismiss_activity_service(id, "claim", user_id)
     return jsonify(success_response(result)), status
 
 @item_bp.route("/returned", methods=["GET"])

@@ -11,19 +11,24 @@ class Config:
     # Core Flask
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")
     TESTING = False
-    DATABASE_PATH = os.path.join(os.path.dirname(__file__), "..", "models", "database.db")
+    DATABASE_PATH = os.path.join(os.path.dirname(__file__), "..", "lostnfound.db")
     MAX_CONTENT_LENGTH = 50 * 1024 * 1024 # 50MB limit for large photos
 
-    # JWT Configuration
+    # JWT Configuration (Hardened for Production)
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret")
-
-    # Explicit token behavior (Hardened for Production UX)
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=15)
-    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
-
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
+    
     JWT_ALGORITHM = "HS256"
-
-    # Safer defaults
-    JWT_TOKEN_LOCATION = ["headers"]
-    JWT_HEADER_NAME = "Authorization"
-    JWT_HEADER_TYPE = "Bearer"
+    
+    # Token Storage (RTR - Refresh Token Rotation)
+    JWT_TOKEN_LOCATION = ["headers", "cookies"]
+    JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
+    JWT_REFRESH_COOKIE_NAME = "refresh_token_cookie"
+    JWT_COOKIE_SECURE = False # MUST BE TRUE IN PROD (using False for dev testing)
+    JWT_COOKIE_HTTPONLY = True
+    JWT_COOKIE_SAMESITE = "Strict"
+    JWT_COOKIE_CSRF_PROTECT = False
+    
+    # Restrict Refresh Token to refresh endpoint
+    JWT_REFRESH_COOKIE_PATH = "/api/auth/refresh"

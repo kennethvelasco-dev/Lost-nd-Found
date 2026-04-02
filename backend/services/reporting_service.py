@@ -1,4 +1,4 @@
-from backend.models.claims import get_claim_by_id, get_completed_claims
+from backend.models.claims import get_claim_detail_db, get_completed_claims
 from backend.models.items import get_found_item_by_id
 from backend.models.base import get_db_connection
 
@@ -6,7 +6,7 @@ def get_transaction_summary(claim_id: int):
     """
     Generates a detailed report of a completed transaction.
     """
-    claim = get_claim_by_id(claim_id)
+    claim = get_claim_detail_db(claim_id)
     if not claim:
         return {"error": "Claim not found"}, 404
     

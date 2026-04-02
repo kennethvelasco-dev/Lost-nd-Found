@@ -88,19 +88,29 @@ def search_items_service(filters: dict) -> tuple:
 
 def get_user_activities_service(user_id: str) -> tuple:
     """
-    Combined service to get all reports and claims for a user.
+    Combined service to get all reports and claims for a user, filtering out dismissed ones.
     """
     from backend.models.items import get_user_reports_db
-    from backend.models.claims import get_pending_claims
+    from backend.models.claims import get_user_claims_db
     
     reports = get_user_reports_db(user_id)
-    all_claims = get_pending_claims()
-    user_claims = [c for c in all_claims if str(c["user_id"]) == str(user_id)]
+    user_claims = get_user_claims_db(user_id)
     
     return {
         "reports": reports,
         "claims": user_claims
     }, 200
+
+def dismiss_activity_service(activity_id: int, activity_type: str, user_id: str) -> tuple:
+    """Service to dismiss a report or claim."""
+    if activity_type in ["lost", "found"]:
+        from backend.models.items import dismiss_report_db
+        return dismiss_report_db(activity_id, activity_type, user_id)
+    elif activity_type == "claim":
+        from backend.models.claims import dismiss_claim_db
+        return dismiss_claim_db(activity_id, user_id)
+    else:
+        return {"error": "Invalid activity type"}, 400
 
 def verify_report_service(report_id: int, entity_type: str, decision: str, reason: str, admin_username: str) -> tuple:
     """
@@ -125,10 +135,21 @@ def get_pending_reports_service() -> tuple:
 
 def resolve_item_service(data: dict, admin_username: str) -> tuple:
     """Service to handle administrative item resolution."""
-    from backend.helpers.input_validation import validate_int
+    from backend.models.validators import validate_int
     item_id = validate_int(data.get("item_id"), "item_id")
     recipient_name = data.get("owner_name", "Unknown")
+    recipient_id = data.get("recipient_id") # Student ID
+    claim_id = data.get("claim_id")
     notes = data.get("handover_notes", "")
+    turnover_proof = data.get("turnover_proof")
     
     from backend.models.items import resolve_item_db
-    return resolve_item_db(item_id, recipient_name, notes, admin_username)
+    return resolve_item_db(item_id, recipient_name, notes, admin_username, claim_id=claim_id, recipient_id=recipient_id, turnover_proof=turnover_proof)
+
+def get_item_detail_service(identifier: str) -> tuple:
+    """Get full details of an item by its UUID or integer ID."""
+    from backend.models.items import get_item_universal_db
+    item = get_item_universal_db(identifier)
+    if not item:
+        return {"error": "Item not found"}, 404
+    return item, 200

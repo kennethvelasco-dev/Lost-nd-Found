@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
 import api from '../../services/api';
@@ -7,36 +8,25 @@ import Button from '../../components/UI/Button';
 
 const AdminClaimList = () => {
     const { loading, error, data, request } = useHttp();
-    const [verifying, setVerifying] = useState(null);
+    const navigate = useNavigate();
 
     const fetchClaims = useCallback(() => {
-        request({ url: '/admin/claims' });
+        // Explicitly filter for pending only
+        request({ url: '/claims/pending', params: { status: 'pending' } });
     }, [request]);
 
     useEffect(() => {
         fetchClaims();
     }, [fetchClaims]);
 
-    const claims = data?.claims || (Array.isArray(data?.items) ? data.items : []);
-
-    const handleAction = async (claimId, action) => {
-        setVerifying(claimId);
-        try {
-            await api.post(`/admin/claims/${claimId}/review`, { action });
-            fetchClaims();
-        } catch (err) {
-            console.error('Failed to update claim', err);
-        } finally {
-            setVerifying(null);
-        }
-    };
+    const claims = data || [];
 
     return (
         <div className="page-container">
             <div className="container">
                 <div className="pretty-header">
-                    <h1 className="pretty-title">Ownership Verification</h1>
-                    <p className="auth-subtitle">Review claims to ensure items return to their rightful owners.</p>
+                    <h1 className="pretty-title">Pending Claims</h1>
+                    <p className="auth-subtitle">Verify ownership details for new claim requests.</p>
                     <div className="title-underline"></div>
                 </div>
 
@@ -44,7 +34,7 @@ const AdminClaimList = () => {
                     loading={loading} 
                     error={error} 
                     isEmpty={claims.length === 0} 
-                    emptyMessage="All claims have been processed. Excellent work!"
+                    emptyMessage="No pending claims at the moment. Good job!"
                     onRetry={fetchClaims}
                 >
                     <div className="claims-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
@@ -52,35 +42,53 @@ const AdminClaimList = () => {
                             <Card key={claim.id}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
-                                        <h3 style={{ color: 'var(--primary)', margin: 0 }}>Claim for: {claim.item_type}</h3>
-                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Submitted by: <strong>{claim.user_name}</strong> on {new Date(claim.created_at).toLocaleDateString()}</p>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <h3 style={{ color: 'var(--primary)', margin: 0 }}>{claim.item_type}</h3>
+                                            <span style={{ 
+                                                fontSize: '10px', 
+                                                padding: '2px 8px', 
+                                                borderRadius: '10px', 
+                                                background: 'var(--warning)', 
+                                                color: 'white',
+                                                fontWeight: 'bold',
+                                                textTransform: 'uppercase'
+                                            }}>
+                                                PENDING REVIEW
+                                            </span>
+                                        </div>
+                                        <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
+                                            Claimed by: <strong>{claim.user_name}</strong> • {new Date(claim.created_at).toLocaleDateString()}
+                                        </p>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px' }}>
                                         <Button 
-                                            variant="secondary" 
-                                            onClick={() => handleAction(claim.id, 'reject')}
-                                            disabled={verifying === claim.id}
-                                        >
-                                            Reject
-                                        </Button>
-                                        <Button 
                                             variant="primary" 
-                                            onClick={() => handleAction(claim.id, 'approve')}
-                                            disabled={verifying === claim.id}
+                                            onClick={() => navigate(`/admin/claims/${claim.id}`)}
                                         >
-                                            Approve
+                                            Review Detail
                                         </Button>
                                     </div>
                                 </div>
-                                <div style={{ marginTop: 'var(--space-3)', padding: 'var(--space-3)', background: 'rgba(0,0,0,0.02)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(0,0,0,0.05)' }}>
-                                    <h4 style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>Ownership Description</h4>
-                                    <p style={{ margin: 0, fontSize: '0.95rem' }}>{claim.answers.description}</p>
-                                    {claim.answers.proof && (
-                                        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                                            <h4 style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '4px', letterSpacing: '0.5px' }}>Proof Provided</h4>
-                                            <p style={{ margin: 0, fontSize: '0.9rem' }}>{claim.answers.proof}</p>
+                                <div style={{ marginTop: 'var(--space-3)', display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 'var(--space-4)' }}>
+                                    {claim.main_picture && (
+                                        <div style={{ height: '100px', borderRadius: 'var(--radius-sm)', overflow: 'hidden', border: '1px solid rgba(0,0,0,0.05)' }}>
+                                            <img src={claim.main_picture} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         </div>
                                     )}
+                                    <div style={{ fontSize: '0.85rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Confidence Score:</span>
+                                            <strong style={{ color: claim.score >= 70 ? 'var(--success)' : 'var(--warning)' }}>{claim.score}%</strong>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Color/Brand:</span>
+                                            <span>{claim.item_color || 'N/A'} • {claim.item_brand || 'N/A'}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'var(--text-secondary)' }}>Incident Date:</span>
+                                            <span>{claim.incident_date ? new Date(claim.incident_date).toLocaleDateString() : 'N/A'}</span>
+                                        </div>
+                                    </div>
                                 </div>
                             </Card>
                         ))}
@@ -92,3 +100,4 @@ const AdminClaimList = () => {
 };
 
 export default AdminClaimList;
+

@@ -13,10 +13,15 @@ from backend.extensions import jwt, limiter
 
 def create_app():
     app = Flask(__name__)
-    CORS(app)
+    CORS(app, supports_credentials=True)
     app.config.from_object(Config)
 
     jwt.init_app(app)
+
+    @jwt.token_in_blocklist_loader
+    def check_if_token_revoked(jwt_header, jwt_payload):
+        from backend.services.auth_service import is_token_revoked
+        return is_token_revoked(jwt_payload["jti"])
     
     if app.config.get("TESTING"):
         limiter.enabled = False
@@ -36,6 +41,15 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix="/api/admin")
     app.register_blueprint(health_bp, url_prefix="/api")
     
+    @app.after_request
+    def add_security_headers(response):
+        """Inject mandatory security headers into every response."""
+        response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self'; object-src 'none';"
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        return response
 
     @app.errorhandler(Exception)
     def handle_exception(e):

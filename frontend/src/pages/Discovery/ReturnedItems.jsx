@@ -10,7 +10,7 @@ const ReturnedItems = () => {
     const [filter, setFilter] = useState('');
 
     const fetchItems = useCallback(async (q = '', f = '') => {
-        const params = { status: 'returned' };
+        const params = { status: 'found' };
         if (q) params.query = q;
         if (f) params.sort = f;
         
@@ -50,7 +50,7 @@ const ReturnedItems = () => {
                 >
                     <div className="grid-layout">
                         {items.map(item => (
-                            <ItemCard key={item.id} item={item} type="returned" />
+                            <ItemCard key={item.id} item={item} isReturned={true} />
                         ))}
                     </div>
                 </StatusState>
