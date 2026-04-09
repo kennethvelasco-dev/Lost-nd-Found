@@ -14,6 +14,11 @@ api.interceptors.response.use(
     async error => {
         const originalRequest = error.config;
         
+        // Skip interceptor logic for auth endpoints specifically
+        if (originalRequest.url.includes('/auth/login') || originalRequest.url.includes('/auth/refresh')) {
+            return Promise.reject(error);
+        }
+        
         // If 401 error and not already retried
         if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
