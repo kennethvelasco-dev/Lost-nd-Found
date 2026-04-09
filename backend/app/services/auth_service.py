@@ -41,29 +41,35 @@ def register_user(data: dict):
     )
 
     if "user_id" in result:
-        user_id = result["user_id"]
-        # Save verification token to DB
-        _save_verification_token(user_id, verification_token)
-        
-        # 4. Mock Email Sending
-        if normalized_email:
-            _mock_send_verification_email(normalized_email, verification_token)
-
-        # Generate initial access token (or wait for verification depending on policy)
-        # For this app, we'll allow login but maybe restrict actions if not verified.
-        # However, the user asked for "Email verification flow", so we'll return the token for testing.
-        user_id_str = str(user_id)
-        token = create_access_token(
-            identity=user_id_str,
-            additional_claims={"role": role}
+        return _finalize_user_registration(
+            user_id=result["user_id"],
+            verification_token=verification_token,
+            role=role,
+            normalized_email=normalized_email
         )
-        return {
-            "access_token": token, 
-            "message": "Registration successful. Please verify your email.",
-            "debug_verification_token": verification_token # For easier testing
-        }, 201
 
     raise ValidationError(result.get("error", "Registration failed"))
+
+def _finalize_user_registration(user_id, verification_token, role, normalized_email):
+    """Handles post-creation tasks: token storage, email notification, and JWT generation."""
+    # Save verification token to DB
+    _save_verification_token(user_id, verification_token)
+    
+    # 4. Mock Email Sending
+    if normalized_email:
+        _mock_send_verification_email(normalized_email, verification_token)
+
+    # Generate initial access token
+    user_id_str = str(user_id)
+    token = create_access_token(
+        identity=user_id_str,
+        additional_claims={"role": role}
+    )
+    return {
+        "access_token": token, 
+        "message": "Registration successful. Please verify your email.",
+        "debug_verification_token": verification_token # For easier testing
+    }, 201
 
 def login_user(data: dict):
     """Handles login with account lockout and session security."""
@@ -81,6 +87,10 @@ def login_user(data: dict):
     lockout_until_str = user.get("lockout_until")
     if lockout_until_str:
         lockout_until = datetime.fromisoformat(lockout_until_str)
+        # Ensure comparison is aware to aware
+        if lockout_until.tzinfo is None:
+            lockout_until = lockout_until.replace(tzinfo=timezone.utc)
+            
         if now < lockout_until:
             wait_time = int((lockout_until - now).total_seconds() / 60)
             raise ValidationError(f"Account is locked. Please try again in {max(1, wait_time)} minutes.", 403)

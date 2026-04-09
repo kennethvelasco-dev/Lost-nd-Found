@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from app.models.base import get_db_connection  
+from ..models.base import get_db_connection  
 
 # --- General audit logging ---
 def log_audit_action(action: str, entity_type: str, entity_id: int, performed_by: str) -> dict:

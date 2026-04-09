@@ -1,7 +1,7 @@
 import os
 import uuid
 from werkzeug.utils import secure_filename
-from app.models import ValidationError
+from ..models import ValidationError
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 MAX_UPLOAD_SIZE = 5 * 1024 * 1024  # 5 MB

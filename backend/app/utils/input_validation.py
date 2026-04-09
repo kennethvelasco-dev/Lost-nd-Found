@@ -1,5 +1,5 @@
 import re
-from app.models.validators import ValidationError, require_fields
+from ..models.validators import ValidationError, require_fields
 
 def validate_email(email: str) -> bool:
     """Basic email format validation."""

@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from app.models import ValidationError
+from ..models import ValidationError
 
 def validate_future_date(date_str: str) -> str:
     """

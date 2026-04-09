@@ -109,9 +109,15 @@ def get_potential_matches_service(claim_id: int, user_id: str, role: str) -> tup
     
     import json
     try:
-        answers = json.loads(claim["answers"])
+        if isinstance(claim["answers"], str):
+            answers = json.loads(claim["answers"])
+        else:
+            answers = claim["answers"]
     except:
-        answers = claim["answers"]
+        answers = {}
+        
+    if not isinstance(answers, dict):
+        answers = {}
 
     for item in found_items:
         score_result = compute_claim_score(answers, item)
