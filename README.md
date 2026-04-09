@@ -1,127 +1,66 @@
-# Campus Lost & Found System
+# Campus Lost and Found
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
-[![Flask](https://img.shields.io/badge/flask-3.0+-green.svg)](https://flask.palletsprojects.com/)
-[![Standard: Senior Engineer Checklist](https://img.shields.io/badge/Standard-Senior%20Engineer%20Checklist-gold.svg)](#production-readiness)
+A professional, full-stack application designed to streamline the lost and found process for university campuses. Built with a modular Python (Flask) backend and a modern React (Vite) frontend.
 
-> **Production-Ready Backend Core (v1.1.0)**
-> A robust, secure, and professionally architected backend for managing campus lost and found items, featuring intelligent scoring, rate limiting, and RBAC.
+## 🚀 Features
 
----
+- **User Reporting**: Easy submission for both lost and found items.
+- **Admin Dashboard**: Comprehensive claim verification and item resolution.
+- **Security**: Short-lived JWTs, Refresh Token Rotation (RTR), and rate-limiting.
+- **Modular Design**: Application factory pattern with a decoupled service layer.
+- **Modern UI**: Professional aesthetics with responsive design and interactive elements.
 
-## 🚀 Key Features
+## 📁 Project Structure
 
-### 🛡️ Security & Authentication
-- **Strong Auth**: JWT-based authentication with secure cookie/header support and token revocation.
-- **RBAC**: Multi-tiered Role-Based Access Control (Admin, User) for all sensitive operations.
-- **Rate Limiting**: Brute-force protection on authentication and reporting endpoints via Flask-Limiter.
-- **Data Protection**: Parameterized SQL queries and strict input validation prevent injection attacks.
+```
+root/
+│
+├── frontend/             # React (Vite) Application
+│   ├── src/              # Source code
+│   ├── public/           # Static assets (logos, backgrounds)
+│   └── .env.example      # Frontend environment template
+│
+├── backend/              # Flask Modular Application
+│   ├── app/              # Core logic
+│   │   ├── routes/       # API Endpoints
+│   │   ├── services/     # Business Logic
+│   │   ├── models/       # Database Models
+│   │   └── utils/        # Shared Utilities
+│   ├── config/           # Configuration management
+│   ├── migrations/       # Database migrations
+│   └── .env.example      # Backend environment template
+│
+├── docs/                 # Documentation
+│   ├── API.md            # API Specifications
+│   └── ARCHITECTURE.md   # System Architecture
+│
+├── README.md             # Project Overview
+└── .gitignore            # Version control exclusions
+```
 
-### 🧩 Core Functionality
-- **Dual Reporting**: Dedicated pipelines for reporting Lost and Found items.
-- **Intelligent Scoring**: Weighted matching engine that ranks claims based on field accuracy.
-- **Claim Lifecycle**: Full management from submission and matching to admin approval and handover.
-- **Audit Trails**: Global activity logging for tracking system changes and user actions.
-
-### 🏛️ Architecture
-- **Service Layer Pattern**: Decoupled business logic from routes for maximum testability.
-- **App Factory Pattern**: Clean application initialization including dynamic extension loading.
-- **Isolated Testing**: Robust testing suite with automated database state management.
-
----
-
-## 🛠️ Setup & Installation
+## 🛠️ Getting Started
 
 ### Prerequisites
-- Python 3.8 or higher
-- `pip` and `virtualenv`
+- Python 3.10+
+- Node.js 18+
+- npm or yarn
 
-### Installation
+### Backend Setup
+1. `cd backend`
+2. `python -m venv venv`
+3. `venv\Scripts\activate` (Windows) or `source venv/bin/activate` (Linux/Mac)
+4. `pip install -r requirements.txt`
+5. Copy `.env.example` to `.env` and configure your secrets.
+6. `python app.py`
 
-1. **Clone & Setup Environment**
-   ```bash
-   git clone <repo-url>
-   cd LostnFound
-   python -m venv backend/venv
-   
-   # Windows:
-   .\backend\venv\Scripts\activate
-   # Mac/Linux:
-   source backend/venv/bin/activate
-   ```
+### Frontend Setup
+1. `cd frontend`
+2. `npm install`
+3. Copy `.env.example` to `.env`.
+4. `npm run dev`
 
-2. **Install Dependencies**
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
+## 📖 Documentation
+Detailed technical documentation can be found in the [docs/](docs/) directory.
 
-3. **Environment Configuration**
-   Copy `.env.example` to `.env` and configure your secret keys:
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
-
----
-
-## 🧪 Testing
-
-The backend uses a structured `pytest` suite divided into logical categories:
-
-```bash
-# Run the complete test suite (from project root)
-# The system automatically handles temporary test database creation.
-pytest tests/
-```
-
-### Test Categories
-| Category | Location | Description |
-| :--- | :--- | :--- |
-| **Unit** | `tests/unit/` | Core matching logic and utility functions. |
-| **Integration** | `tests/integration/` | End-to-end API flows (Auth, Claims, Items). |
-| **Security** | `tests/security/` | IDOR prevention, concurrency, and RBAC checks. |
-
----
-
-## 📖 API Documentation
-
-Detailed endpoint specifications, request envelopes, and response structures are available in the [**API Spec**](./API_SPEC.md).
-
-### Quick Reference
-- `POST /api/auth/register` - User/Admin onboarding.
-- `POST /api/auth/login` - JWT generation.
-- `POST /api/items/found` - Report found item.
-- `POST /api/claims/submit` - File a claim/report.
-- `POST /api/admin/claims/<id>/verify` - Admin verification (Approve/Reject).
-
----
-
-## 📂 Project Structure
-
-```text
-.
-├── backend/
-│   ├── routes/          # API Controllers (Blueprints)
-│   ├── services/        # Business Logic & Scoring Engine
-│   ├── models/          # Data Access Layer & DB Schema
-│   ├── helpers/         # Shared Utilities & Validations
-│   ├── config/          # Environment Configurations
-│   ├── extensions.py    # Global Flask Extensions (JWT, Limiter)
-│   └── __init__.py      # App Factory
-├── tests/
-│   ├── unit/            # Isolated Logic Tests
-│   ├── integration/     # API Flow Tests
-│   └── security/        # Access Control & Concurrency
-├── API_SPEC.md          # Detailed Endpoint Documentation
-└── requirements.txt     # Dependency Management
-```
-
----
-
-## 🏆 Production Readiness
-This project fulfills the **Senior Engineer 20-Point Backend Checklist**, including:
-- [x] Standardized JSON response envelopes.
-- [x] Global exception handling (Production vs. Test mode).
-- [x] Timezone-aware UTC datetime management.
-- [x] Automated Resource Cleanup (Try-Finally DB enclosure).
-- [x] No raw SQL concatenation.
+## ⚖️ License
+[Insert License Here] - Professional use recommended.
