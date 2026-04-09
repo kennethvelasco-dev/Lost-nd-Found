@@ -84,11 +84,10 @@ def run_smoke_test():
                     print(f"OK: {ep}: Structure Verified (Combined Object)")
                 else:
                     print(f"FAIL: {ep}: Missing reports/claims keys")
+            elif "items" in data and "pagination" in data:
+                print(f"OK: {ep}: Structure Verified (Paginated List)")
             else:
-                if "items" in data and "pagination" in data:
-                    print(f"OK: {ep}: Structure Verified (Paginated List)")
-                else:
-                    print(f"FAIL: {ep}: Missing pagination/items wrapper")
+                print(f"FAIL: {ep}: Missing pagination/items wrapper")
         else:
             print(f"FAIL: {ep} returned {code}")
 

@@ -75,7 +75,7 @@ def get_user_claims_service(user_id: str, role: str, status_filter=None) -> tupl
     if role == "admin":
         # Admin can provide a custom filter like ['pending'] or ['approved']
         # If not provided, default to both for backward compatibility or as requested
-        final_filter = status_filter if status_filter else ['pending', 'approved']
+        final_filter = status_filter or ['pending', 'approved']
         claims = get_filtered_claims_db(status_filter=final_filter)
     else:
         # Users see all their own claims regardless of status
