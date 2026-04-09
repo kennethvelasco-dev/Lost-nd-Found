@@ -1,6 +1,6 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt, get_jwt_identity, verify_jwt_in_request
-from functools import wraps
+from flask_jwt_extended import jwt_required, get_jwt_identity
+from ..utils.decorators import admin_required
 from ..services.admin_service import (
     get_pending_claims_service, 
     process_claim_verification,
@@ -16,23 +16,6 @@ from ..services.reporting_service import (
 from ..extensions import limiter
 
 admin_bp = Blueprint("admin", __name__)
-
-# Thin admin check decorator
-def admin_required(fn):
-    @wraps(fn)
-    def wrapper(*args, **kwargs):
-        try:
-            # Ensure a valid JWT exists first
-            verify_jwt_in_request()
-            claims = get_jwt()
-        except Exception:
-            return jsonify(error_response("UNAUTHORIZED", "Invalid or missing token")), 401
-
-        if claims.get("role") != "admin":
-            return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
-
-        return fn(*args, **kwargs)
-    return wrapper
 
 @admin_bp.route("/claims", methods=["GET"])
 @jwt_required()

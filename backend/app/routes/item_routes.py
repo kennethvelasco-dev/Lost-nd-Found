@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from ..utils.decorators import admin_required
 from ..services.item_service import (
     submit_found_item,
     submit_lost_item,
@@ -78,22 +79,18 @@ def search_items_route():
 
 @item_bp.route("/pending", methods=["GET"])
 @jwt_required()
+@admin_required
 def get_pending_reports():
     """Get reports awaiting approval. Admin only."""
-    if get_jwt().get("role") != "admin":
-        return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
-    
     result, status = get_pending_reports_service()
     return jsonify(success_response(result)), status
 
 @item_bp.route("/reports/<int:id>/verify", methods=["POST"])
 @jwt_required()
+@admin_required
 @require_json_fields(["decision", "type"])
 def verify_report_route(id):
     """Approve or reject a report. Admin only."""
-    if get_jwt().get("role") != "admin":
-        return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
-    
     data = request.json or {}
     admin_username = get_jwt_identity()
     result, status = verify_report_service(

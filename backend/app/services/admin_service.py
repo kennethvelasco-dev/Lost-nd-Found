@@ -1,7 +1,7 @@
 from ..models.claims import (
     get_claim_detail_db,
     get_filtered_claims_db,
-    get_completed_claims,
+    get_all_completed_claims_db,
     verify_claim
 )
 from ..models.validators import (
@@ -17,7 +17,7 @@ def get_pending_claims_service():
 
 def get_completed_transactions_service():
     """Return all completed claims/transactions for reporting."""
-    transactions = get_completed_claims()
+    transactions = get_all_completed_claims_db()
     return transactions, 200
 
 def process_claim_verification(claim_id: int, data: dict, admin_username: str):
@@ -41,30 +41,6 @@ def process_claim_verification(claim_id: int, data: dict, admin_username: str):
 
 def get_admin_stats_service():
     """Return counts for the admin dashboard"""
-    from ..models.base import get_db_connection
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'lost'")
-        total_lost = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found'")
-        total_found = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM claims WHERE decision = 'pending'")
-        pending_claims = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")
-        resolved_items = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'returned'")
-        resolved_items += cursor.fetchone()[0]
-        
-        return {
-            "total_lost": total_lost,
-            "total_found": total_found,
-            "pending_claims": pending_claims,
-            "resolved_items": resolved_items
-        }, 200
-    finally:
-        conn.close()
+    from ..models.items import get_dashboard_stats_db
+    stats = get_dashboard_stats_db()
+    return stats, 200

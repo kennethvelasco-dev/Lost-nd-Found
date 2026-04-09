@@ -91,10 +91,10 @@ def get_user_activities_service(user_id: str) -> tuple:
     Combined service to get all reports and claims for a user, filtering out dismissed ones.
     """
     from ..models.items import get_user_reports_db
-    from ..models.claims import get_user_claims_db
+    from ..models.claims import get_claims_db
     
     reports = get_user_reports_db(user_id)
-    user_claims = get_user_claims_db(user_id)
+    user_claims = get_claims_db(user_id)
     
     return {
         "reports": reports,
@@ -113,25 +113,15 @@ def dismiss_activity_service(activity_id: int, activity_type: str, user_id: str)
         return {"error": "Invalid activity type"}, 400
 
 def verify_report_service(report_id: int, entity_type: str, decision: str, reason: str, admin_username: str) -> tuple:
-    """
-    Service to approve/reject a report.
-    """
+    """Service to approve/reject a report."""
     from ..models.items import verify_report_db
     return verify_report_db(report_id, entity_type, decision, reason, admin_username)
 
 def get_pending_reports_service() -> tuple:
     """Gets all reports awaiting approval."""
-    from ..models.base import get_db_connection
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE status = 'pending_approval'")
-        lost = [dict(row) for row in cursor.fetchall()]
-        cursor.execute("SELECT *, 'found' as type FROM found_items WHERE status = 'pending_approval'")
-        found = [dict(row) for row in cursor.fetchall()]
-        return {"pending": lost + found}, 200
-    finally:
-        conn.close()
+    from ..models.items import get_pending_reports_db
+    result = get_pending_reports_db()
+    return result, 200
 
 def resolve_item_service(data: dict, admin_username: str) -> tuple:
     """Service to handle administrative item resolution."""

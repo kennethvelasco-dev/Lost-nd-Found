@@ -1,58 +1,61 @@
-from ..models.claims import get_claim_detail_db, get_completed_claims
-from ..models.items import get_found_item_by_id
-from ..models.base import get_db_connection
+from ..models.claims import get_all_completed_claims_db, get_claims_db
+from ..models.items import get_found_item_by_id, get_user_reports_db
+from ..utils.user_helpers import get_user_by_id
 
-def get_transaction_summary(claim_id: int):
+def get_transaction_summary(user_id):
     """
-    Generates a detailed report of a completed transaction.
+    Returns counts and user-specific details for reports and claims.
     """
-    claim = get_claim_detail_db(claim_id)
-    if not claim:
-        return {"error": "Claim not found"}, 404
-    
-    if claim["decision"] != "completed":
-        return {"error": "Transaction not completed yet"}, 400
+    user = get_user_by_id(user_id)
+    if not user:
+        return {"error": "User not found"}, 404
         
-    found_item = get_found_item_by_id(claim["found_item_id"])
-    
-    # Fetch user info for the claimant
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        user_row = cursor.execute("SELECT username, name, email FROM users WHERE id = ?", (claim["user_id"],)).fetchone()
-        user = dict(user_row) if user_row else {}
-    finally:
-        conn.close()
-
-    report = {
-        "transaction_id": claim["id"],
-        "completed_at": claim["completed_at"],
-        "handover_notes": claim["handover_notes"],
-        "claimant_details": {
-            "name": claim["claimant_name"],
-            "email": claim["claimant_email"],
-            "system_username": user.get("username")
-        },
-        "item_details": {
-            "report_id": found_item["report_id"],
-            "category": found_item["category"],
-            "item_type": found_item["item_type"],
-            "brand": found_item["brand"],
-            "color": found_item["color"],
-            "found_location": found_item["found_location"],
-            "found_datetime": found_item["found_datetime"]
-        },
-        "pickup_details": {
-            "datetime": claim["pickup_datetime"],
-            "location": claim["pickup_location"]
-        }
+    user_info = {
+        "username": user["username"],
+        "name": user["name"],
+        "email": user["email"]
     }
-    
-    return report, 200
+
+    reports = get_user_reports_db(user_id)
+    claims = get_claims_db(user_id=user_id)
+
+    return {
+        "user": user_info,
+        "counts": {
+            "reports": len(reports),
+            "claims": len(claims)
+        }
+    }, 200
 
 def get_all_completed_transactions_report():
     """
-    Returns a list of all completed transactions with brief info.
+    Generates a full history of successful returns for administrative view.
     """
-    claims = get_completed_claims()
-    return claims, 200
+    claims = get_all_completed_claims_db()
+    report = []
+
+    for claim in claims:
+        found_item = get_found_item_by_id(claim["found_item_id"])
+        if not found_item:
+            continue
+            
+        user = get_user_by_id(claim["user_id"])
+        
+        entry = {
+            "transaction_id": claim["id"],
+            "resolution_date": claim["completed_at"] or claim["created_at"],
+            "claimant_details": {
+                "name": claim["claimant_name"],
+                "email": claim["claimant_email"],
+                "system_username": user["username"] if user else None
+            },
+            "item_details": {
+                "report_id": found_item["report_id"],
+                "category": found_item["category"],
+                "description": found_item["public_description"]
+            },
+            "handover_notes": claim["handover_notes"]
+        }
+        report.append(entry)
+
+    return {"history": report}, 200

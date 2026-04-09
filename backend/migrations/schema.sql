@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS users (
     is_email_verified INTEGER DEFAULT 0,
     verification_token TEXT,
     verification_token_expires TEXT,
+    reset_token TEXT,
+    reset_token_expires TEXT,
     created_at TEXT NOT NULL
 );
 

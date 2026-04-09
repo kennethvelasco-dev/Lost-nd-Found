@@ -104,9 +104,6 @@ def get_potential_matches_service(claim_id: int, user_id: str, role: str) -> tup
     if not claim:
         return {"error": "Claim not found"}, 404
         
-    found_items, _ = get_published_found_items()
-    matches = []
-    
     import json
     try:
         if isinstance(claim["answers"], str):
@@ -119,6 +116,16 @@ def get_potential_matches_service(claim_id: int, user_id: str, role: str) -> tup
     if not isinstance(answers, dict):
         answers = {}
 
+    # Performance Optimization: Relaxed Filtering
+    # We fetch only items in the same or related categories
+    from ..config.categories import get_related_categories
+    claimed_category = answers.get("category") or answers.get("claimed_category")
+    related_cats = get_related_categories(claimed_category) if claimed_category else None
+    
+    # Pass relaxed category filter to the model
+    found_items, _ = get_published_found_items(limit=100, categories=related_cats)
+    
+    matches = []
     for item in found_items:
         score_result = compute_claim_score(answers, item)
         if score_result["total"] > 0:

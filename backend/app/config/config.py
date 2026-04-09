@@ -33,3 +33,9 @@ class Config:
     
     # Restrict Refresh Token to refresh endpoint
     JWT_REFRESH_COOKIE_PATH = "/api/auth/refresh"
+
+    # CORS Configuration
+    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
+
+    # Password Reset
+    RESET_TOKEN_EXPIRY_MINUTES = int(os.environ.get("RESET_TOKEN_EXPIRY_MINUTES", 60))

@@ -219,7 +219,7 @@ def get_filtered_claims_db(status_filter=['pending']):
         conn.close()
 
 # GET COMPLETED CLAIMS (For Reporting)
-def get_completed_claims():
+def get_all_completed_claims_db():
     """Return all completed claims for transaction reporting."""
     conn = get_db_connection()
     try:
@@ -500,7 +500,7 @@ def get_claim_detail_db(claim_id):
     finally:
         conn.close()
 
-def get_user_claims_db(user_id):
+def get_claims_db(user_id):
     """Get all non-dismissed claims for a specific user."""
     conn = get_db_connection()
     try:

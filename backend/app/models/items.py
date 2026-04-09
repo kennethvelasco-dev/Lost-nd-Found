@@ -117,25 +117,40 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
         conn.close()
 
 # Get Found Items
-def get_published_found_items(limit=20, offset=0) -> tuple[list[Dict[str, Any]], int]:
-    """Return all published found items with pagination."""
+def get_published_found_items(limit=20, offset=0, categories=None) -> tuple[list[Dict[str, Any]], int]:
+    """
+    Return all published found items with pagination.
+    Supports optional category filtering for optimized matching.
+    """
     conn = get_db_connection()
     try:
         cursor = conn.cursor()
+        
+        where_clause = "WHERE status = 'lost'"
+        params = []
+        
+        if categories:
+            if isinstance(categories, list):
+                placeholders = ",".join(["?" for _ in categories])
+                where_clause += f" AND category IN ({placeholders})"
+                params.extend(categories)
+            else:
+                where_clause += " AND category = ?"
+                params.append(categories)
 
-        # Get total count (search for 'lost' status for available items)
-        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'lost'")
+        # Get total count
+        cursor.execute(f"SELECT COUNT(*) FROM found_items {where_clause}", params)
         total_count = cursor.fetchone()[0]
 
-        cursor.execute("""
+        cursor.execute(f"""
             SELECT id, report_id, category, item_type, color, brand,
                    found_location, found_datetime, public_description,
-                   main_picture
+                   main_picture, reporter_id
             FROM found_items
-            WHERE status = 'lost'
+            {where_clause}
             ORDER BY created_at DESC
             LIMIT ? OFFSET ?
-        """, (limit, offset))
+        """, params + [limit, offset])
 
         items = [dict(row) for row in cursor.fetchall()]
         return items, total_count
@@ -441,5 +456,47 @@ def get_item_universal_db(identifier):
         if row: return dict(row)
         
         return None
+    finally:
+        conn.close()
+
+def get_pending_reports_db():
+    """Gets all reports awaiting approval."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE status = 'pending_approval'")
+        lost = [dict(row) for row in cursor.fetchall()]
+        cursor.execute("SELECT *, 'found' as type FROM found_items WHERE status = 'pending_approval'")
+        found = [dict(row) for row in cursor.fetchall()]
+        return {"pending": lost + found}
+    finally:
+        conn.close()
+
+def get_dashboard_stats_db():
+    """Aggregates system-wide counts for the admin dashboard."""
+    conn = get_db_connection()
+    try:
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'lost'")
+        total_lost = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found' OR status = 'lost'")
+        total_found = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM claims WHERE decision = 'pending'")
+        pending_claims = cursor.fetchone()[0]
+        
+        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")
+        resolved_items = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'returned'")
+        resolved_items += cursor.fetchone()[0]
+        
+        return {
+            "total_lost": total_lost,
+            "total_found": total_found,
+            "pending_claims": pending_claims,
+            "resolved_items": resolved_items
+        }
     finally:
         conn.close()

@@ -12,7 +12,7 @@ def create_app(config_class=Config):
     app.config.from_object(config_class)
 
     # Initialize Extensions
-    CORS(app, supports_credentials=True)
+    CORS(app, supports_credentials=True, origins=app.config.get("CORS_ORIGINS", "*"))
     jwt.init_app(app)
     limiter.init_app(app)
 

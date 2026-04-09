@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
+from ..utils.decorators import admin_required
 from ..services.claim_service import (
     submit_claim,
     get_potential_matches_service,
@@ -48,14 +49,10 @@ def get_pending():
 
 @claim_bp.route("/<int:claim_id>/verify", methods=["POST"])
 @jwt_required()
+@admin_required
 @require_json_fields(["decision"])
 def post_verify_claim(claim_id):
     """Approve or reject a claim. Admin only."""
-    # Note: Using get_jwt() instead of re-importing in function for consistency
-    jwt_claims = get_jwt()
-    if jwt_claims.get("role") != "admin":
-        return jsonify(error_response("FORBIDDEN", "Admin access required")), 403
-
     data = request.get_json()
     decision = data.get("decision")
     admin_username = get_jwt_identity()

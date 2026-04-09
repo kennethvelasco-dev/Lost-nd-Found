@@ -14,7 +14,7 @@ from .items import (
 from .claims import (
     create_claim,
     get_filtered_claims_db,
-    get_completed_claims,
+    get_all_completed_claims_db,
     get_claim_detail_db,
     update_claim,
     update_claim_status,
