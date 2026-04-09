@@ -1,13 +1,22 @@
-from flask import Flask, jsonify
+import os
+import time
+from flask import Flask, jsonify, json
 from flask_cors import CORS
-from .extensions import jwt, limiter
+from .extensions import jwt, limiter, db
 from .config.config import Config
 from .models import init_db
+from .models.validators import ValidationError
 from .utils.response import error_response
 from .services.auth_service import is_token_revoked
 from werkzeug.exceptions import HTTPException
 
-def create_app(config_class=Config):
+def create_app(config_name=None):
+    if config_name is None:
+        config_name = os.environ.get("FLASK_ENV", "development")
+
+    from .config.config import config_by_name
+    config_class = config_by_name.get(config_name, config_by_name["default"])
+
     app = Flask(__name__)
     app.config.from_object(config_class)
 
@@ -15,12 +24,24 @@ def create_app(config_class=Config):
     CORS(app, supports_credentials=True, origins=app.config.get("CORS_ORIGINS", "*"))
     jwt.init_app(app)
     limiter.init_app(app)
+    db.init_app(app)
 
     # JWT Callbacks
     @jwt.token_in_blocklist_loader
     def check_if_token_revoked(jwt_header, jwt_payload):
+        # 1. Check database blocklist
         jti = jwt_payload.get("jti")
-        return is_token_revoked(jti)
+        if is_token_revoked(jti):
+            return True
+            
+        # 2. Check absolute timeout (24h)
+        auth_time = jwt_payload.get("auth_time")
+        if auth_time:
+            max_age = app.config.get("SESSION_ABSOLUTE_TIMEOUT", 24) * 3600
+            if time.time() - auth_time > max_age:
+                return True # Treat as revoked/expired
+                
+        return False
 
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):
@@ -48,14 +69,34 @@ def create_app(config_class=Config):
     app.register_blueprint(health_bp, url_prefix="/api")
 
     # Global Error Handlers
+    @app.errorhandler(ValidationError)
+    def handle_validation_error(e):
+        status_code = getattr(e, "status_code", 400)
+        return jsonify(error_response("VALIDATION_ERROR", str(e))), status_code
+
+    @app.errorhandler(HTTPException)
+    def handle_http_exception(e):
+        """Return JSON instead of HTML for HTTP errors."""
+        response = e.get_response()
+        response.data = json.dumps(error_response("HTTP_ERROR", e.description))
+        response.content_type = "application/json"
+        return response, e.code
+
     @app.errorhandler(Exception)
     def handle_exception(e):
-        if isinstance(e, HTTPException):
-            return jsonify(error_response("HTTP_ERROR", e.description)), e.code
-        
+        # Log the full error server-side
         import traceback
-        print(f"CRITICAL ERROR: {str(e)}\n{traceback.format_exc()}")
-        return jsonify(error_response("INTERNAL_SERVER_ERROR", "An unexpected server error occurred.")), 500
+        app.logger.error(f"UNHANDLED EXCEPTION: {str(e)}\n{traceback.format_exc()}")
+        
+        # Determine status code
+        status_code = 500
+        if isinstance(e, HTTPException):
+            status_code = e.code
+            message = e.description
+        else:
+            message = "An unexpected server error occurred." if not app.debug else str(e)
+
+        return jsonify(error_response("SERVER_ERROR", message)), status_code
 
     @app.after_request
     def add_security_headers(response):

@@ -1,13 +1,11 @@
 from ..models.claims import (
     create_claim,
-    ValidationError,
-    require_fields,
-    validate_found_item_id,
     link_claim_to_found_item,
     get_claim_detail_db,
     schedule_pickup,
     get_filtered_claims_db
 )
+from ..models.validators import ValidationError, require_fields, validate_found_item_id
 from ..models.items import get_published_found_items
 from .scoring_service import compute_claim_score
 

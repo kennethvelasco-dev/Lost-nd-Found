@@ -1,6 +1,10 @@
+import logging
 from datetime import datetime, timezone
-from .base import get_db_connection
+from sqlalchemy import text
+from ..extensions import db
 from .validators import ValidationError, require_fields, validate_int
+
+logger = logging.getLogger(__name__)
 
 def log_action(action: str, entity_type: str, entity_id: int, performed_by: str, notes: str = None):
     """
@@ -31,17 +35,20 @@ def log_action(action: str, entity_type: str, entity_id: int, performed_by: str,
         validate_int(entity_id, "entity_id")
 
         # Insert into audit_logs
-        """Log an action performed on an entity."""
-        conn = get_db_connection()
-        try:
-            cursor = conn.cursor()
-            cursor.execute("""
-                INSERT INTO audit_logs (action, entity_type, entity_id, performed_by, timestamp, notes)
-                VALUES (?, ?, ?, ?, ?, ?)
-            """, (action, entity_type, entity_id, performed_by, datetime.now(timezone.utc).isoformat(), notes))
-            conn.commit()
-        finally:
-            conn.close()
+        query = text("""
+            INSERT INTO audit_logs (action, entity_type, entity_id, performed_by, timestamp, notes)
+            VALUES (:action, :type, :id, :by, :now, :notes)
+        """)
+        
+        db.session.execute(query, {
+            "action": action,
+            "type": entity_type,
+            "id": entity_id,
+            "by": performed_by,
+            "now": datetime.now(timezone.utc),
+            "notes": notes
+        })
+        db.session.commit()
 
         return {"message": "Action logged successfully"}
 
@@ -49,4 +56,6 @@ def log_action(action: str, entity_type: str, entity_id: int, performed_by: str,
         return {"error": ve.message}, ve.status_code
 
     except Exception as e:
-        return {"error": f"Database error: {str(e)}"}
+        db.session.rollback()
+        logger.error(f"Audit log error: {str(e)}")
+        return {"error": "Failed to log action"}

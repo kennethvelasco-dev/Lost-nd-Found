@@ -1,23 +1,24 @@
 import os
 from datetime import timedelta
+from dotenv import load_dotenv
+
+# Load .env file
+load_dotenv()
 
 class Config:
-    """
-    Base configuration.
-    Used for development unless overridden by environment variables.
-    """
-
-    # Core Flask
+    """Base configuration."""
     SECRET_KEY = os.environ.get("FLASK_SECRET_KEY", "dev-secret-key")
-    TESTING = os.environ.get("FLASK_TESTING", "false").lower() == "true"
-    DATABASE_PATH = os.environ.get("DATABASE_PATH", os.path.join(os.path.dirname(__file__), "..", "..", "lostnfound.db"))
+    JSON_SORT_KEYS = False
     MAX_CONTENT_LENGTH = int(os.environ.get("MAX_CONTENT_LENGTH", 50 * 1024 * 1024))
-
-    # JWT Configuration
+    RESET_TOKEN_EXPIRY_MINUTES = int(os.environ.get("RESET_TOKEN_EXPIRY_MINUTES", 60))
+    
+    # SQLAlchemy
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL") or \
+        f"sqlite:///{os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', 'lostnfound.db'))}"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY", "dev-jwt-secret")
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=int(os.environ.get("JWT_ACCESS_MINS", 15)))
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=int(os.environ.get("JWT_REFRESH_DAYS", 7)))
-    
     JWT_ALGORITHM = "HS256"
     
     # Token Storage
@@ -25,17 +26,34 @@ class Config:
     JWT_ACCESS_COOKIE_NAME = "access_token_cookie"
     JWT_REFRESH_COOKIE_NAME = "refresh_token_cookie"
     
-    # Security Flags (Should be True in Production with HTTPS)
+    # Security Flags (Should be True in Production)
     JWT_COOKIE_SECURE = os.environ.get("JWT_COOKIE_SECURE", "false").lower() == "true"
     JWT_COOKIE_HTTPONLY = os.environ.get("JWT_COOKIE_HTTPONLY", "true").lower() == "true"
-    JWT_COOKIE_SAMESITE = os.environ.get("JWT_COOKIE_SAMESITE", "Strict")
+    JWT_COOKIE_SAMESITE = os.environ.get("JWT_COOKIE_SAMESITE", "Lax")
     JWT_COOKIE_CSRF_PROTECT = os.environ.get("JWT_COOKIE_CSRF_PROTECT", "false").lower() == "true"
-    
-    # Restrict Refresh Token to refresh endpoint
     JWT_REFRESH_COOKIE_PATH = "/api/auth/refresh"
 
     # CORS Configuration
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
 
-    # Password Reset
-    RESET_TOKEN_EXPIRY_MINUTES = int(os.environ.get("RESET_TOKEN_EXPIRY_MINUTES", 60))
+    # Email (Resend)
+    RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
+    RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+
+    # absolute timeout logic
+    SESSION_ABSOLUTE_TIMEOUT = int(os.environ.get("SESSION_ABSOLUTE_TIMEOUT_HOURS", 24))
+
+class DevelopmentConfig(Config):
+    DEBUG = True
+
+class ProductionConfig(Config):
+    DEBUG = False
+    # Enforce secure cookies in production
+    JWT_COOKIE_SECURE = True
+    JWT_COOKIE_SAMESITE = "Strict"
+
+config_by_name = {
+    "development": DevelopmentConfig,
+    "production": ProductionConfig,
+    "default": DevelopmentConfig
+}

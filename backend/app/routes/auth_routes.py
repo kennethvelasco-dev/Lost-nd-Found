@@ -25,12 +25,13 @@ auth_bp = Blueprint("auth", __name__)
 
 @auth_bp.route("/register", methods=["POST"])
 @limiter.limit("3 per 15 minutes")
-@require_json_fields(["username", "password", "role"])
+@require_json_fields(["username", "password", "role", "email"])
 def register():
     data = request.get_json() or {}
     try:
         result, status = register_user(data)
-        return jsonify(success_response(result)), status
+        # MUST-FIX: Returns JSON: { "message": ... }
+        return jsonify({"message": result["message"]}), status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 400
 
@@ -41,11 +42,11 @@ def login():
     data = request.get_json() or {}
     try:
         result, status = login_user(data)
-        response = jsonify(success_response({
-            "user": result["user"],
-            "message": result["message"],
-            "access_token": result["access_token"]
-        }))
+        # MUST-FIX: Returns JSON: { "data": { "access_token": "..." } }
+        response = jsonify(success_response(data={
+            "access_token": result["access_token"],
+            "user": result["user"]
+        }, message=result["message"]))
         
         # Set tokens in HTTP-only cookies
         set_access_cookies(response, result["access_token"])
@@ -61,11 +62,13 @@ def login():
 def refresh():
     try:
         user_id = get_jwt_identity()
-        role = get_jwt().get("role")
-        old_jti = get_jwt()["jti"]
+        claims = get_jwt()
+        role = claims.get("role")
+        auth_time = claims.get("auth_time")
+        old_jti = claims["jti"]
         
-        # RTR: Generate new tokens
-        result, status = refresh_token_service(user_id, role)
+        # RTR: Generate new tokens with preservation of auth_time
+        result, status = refresh_token_service(user_id, role, auth_time)
         
         response = jsonify(success_response({"message": "Token refreshed"}))
         set_access_cookies(response, result["access_token"])

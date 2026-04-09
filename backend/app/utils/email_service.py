@@ -1,47 +1,81 @@
-import os
+import resend
+import logging
 from flask import current_app
+
+logger = logging.getLogger(__name__)
 
 def send_email(to_email, subject, html_content):
     """ 
-    Logs the email to the console instead of sending via a paid service.
-    This ensures a 'zero dollar' deployment strategy.
+    Sends an email using the Resend service.
+    Falls back to console logging if API key is missing.
     """
-    print("\n" + "="*60)
-    print(f"ZERO-COST EMAIL LOG (MOCK)")
-    print(f"TO: {to_email}")
-    print(f"SUBJECT: {subject}")
-    print("-" * 30)
-    # Keeping original content for console debugging.
+    api_key = current_app.config.get("RESEND_API_KEY")
+    from_email = current_app.config.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+
+    if not api_key:
+        logger.warning("RESEND_API_KEY not found. Falling back to console logging.")
+        print("\n" + "="*60)
+        print(f"ZERO-COST EMAIL LOG (MOCK)")
+        print(f"TO: {to_email}")
+        print(f"SUBJECT: {subject}")
+        print("-" * 30)
+        try:
+            clean_text = html_content.replace("<p>", "\n").replace("</p>", "").replace("<h1>", "\n## ").replace("</h1>", "\n")
+            print(clean_text)
+        except:
+            print(html_content)
+        print("="*60 + "\n")
+        return True
+
+    resend.api_key = api_key
     try:
-        clean_text = html_content.replace("<p>", "\n").replace("</p>", "").replace("<h1>", "\n## ").replace("</h1>", "\n")
-        print(clean_text)
-    except:
-        print(html_content)
-    print("="*60 + "\n")
-    return True
+        r = resend.Emails.send({
+            "from": from_email,
+            "to": to_email,
+            "subject": subject,
+            "html": html_content
+        })
+        logger.info(f"Email sent successfully to {to_email}. ID: {r['id']}")
+        return True
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {str(e)}")
+        return False
 
 def send_verification_email(email, token):
-    """ Logs a verification link to the console. """
-    # In a real app, this URL would point to your frontend
-    link = f"http://localhost:5000/api/auth/verify-email?token={token}"
+    """ Sends a verification link using Resend. """
+    # In production, BASE_URL should come from config
+    base_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
+    link = f"{base_url}/verify-email?token={token}"
     subject = "Verify your Lost & Found Account"
     html_content = f"""
-    <h1>Welcome to Campus Lost & Found</h1>
-    <p>Please verify your email by clicking the link below:</p>
-    <a href="{link}">Verify Email</a>
-    <p>If you didn't create an account, you can safely ignore this email.</p>
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto;">
+        <h1 style="color: #4f46e5;">Welcome to Campus Lost & Found</h1>
+        <p>Thank you for signing up! Please verify your email by clicking the button below:</p>
+        <div style="margin: 30px 0;">
+            <a href="{link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Verify Email Address</a>
+        </div>
+        <p>If the button doesn't work, copy and paste this link into your browser:</p>
+        <p style="color: #6b7280; font-size: 14px;">{link}</p>
+        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 30px 0;" />
+        <p style="font-size: 12px; color: #9ca3af;">If you didn't create an account, you can safely ignore this email.</p>
+    </div>
     """
     return send_email(email, subject, html_content)
 
 def send_password_reset_email(email, token):
-    """ Logs a password reset link to the console. """
-    # In a real app, this URL would point to your frontend reset page
-    link = f"http://localhost:3000/reset-password?token={token}"
+    """ Sends a password reset link using Resend. """
+    base_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
+    link = f"{base_url}/reset-password?token={token}"
     subject = "Reset your Lost & Found Password"
     html_content = f"""
-    <h1>Password Reset Request</h1>
-    <p>You requested to reset your password. Click the link below to set a new one:</p>
-    <a href="{link}">Reset Password</a>
-    <p>This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
+    <div style="font-family: sans-serif; max-width: 600px; margin: auto;">
+        <h1 style="color: #4f46e5;">Password Reset Request</h1>
+        <p>You requested to reset your password. Click the button below to set a new one:</p>
+        <div style="margin: 30px 0;">
+            <a href="{link}" style="background-color: #4f46e5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Reset Password</a>
+        </div>
+        <p>This link will expire in 1 hour. If you didn't request this, please ignore this email.</p>
+        <p style="color: #6b7280; font-size: 14px;">{link}</p>
+    </div>
     """
     return send_email(email, subject, html_content)

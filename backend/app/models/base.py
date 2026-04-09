@@ -1,38 +1,44 @@
-import sqlite3
 import os
-
+import logging
 from flask import current_app
+from sqlalchemy import text
+from ..extensions import db
 
-DEFAULT_DB = os.path.join(os.path.dirname(__file__), "..", "..", "lostnfound.db")
-
-def get_db_path():
-    # If app context is available, try to get from config, else use default relative to this file
-    try:
-        if current_app:
-            return current_app.config.get("DATABASE_PATH", DEFAULT_DB)
-    except RuntimeError:
-        pass
-    return DEFAULT_DB
+logger = logging.getLogger(__name__)
 
 def get_db_connection():
-    path = get_db_path()
-    conn = sqlite3.connect(path)
-    conn.execute("PRAGMA foreign_keys = ON")
-    conn.row_factory = sqlite3.Row
-    return conn
+    """ 
+    Legacy wrapper for raw db connection if needed.
+    In SQLAlchemy context, we usually use db.session.
+    """
+    return db.engine.raw_connection()
 
 def init_db():
-    conn = get_db_connection()
+    """ Initialized the database by executing the schema script. """
+    schema_path = os.path.join(os.path.dirname(__file__), '..', '..', 'migrations', 'schema.sql')
+    
+    if not os.path.exists(schema_path):
+        logger.error(f"Schema file not found at {schema_path}")
+        return
+
+    with open(schema_path, 'r') as f:
+        schema_sql = f.read()
+
     try:
-        cursor = conn.cursor()
-
-        # Schema is moved to backend/migrations/schema.sql
-        schema_path = os.path.join(os.path.dirname(__file__), '..', '..', 'migrations', 'schema.sql')
-        with open(schema_path, 'r') as f:
-            schema_sql = f.read()
-        
-        cursor.executescript(schema_sql)
-
-        conn.commit()
-    finally:
-        conn.close()
+        # Split by semicolon for Postgres compatibility if not using executescript
+        # SQLite's executescript is convenient, but for Postgres we need individual statements
+        # or we use the underlying driver's capabilities.
+        with current_app.app_context():
+            # For simplicity in this refactor, we'll execute the script in blocks 
+            # separated by double-newlines or semicolons if they aren't in strings.
+            # A better way for production is real migrations (Alembic).
+            statements = schema_sql.split(';')
+            for statement in statements:
+                if statement.strip():
+                    db.session.execute(text(statement))
+            db.session.commit()
+            logger.info("Database initialized successfully.")
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to initialize database: {str(e)}")
+        raise e

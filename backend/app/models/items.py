@@ -1,76 +1,70 @@
+import uuid
+import logging
 from datetime import datetime, timezone
-from .base import get_db_connection
+from sqlalchemy import text
+from ..extensions import db
 from .validators import ValidationError, require_fields, validate_int
 from .audit import log_action
 from typing import Optional, Dict, Any
 
+logger = logging.getLogger(__name__)
+
 # Lost Items
 def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a lost item record with validation and logging."""
-    conn = get_db_connection()
     try:
-        # Validate required fields
         require_fields(data, ["category", "last_seen_location", "last_seen_datetime"])
 
-        cursor = conn.cursor()
-
-        import uuid
-
-        cursor.execute("""
+        query = text("""
             INSERT INTO lost_items (
                 report_id, category, item_type, last_seen_location,
                 last_seen_datetime, public_description, private_details,
                 main_picture, additional_picture_1, additional_picture_2,
                 additional_picture_3, reporter_id, status, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            str(uuid.uuid4()), # Auto-generate report_id
-            data["category"],
-            data.get("item_type", "Unknown"),
-            data["last_seen_location"],
-            data["last_seen_datetime"],
-            data.get("public_description"),
-            data.get("private_details"),
-            data.get("main_picture"),
-            data.get("additional_picture_1"),
-            data.get("additional_picture_2"),
-            data.get("additional_picture_3"),
-            data.get("reporter_id"),
-            "pending_approval", # Default status for user reports
-            datetime.now(timezone.utc).isoformat()
-        ))
+            VALUES (:report_id, :cat, :type, :loc, :dt, :pub, :priv, :m_pic, :p1, :p2, :p3, :rep_id, :status, :now)
+            RETURNING id
+        """)
+        
+        params = {
+            "report_id": str(uuid.uuid4()),
+            "cat": data["category"],
+            "type": data.get("item_type", "Unknown"),
+            "loc": data["last_seen_location"],
+            "dt": data["last_seen_datetime"],
+            "pub": data.get("public_description"),
+            "priv": data.get("private_details"),
+            "m_pic": data.get("main_picture"),
+            "p1": data.get("additional_picture_1"),
+            "p2": data.get("additional_picture_2"),
+            "p3": data.get("additional_picture_3"),
+            "rep_id": data.get("reporter_id"),
+            "status": "pending_approval",
+            "now": datetime.now(timezone.utc)
+        }
+        
+        result = db.session.execute(query, params)
+        db.session.commit()
+        row = result.fetchone()
+        item_id = row[0] if row else None
 
-        conn.commit()
-        item_id = cursor.lastrowid
-
-        # Log creation
         log_action("create", "lost_item", item_id, str(data.get("reporter_id", "system")))
-
         return {"message": "Lost item created successfully", "item_id": item_id}
 
     except ValidationError as ve:
         return {"error": ve.message}
-
     except Exception as e:
-        import traceback
-        return {"error": f"Database error: {str(e)}\n{traceback.format_exc()}"}
-
-    finally:
-        conn.close()
+        db.session.rollback()
+        logger.error(f"Error creating lost item: {str(e)}")
+        return {"error": "Internal server error while creating report."}
 
 # Found Items
 def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
     """Create a found item record with validation and logging."""
-    conn = get_db_connection()
     try:
         require_fields(data, ["category", "found_location", "found_datetime"])
 
-        cursor = conn.cursor()
-
-        import uuid
-
-        cursor.execute("""
+        query = text("""
             INSERT INTO found_items (
                 report_id, category, item_type, color, brand,
                 found_location, found_datetime,
@@ -78,425 +72,244 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
                 additional_picture_1, additional_picture_2, additional_picture_3,
                 reporter_id, status, created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        """, (
-            str(uuid.uuid4()), # Auto-generate report_id
-            data["category"],
-            data.get("item_type", "Unknown"),
-            data.get("color"),
-            data.get("brand"),
-            data["found_location"],
-            data["found_datetime"],
-            data.get("public_description"),
-            data.get("private_details"),
-            data.get("main_picture"),
-            data.get("additional_picture_1"),
-            data.get("additional_picture_2"),
-            data.get("additional_picture_3"),
-            data.get("reporter_id"),
-            "pending_approval", # Default status
-            datetime.now(timezone.utc).isoformat()
-        ))
+            VALUES (:report_id, :cat, :type, :color, :brand, :loc, :dt, :pub, :priv, :m_pic, :p1, :p2, :p3, :rep_id, :status, :now)
+            RETURNING id
+        """)
+        
+        params = {
+            "report_id": str(uuid.uuid4()),
+            "cat": data["category"],
+            "type": data.get("item_type", "Unknown"),
+            "color": data.get("color"),
+            "brand": data.get("brand"),
+            "loc": data["found_location"],
+            "dt": data["found_datetime"],
+            "pub": data.get("public_description"),
+            "priv": data.get("private_details"),
+            "m_pic": data.get("main_picture"),
+            "p1": data.get("additional_picture_1"),
+            "p2": data.get("additional_picture_2"),
+            "p3": data.get("additional_picture_3"),
+            "rep_id": data.get("reporter_id"),
+            "status": "pending_approval",
+            "now": datetime.now(timezone.utc)
+        }
+        
+        result = db.session.execute(query, params)
+        db.session.commit()
+        row = result.fetchone()
+        item_id = row[0] if row else None
 
-        conn.commit()
-        item_id = cursor.lastrowid
-
-        # Log creation
         log_action("create", "found_item", item_id, str(data.get("reporter_id", "system")))
-
         return {"message": "Found item created successfully", "item_id": item_id}
 
     except ValidationError as ve:
         return {"error": ve.message}
-
     except Exception as e:
-        import traceback
-        return {"error": f"Database error: {str(e)}\n{traceback.format_exc()}"}
-
-    finally:
-        conn.close()
+        db.session.rollback()
+        logger.error(f"Error creating found item: {str(e)}")
+        return {"error": "Internal server error while creating report."}
 
 # Get Found Items
 def get_published_found_items(limit=20, offset=0, categories=None) -> tuple[list[Dict[str, Any]], int]:
     """
     Return all published found items with pagination.
-    Supports optional category filtering for optimized matching.
     """
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        
-        where_clause = "WHERE status = 'lost'"
-        params = []
-        
-        if categories:
-            if isinstance(categories, list):
-                placeholders = ",".join(["?" for _ in categories])
-                where_clause += f" AND category IN ({placeholders})"
-                params.extend(categories)
-            else:
-                where_clause += " AND category = ?"
-                params.append(categories)
+    where_clause = "WHERE status = 'lost'"
+    params = {"limit": limit, "offset": offset}
+    
+    if categories:
+        if isinstance(categories, list):
+            placeholders = ",".join([f":c{i}" for i in range(len(categories))])
+            where_clause += f" AND category IN ({placeholders})"
+            for i, cat in enumerate(categories):
+                params[f"c{i}"] = cat
+        else:
+            where_clause += " AND category = :category"
+            params["category"] = categories
 
-        # Get total count
-        cursor.execute(f"SELECT COUNT(*) FROM found_items {where_clause}", params)
-        total_count = cursor.fetchone()[0]
+    count_query = text(f"SELECT COUNT(*) FROM found_items {where_clause}")
+    total_count = db.session.execute(count_query, params).scalar()
 
-        cursor.execute(f"""
-            SELECT id, report_id, category, item_type, color, brand,
-                   found_location, found_datetime, public_description,
-                   main_picture, reporter_id
-            FROM found_items
-            {where_clause}
-            ORDER BY created_at DESC
-            LIMIT ? OFFSET ?
-        """, params + [limit, offset])
+    select_query = text(f"""
+        SELECT id, report_id, category, item_type, color, brand,
+               found_location, found_datetime, public_description,
+               main_picture, reporter_id
+        FROM found_items
+        {where_clause}
+        ORDER BY created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+    result = db.session.execute(select_query, params).fetchall()
+    items = [dict(row._mapping) for row in result]
+    return items, total_count
 
-        items = [dict(row) for row in cursor.fetchall()]
-        return items, total_count
-    finally:
-        conn.close()
-
-# Get Found Item by ID
 def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
-    """Return a found item by ID. Validates ID type."""
-    conn = get_db_connection()
-    try:
-        validate_int(item_id, "item_id")
+    validate_int(item_id, "item_id")
+    query = text("SELECT * FROM found_items WHERE id = :id")
+    row = db.session.execute(query, {"id": item_id}).fetchone()
+    return dict(row._mapping) if row else None
 
-        cursor = conn.cursor()
-
-        cursor.execute("SELECT * FROM found_items WHERE id = ?", (item_id,))
-        row = cursor.fetchone()
-
-        if row is None:
-            return None
-
-        return dict(row)
-    finally:
-        conn.close()
-
-# Verify Report (Admin)
 def verify_report_db(report_id, entity_type, decision, reason, admin_username):
-    """Approve or reject a report. entity_type is 'lost' or 'found'."""
     table = "lost_items" if entity_type == "lost" else "found_items"
-    # User's Terminology: 
-    # Approved Found -> 'lost' (Available to claim)
-    # Approved Lost -> 'reported_lost' (Private report)
-    # Released -> 'found' (Finished)
     approved_status = "reported_lost" if entity_type == "lost" else "lost"
     new_status = approved_status if decision == "approved" else "rejected"
 
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute(f"UPDATE {table} SET status = ?, rejection_reason = ? WHERE id = ?", (new_status, reason, report_id))
-        
-        if cursor.rowcount == 0:
-            return {"error": f"Report ID {report_id} not found in {entity_type} items."}, 404
+    query = text(f"UPDATE {table} SET status = :status, rejection_reason = :reason WHERE id = :id")
+    res = db.session.execute(query, {"status": new_status, "reason": reason, "id": report_id})
+    if res.rowcount == 0:
+        return {"error": f"Report ID {report_id} not found."}, 404
+    
+    db.session.commit()
+    log_action(f"verify_report_{decision}", entity_type, report_id, admin_username, notes=reason)
+    return {"message": f"Report {decision} successfully"}, 200
 
-        conn.commit()
-        log_action(f"verify_report_{decision}", entity_type, report_id, admin_username, notes=reason)
-        return {"message": f"Report {decision} successfully"}, 200
-    except Exception as e:
-        return {"error": str(e)}, 500
-    finally:
-        conn.close()
-
-# Get User Reports
 def get_user_reports_db(user_id):
-    """Retrieve all reports (lost and found) for a specific user, excluding dismissed ones."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("""
-            SELECT *, 
-                   last_seen_datetime AS incident_date, 
-                   created_at AS report_date,
-                   'lost' as type 
-            FROM lost_items 
-            WHERE reporter_id = ? AND is_dismissed = 0
-        """, (user_id,))
-        lost = [dict(row) for row in cursor.fetchall()]
-        
-        cursor.execute("""
-            SELECT *, 
-                   found_datetime AS incident_date, 
-                   created_at AS report_date,
-                   'found' as type 
-            FROM found_items 
-            WHERE reporter_id = ? AND is_dismissed = 0
-        """, (user_id,))
-        found = [dict(row) for row in cursor.fetchall()]
-        
-        return lost + found
-    finally:
-        conn.close()
+    l_query = text("SELECT *, last_seen_datetime AS incident_date, created_at AS report_date, 'lost' as type FROM lost_items WHERE reporter_id = :uid AND (is_dismissed = FALSE OR is_dismissed IS NULL)")
+    f_query = text("SELECT *, found_datetime AS incident_date, created_at AS report_date, 'found' as type FROM found_items WHERE reporter_id = :uid AND (is_dismissed = FALSE OR is_dismissed IS NULL)")
+    
+    lost = [dict(row._mapping) for row in db.session.execute(l_query, {"uid": user_id}).fetchall()]
+    found = [dict(row._mapping) for row in db.session.execute(f_query, {"uid": user_id}).fetchall()]
+    return lost + found
 
 def dismiss_report_db(report_id, entity_type, user_id):
-    """Mark a report as dismissed for the user."""
     table = "lost_items" if entity_type == "lost" else "found_items"
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute(f"UPDATE {table} SET is_dismissed = 1 WHERE id = ? AND reporter_id = ?", (report_id, user_id))
-        conn.commit()
-        return {"message": "Report dismissed successfully"}, 200
-    except Exception as e:
-        return {"error": str(e)}, 500
-    finally:
-        conn.close()
+    query = text(f"UPDATE {table} SET is_dismissed = TRUE WHERE id = :id AND reporter_id = :uid")
+    db.session.execute(query, {"id": report_id, "uid": user_id})
+    db.session.commit()
+    return {"message": "Report dismissed successfully"}, 200
 
 # Search Items
 def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]:
-    """
-    Search items (lost or found) based on filters.
-    Supported filters: category, item_type, color, brand, status, query, limit, offset.
-    Returns (items, total_count).
-    """
-    status = filters.get("status", "found") # Default to found items
+    status = filters.get("status", "found")
+    limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
+    offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
     
-    # Common filter building logic
-    if status == "lost":
-        base_cond = "status IN ('lost', 'reported_lost')"
-        params = []
-    else:
-        base_cond = "status = ?"
-        params = [status]
-
-    if filters.get("category"):
-        base_cond += " AND category = ?"
-        params.append(filters["category"])
+    # Common filter building
+    c_common = ""
+    params = {"limit": limit, "offset": offset}
+    for k in ["category", "item_type", "color", "brand"]:
+        if filters.get(k):
+            c_common += f" AND {k} = :{k}"
+            params[k] = filters[k]
     
-    if filters.get("item_type"):
-        base_cond += " AND item_type = ?"
-        params.append(filters["item_type"])
-
-    if filters.get("color"):
-        base_cond += " AND color = ?"
-        params.append(filters["color"])
-
-    if filters.get("brand"):
-        base_cond += " AND brand = ?"
-        params.append(filters["brand"])
-
     if filters.get("query"):
-        base_cond += " AND (public_description LIKE ? OR category LIKE ? OR item_type LIKE ?)"
-        like_val = f"%{filters['query']}%"
-        params.extend([like_val, like_val, like_val])
+        c_common += " AND (public_description LIKE :q OR category LIKE :q OR item_type LIKE :q)"
+        params["q"] = f"%{filters['query']}%"
 
-    where_clause = f"WHERE {base_cond}"
-
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
+    if status in ["returned", "lost"]:
+        cond_found = "status = 'lost'" if status == "lost" else "status = 'returned'"
+        cond_lost = "status = 'reported_lost'" if status == "lost" else "status = 'returned'"
         
-        limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
-        offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
+        count_query = text(f"""
+            SELECT (SELECT COUNT(*) FROM found_items WHERE {cond_found} {c_common}) + 
+                   (SELECT COUNT(*) FROM lost_items WHERE {cond_lost} {c_common})
+        """)
+        total_count = db.session.execute(count_query, params).scalar() or 0
+        
+        select_query = text(f"""
+            SELECT id, report_id, category, item_type, color, brand,
+                   found_location AS location, found_datetime AS incident_date,
+                   public_description, main_picture, status, created_at, resolved_at,
+                   'found' as source_table
+            FROM found_items WHERE {cond_found} {c_common}
+            UNION ALL
+            SELECT id, report_id, category, item_type, color, brand,
+                   last_seen_location AS location, last_seen_datetime AS incident_date,
+                   public_description, main_picture, status, created_at, resolved_at,
+                   'lost' as source_table
+            FROM lost_items WHERE {cond_lost} {c_common}
+            ORDER BY created_at DESC
+            LIMIT :limit OFFSET :offset
+        """)
+        result = db.session.execute(select_query, params).fetchall()
+    else:
+        table = "found_items" if status == "found" else "lost_items"
+        where_clause = f"WHERE status = :status {c_common}"
+        params["status"] = status
+        
+        count_query = text(f"SELECT COUNT(*) FROM {table} {where_clause}")
+        total_count = db.session.execute(count_query, params).scalar() or 0
+        
+        select_query = text(f"SELECT * FROM {table} {where_clause} ORDER BY created_at DESC LIMIT :limit OFFSET :offset")
+        result = db.session.execute(select_query, params).fetchall()
 
-        if status in ["returned", "lost"]:
-            # UNION query to cover both found and lost items
-            # For 'lost' status, found_items uses status='lost', lost_items uses status='reported_lost'
-            if status == "lost":
-                found_where = where_clause
-                lost_where = where_clause.replace("status IN ('lost', 'reported_lost')", "status = 'reported_lost'")
-                # Adjust params for lost_where since it doesn't need 'lost' or 'reported_lost' in IN clause
-                # Wait, my where_clause building was a bit simplified. Let's be precise.
-                pass 
-            
-            # Rethink: The simplest way is to build independent where clauses for both.
-            cond_found = "status = 'lost'" if status == "lost" else "status = 'returned'"
-            cond_lost = "status = 'reported_lost'" if status == "lost" else "status = 'returned'"
-            
-            p_common = []
-            c_common = ""
-            for k in ["category", "item_type", "color", "brand"]:
-                if filters.get(k):
-                    c_common += f" AND {k} = ?"
-                    p_common.append(filters[k])
-            
-            if filters.get("query"):
-                c_common += " AND (public_description LIKE ? OR category LIKE ? OR item_type LIKE ?)"
-                lv = f"%{filters['query']}%"
-                p_common.extend([lv, lv, lv])
-
-            count_query = f"""
-                SELECT SUM(cnt) FROM (
-                    SELECT COUNT(*) as cnt FROM found_items WHERE {cond_found} {c_common}
-                    UNION ALL
-                    SELECT COUNT(*) as cnt FROM lost_items WHERE {cond_lost} {c_common}
-                )
-            """
-            cursor.execute(count_query, p_common * 2)
-            total_count = cursor.fetchone()[0] or 0
-            
-            limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
-            offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
-
-            select_query = f"""
-                SELECT id, report_id, category, item_type, color, brand,
-                       found_location AS location, found_datetime AS incident_date,
-                       public_description, main_picture, status, created_at, resolved_at,
-                       'found' as source_table
-                FROM found_items WHERE {cond_found} {c_common}
-                UNION ALL
-                SELECT id, report_id, category, item_type, color, brand,
-                       last_seen_location AS location, last_seen_datetime AS incident_date,
-                       public_description, main_picture, status, created_at, resolved_at,
-                       'lost' as source_table
-                FROM lost_items WHERE {cond_lost} {c_common}
-                ORDER BY created_at DESC
-                LIMIT ? OFFSET ?
-            """
-            cursor.execute(select_query, p_common * 2 + [limit, offset])
-
-        else:
-            # Traditional single-table search (for 'found' or 'pending_approval' etc)
-            table = "found_items" if status == "found" else "lost_items"
-            cursor.execute(f"SELECT COUNT(*) FROM {table} {where_clause}", params)
-            total_count = cursor.fetchone()[0]
-            
-            limit = validate_int(filters.get("limit", 20), "limit", min_val=1, max_val=100)
-            offset = validate_int(filters.get("offset", 0), "offset", min_val=0)
-
-            select_query = f"SELECT * FROM {table} {where_clause} ORDER BY created_at DESC LIMIT ? OFFSET ?"
-            cursor.execute(select_query, params + [limit, offset])
-
-        rows = cursor.fetchall()
-        items = [dict(row) for row in rows]
-        return items, total_count
-    finally:
-        conn.close()
+    return [dict(row._mapping) for row in result], total_count
 
 def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, claim_id=None, recipient_id=None, turnover_proof=None):
-    """Marks a found item as returned and logs the handover."""
-    conn = get_db_connection()
     try:
-        cursor = conn.cursor()
-        now = datetime.now(timezone.utc).isoformat()
+        now = datetime.now(timezone.utc)
+        params = {
+            "name": recipient_name,
+            "rid": recipient_id,
+            "now": now,
+            "proof": turnover_proof,
+            "id": item_id
+        }
         
-        # 1. Update found_items status to 'returned' (Released)
-        cursor.execute(
-            """UPDATE found_items 
-               SET status = 'returned', 
-                   recipient_name = ?, 
-                   recipient_id = ?, 
-                   resolved_at = ?,
-                   turnover_proof = ? 
-               WHERE id = ?""",
-            (recipient_name, recipient_id, now, turnover_proof, item_id)
-        )
+        # Try found_items
+        res = db.session.execute(text("""
+            UPDATE found_items SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
+            resolved_at = :now, turnover_proof = :proof WHERE id = :id
+        """), params)
         
-        updated_table = "found_item"
-        if cursor.rowcount == 0:
-            cursor.execute(
-                """UPDATE lost_items 
-                   SET status = 'returned',
-                       recipient_name = ?, 
-                       recipient_id = ?, 
-                       resolved_at = ?,
-                       turnover_proof = ?  
-                   WHERE id = ?""",
-                (recipient_name, recipient_id, now, turnover_proof, item_id)
-            )
-            if cursor.rowcount == 0:
-                return {"error": f"Item {item_id} not found"}, 404
-            updated_table = "lost_item"
+        table = "found_item"
+        if res.rowcount == 0:
+            res = db.session.execute(text("""
+                UPDATE lost_items SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
+                resolved_at = :now, turnover_proof = :proof WHERE id = :id
+            """), params)
+            if res.rowcount == 0:
+                return {"error": "Item not found"}, 404
+            table = "lost_item"
         
-        # 2. If a claim_id is provided, mark it as 'completed'
         if claim_id:
-            cursor.execute(
-                """UPDATE claims 
-                   SET decision = 'completed', 
-                       handover_notes = ?, 
-                       completed_at = ? 
-                   WHERE id = ?""",
-                (f"ID: {recipient_id} | {handover_notes}", now, claim_id)
-            )
+            db.session.execute(text("""
+                UPDATE claims SET decision = 'completed', handover_notes = :notes, completed_at = :now WHERE id = :cid
+            """), {"notes": f"ID: {recipient_id} | {handover_notes}", "now": now, "cid": claim_id})
         
-        conn.commit()
-        log_action("resolve_item", updated_table, item_id, admin_username, notes=f"Recipient: {recipient_name} ({recipient_id}) | Notes: {handover_notes}")
+        db.session.commit()
+        log_action("resolve_item", table, item_id, admin_username, notes=f"Recipient: {recipient_name} ({recipient_id})")
         return {"message": "Item marked as returned successfully"}, 200
     except Exception as e:
-        conn.rollback()
-        return {"error": str(e)}, 500
-    finally:
-        conn.close()
+        db.session.rollback()
+        logger.error(f"Error resolving item: {str(e)}")
+        return {"error": "Failed to resolve item"}, 500
 
 def get_item_universal_db(identifier):
-    """Fetch an item by its unique UUID report_id OR its integer ID."""
-    conn = get_db_connection()
     try:
-        cursor = conn.cursor()
-        
-        # Check if identifier is integer
-        is_int = False
-        try:
-            int_id = int(identifier)
-            is_int = True
-        except:
-            pass
+        int_id = int(identifier)
+        params = {"id": int_id}
+        l_q = text("SELECT *, 'lost' as type FROM lost_items WHERE id = :id")
+        f_q = text("SELECT *, 'found' as type FROM found_items WHERE id = :id")
+    except:
+        params = {"rid": identifier}
+        l_q = text("SELECT *, 'lost' as type FROM lost_items WHERE report_id = :rid")
+        f_q = text("SELECT *, 'found' as type FROM found_items WHERE report_id = :rid")
 
-        # Search lost_items
-        if is_int:
-            cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE id = ?", (int_id,))
-        else:
-            cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE report_id = ?", (identifier,))
-        
-        row = cursor.fetchone()
-        if row: return dict(row)
-        
-        # Search found_items
-        if is_int:
-            cursor.execute("SELECT *, 'found' as type FROM found_items WHERE id = ?", (int_id,))
-        else:
-            cursor.execute("SELECT *, 'found' as type FROM found_items WHERE report_id = ?", (identifier,))
-            
-        row = cursor.fetchone()
-        if row: return dict(row)
-        
-        return None
-    finally:
-        conn.close()
+    row = db.session.execute(l_q, params).fetchone()
+    if row: return dict(row._mapping)
+    row = db.session.execute(f_q, params).fetchone()
+    if row: return dict(row._mapping)
+    return None
 
 def get_pending_reports_db():
-    """Gets all reports awaiting approval."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT *, 'lost' as type FROM lost_items WHERE status = 'pending_approval'")
-        lost = [dict(row) for row in cursor.fetchall()]
-        cursor.execute("SELECT *, 'found' as type FROM found_items WHERE status = 'pending_approval'")
-        found = [dict(row) for row in cursor.fetchall()]
-        return {"pending": lost + found}
-    finally:
-        conn.close()
+    l_q = text("SELECT *, 'lost' as type FROM lost_items WHERE status = 'pending_approval'")
+    f_q = text("SELECT *, 'found' as type FROM found_items WHERE status = 'pending_approval'")
+    lost = [dict(row._mapping) for row in db.session.execute(l_q).fetchall()]
+    found = [dict(row._mapping) for row in db.session.execute(f_q).fetchall()]
+    return {"pending": lost + found}
 
 def get_dashboard_stats_db():
-    """Aggregates system-wide counts for the admin dashboard."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'lost'")
-        total_lost = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'found' OR status = 'lost'")
-        total_found = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM claims WHERE decision = 'pending'")
-        pending_claims = cursor.fetchone()[0]
-        
-        cursor.execute("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")
-        resolved_items = cursor.fetchone()[0]
-        cursor.execute("SELECT COUNT(*) FROM lost_items WHERE status = 'returned'")
-        resolved_items += cursor.fetchone()[0]
-        
-        return {
-            "total_lost": total_lost,
-            "total_found": total_found,
-            "pending_claims": pending_claims,
-            "resolved_items": resolved_items
-        }
-    finally:
-        conn.close()
+    total_lost = db.session.execute(text("SELECT COUNT(*) FROM lost_items WHERE status = 'lost'")).scalar() or 0
+    total_found = db.session.execute(text("SELECT COUNT(*) FROM found_items WHERE status IN ('found', 'lost')")).scalar() or 0
+    pending_claims = db.session.execute(text("SELECT COUNT(*) FROM claims WHERE decision = 'pending'")).scalar() or 0
+    resolved = (db.session.execute(text("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")).scalar() or 0) + \
+               (db.session.execute(text("SELECT COUNT(*) FROM lost_items WHERE status = 'returned'")).scalar() or 0)
+    
+    return {
+        "total_lost": total_lost,
+        "total_found": total_found,
+        "pending_claims": pending_claims,
+        "resolved_items": resolved
+    }

@@ -1,10 +1,12 @@
-from flask import current_app
-from datetime import datetime, timedelta, timezone
+import time
 import secrets
 import bcrypt
+import logging
+from flask import current_app
+from datetime import datetime, timedelta, timezone
 from ..utils.email_service import send_verification_email, send_password_reset_email
 from ..extensions import limiter
-from ..models import ValidationError
+from ..models.validators import ValidationError
 
 def hash_password(password: str) -> str:
     """Hashes a password using bcrypt."""
@@ -85,11 +87,17 @@ def login_user(data: dict) -> tuple:
         _handle_failed_login(user["id"], user.get("failed_login_attempts", 0))
         raise ValidationError("Invalid username or password", 401)
 
-    # Reset failed attempts on success
-    _reset_login_attempts(user["id"])
+    # Check verification
+    if not user.get("is_email_verified"):
+        raise ValidationError("Please verify your account before logging in.", 403)
 
     # Create tokens
-    additional_claims = {"role": user["role"]}
+    # 'auth_time' is the absolute login time for session duration enforcement
+    auth_time = int(time.time())
+    additional_claims = {
+        "role": user["role"],
+        "auth_time": auth_time
+    }
     access_token = create_access_token(identity=str(user["id"]), additional_claims=additional_claims)
     refresh_token = create_refresh_token(identity=str(user["id"]), additional_claims=additional_claims)
 
@@ -105,11 +113,14 @@ def login_user(data: dict) -> tuple:
         }
     }, 200
 
-def refresh_token_service(user_id: str, role: str) -> tuple:
-    """Generates a new access/refresh token pair (RTR)."""
+def refresh_token_service(user_id: str, role: str, auth_time: int) -> tuple:
+    """Generates a new access/refresh token pair (RTR) while preserving auth_time."""
     from flask_jwt_extended import create_access_token, create_refresh_token
     
-    additional_claims = {"role": role}
+    additional_claims = {
+        "role": role,
+        "auth_time": auth_time
+    }
     access_token = create_access_token(identity=user_id, additional_claims=additional_claims)
     refresh_token = create_refresh_token(identity=user_id, additional_claims=additional_claims)
     

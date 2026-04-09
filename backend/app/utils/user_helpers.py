@@ -1,7 +1,10 @@
-import sqlite3
 import bcrypt
+import logging
 from datetime import datetime, timezone
-from ..models.base import get_db_connection
+from sqlalchemy import text
+from ..extensions import db
+
+logger = logging.getLogger(__name__)
 
 # Hashing Helpers
 def hash_password(password: str) -> str:
@@ -10,79 +13,73 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
 
 def verify_password(password: str, password_hash: str) -> bool:
-    """Check a password against its hash (handles both bcrypt and legacy werkzeug)."""
+    """Check a password against its hash."""
     if not password or not password_hash:
         return False
-    
-    # Bcrypt hashes typically start with $2
-    if password_hash.startswith('$2'):
-        try:
-            return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
-        except Exception:
-            return False
-    
-    # Legacy fallback for werkzeug hashes
     try:
-        from werkzeug.security import check_password_hash
-        return check_password_hash(password_hash, password)
+        return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
     except Exception:
         return False
 
 # Database Helpers (Models)
 def create_user_db(username, email, password_hash, role="user", name=None, verification_token=None):
     """Inserts a new user record into the database."""
-    conn = get_db_connection()
+    query = text("""
+        INSERT INTO users (username, email, password_hash, role, name, verification_token, created_at)
+        VALUES (:username, :email, :password_hash, :role, :name, :verification_token, :created_at)
+        RETURNING id
+    """)
+    params = {
+        "username": username,
+        "email": email,
+        "password_hash": password_hash,
+        "role": role,
+        "name": name,
+        "verification_token": verification_token,
+        "created_at": datetime.now(timezone.utc)
+    }
     try:
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO users (username, email, password_hash, role, name, verification_token, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        """
-        cursor.execute(query, (
-            username, email, password_hash, role, name, verification_token,
-            datetime.now(timezone.utc).isoformat()
-        ))
-        conn.commit()
-        return cursor.lastrowid
-    except sqlite3.IntegrityError:
+        result = db.session.execute(query, params)
+        row = result.fetchone()
+        db.session.commit()
+        return row[0] if row else None
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"DB Error creating user: {str(e)}")
         return None
-    finally:
-        conn.close()
 
 def get_user_by_username(username: str):
     """Fetch a user by username."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    query = text("SELECT * FROM users WHERE username = :username")
+    result = db.session.execute(query, {"username": username})
+    row = result.fetchone()
+    return dict(row._mapping) if row else None
 
 def get_user_by_id(user_id: int):
     """Fetch a user by ID."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
-        row = cursor.fetchone()
-        return dict(row) if row else None
-    finally:
-        conn.close()
+    query = text("SELECT * FROM users WHERE id = :user_id")
+    result = db.session.execute(query, {"user_id": user_id})
+    row = result.fetchone()
+    return dict(row._mapping) if row else None
 
 def create_default_admin():
     """Initializes a default admin if it doesn't exist."""
-    conn = get_db_connection()
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT id FROM users WHERE username = 'admin'")
-        if not cursor.fetchone():
-            pwd_hash = hash_password("AdminPass123!")
-            cursor.execute(
-                "INSERT INTO users (username, password_hash, role, name, admin_id, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-                ("admin", pwd_hash, "admin", "System Admin", "ADM-001", datetime.now(timezone.utc).isoformat())
-            )
-            conn.commit()
-    finally:
-        conn.close()
+    check_query = text("SELECT id FROM users WHERE username = :username")
+    row = db.session.execute(check_query, {"username": "admin"}).fetchone()
+    
+    if not row:
+        pwd_hash = hash_password("AdminPass123!")
+        insert_query = text("""
+            INSERT INTO users (username, password_hash, role, name, admin_id, created_at, is_email_verified) 
+            VALUES (:username, :password_hash, :role, :name, :admin_id, :created_at, :is_email_verified)
+        """)
+        db.session.execute(insert_query, {
+            "username": "admin",
+            "password_hash": pwd_hash,
+            "role": "admin",
+            "name": "System Admin",
+            "admin_id": "ADM-001",
+            "created_at": datetime.now(timezone.utc),
+            "is_email_verified": True
+        })
+        db.session.commit()
