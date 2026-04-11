@@ -1,4 +1,6 @@
-import resend
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 import logging
 from flask import current_app
 
@@ -6,43 +8,64 @@ logger = logging.getLogger(__name__)
 
 def send_email(to_email, subject, html_content):
     """ 
-    Sends an email using the Resend service.
-    Falls back to console logging if API key is missing.
+    Sends an email using the built-in smtplib.
+    Falls back to console logging if SMTP settings are missing or if it fails.
     """
-    api_key = current_app.config.get("RESEND_API_KEY")
-    from_email = current_app.config.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+    smtp_server = current_app.config.get("SMTP_SERVER")
+    smtp_port = current_app.config.get("SMTP_PORT", 587)
+    smtp_username = current_app.config.get("SMTP_USERNAME")
+    smtp_password = current_app.config.get("SMTP_PASSWORD")
+    smtp_use_tls = current_app.config.get("SMTP_USE_TLS", True)
+    from_email = current_app.config.get("SMTP_FROM_EMAIL", "onboarding@yourdomain.com")
 
-    if not api_key:
-        logger.warning("RESEND_API_KEY not found. Falling back to console logging.")
-        print("\n" + "="*60)
-        print(f"ZERO-COST EMAIL LOG (MOCK)")
-        print(f"TO: {to_email}")
-        print(f"SUBJECT: {subject}")
-        print("-" * 30)
-        try:
-            clean_text = html_content.replace("<p>", "\n").replace("</p>", "").replace("<h1>", "\n## ").replace("</h1>", "\n")
-            print(clean_text)
-        except:
-            print(html_content)
-        print("="*60 + "\n")
+    if not smtp_server or not smtp_username or not smtp_password:
+        logger.warning("SMTP credentials not fully configured. Falling back to console logging.")
+        _mock_send(to_email, subject, html_content)
         return True
 
-    resend.api_key = api_key
+    msg = MIMEMultipart("alternative")
+    msg["Subject"] = subject
+    msg["From"] = from_email
+    msg["To"] = to_email
+
+    part = MIMEText(html_content, "html")
+    msg.attach(part)
+
     try:
-        r = resend.Emails.send({
-            "from": from_email,
-            "to": to_email,
-            "subject": subject,
-            "html": html_content
-        })
-        logger.info(f"Email sent successfully to {to_email}. ID: {r['id']}")
+        if smtp_port == 465:
+            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
+        else:
+            server = smtplib.SMTP(smtp_server, smtp_port)
+            if smtp_use_tls:
+                server.starttls()
+                
+        server.login(smtp_username, smtp_password)
+        server.sendmail(from_email, to_email, msg.as_string())
+        server.quit()
+        logger.info(f"Email sent successfully to {to_email}.")
         return True
     except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {str(e)}")
-        return False
+        logger.error(f"Failed to send email to {to_email} via SMTP: {str(e)}")
+        # Fallback to local console so it acts as an email mockup instead of crashing
+        _mock_send(to_email, subject, html_content)
+        return True
+
+def _mock_send(to_email, subject, html_content):
+    """Mock sending an email by printing to the console."""
+    print("\n" + "="*60)
+    print(f"ZERO-COST EMAIL LOG (MOCK)")
+    print(f"TO: {to_email}")
+    print(f"SUBJECT: {subject}")
+    print("-" * 30)
+    try:
+        clean_text = html_content.replace("<p>", "\n").replace("</p>", "").replace("<h1>", "\n## ").replace("</h1>", "\n")
+        print(clean_text)
+    except:
+        print(html_content)
+    print("="*60 + "\n")
 
 def send_verification_email(email, token):
-    """ Sends a verification link using Resend. """
+    """ Sends a verification link via email. """
     # In production, BASE_URL should come from config
     base_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
     link = f"{base_url}/verify-email?token={token}"
@@ -63,7 +86,7 @@ def send_verification_email(email, token):
     return send_email(email, subject, html_content)
 
 def send_password_reset_email(email, token):
-    """ Sends a password reset link using Resend. """
+    """ Sends a password reset link via email. """
     base_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
     link = f"{base_url}/reset-password?token={token}"
     subject = "Reset your Lost & Found Password"

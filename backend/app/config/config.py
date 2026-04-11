@@ -36,9 +36,13 @@ class Config:
     # CORS Configuration
     CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
 
-    # Email (Resend)
-    RESEND_API_KEY = os.environ.get("RESEND_API_KEY")
-    RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
+    # Email (SMTP)
+    SMTP_SERVER = os.environ.get("SMTP_SERVER")
+    SMTP_PORT = int(os.environ.get("SMTP_PORT", 587))
+    SMTP_USERNAME = os.environ.get("SMTP_USERNAME")
+    SMTP_PASSWORD = os.environ.get("SMTP_PASSWORD")
+    SMTP_USE_TLS = os.environ.get("SMTP_USE_TLS", "true").lower() == "true"
+    SMTP_FROM_EMAIL = os.environ.get("SMTP_FROM_EMAIL", "onboarding@yourdomain.com")
 
     # absolute timeout logic
     SESSION_ABSOLUTE_TIMEOUT = int(os.environ.get("SESSION_ABSOLUTE_TIMEOUT_HOURS", 24))
