@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'http://localhost:5000/api',
+    baseURL: 'https://lost-nd-found.onrender.com/api',
     withCredentials: true, // Crucial for cookie-based auth
     headers: {
         'Content-Type': 'application/json'
@@ -26,7 +26,7 @@ api.interceptors.response.use(
             try {
                 // Try to get a new access token via refresh cookie
                 // No need to pass tokens manually; browser sends the refresh cookie
-                await axios.post('http://localhost:5000/api/auth/refresh', {}, {
+                await axios.post('https://lost-nd-found.onrender.com/api/auth/refresh', {}, {
                     withCredentials: true
                 });
                 

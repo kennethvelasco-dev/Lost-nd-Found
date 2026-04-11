@@ -75,7 +75,7 @@ def create_default_admin():
         """)
         db.session.execute(insert_query, {
             "username": "admin",
-            "email": "velascokenneth0528@gmail.com",
+            "email": "admin8857@gmail.com",
             "password_hash": pwd_hash,
             "role": "admin",
             "name": "System Admin",
