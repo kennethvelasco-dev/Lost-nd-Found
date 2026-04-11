@@ -59,7 +59,8 @@ class ProductionConfig(Config):
     DEBUG = False
     # Enforce secure cookies in production
     JWT_COOKIE_SECURE = True
-    JWT_COOKIE_SAMESITE = "Strict"
+    # Cross-site SPA (Vercel frontend) requires SameSite=None so cookies are sent
+    JWT_COOKIE_SAMESITE = "None"
 
 config_by_name = {
     "development": DevelopmentConfig,
