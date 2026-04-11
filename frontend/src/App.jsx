@@ -48,8 +48,8 @@ function App() {
             
             {/* Main Application Shell */}
             <Route element={<Layout />}>
-              <Route path="/" element={<Navigate to="/lost-items" replace />} />
-              <Route path="/lost-items" element={<LostItems />} />
+              <Route path="/" element={<Navigate to="/login" replace />} />
+              <Route path="/lost-items" element={<ProtectedRoute><LostItems /></ProtectedRoute>} />
               <Route path="/returned-items" element={<ProtectedRoute><ReturnedItems /></ProtectedRoute>} />
               <Route path="/items/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
               <Route path="/items/:id/claim" element={<ProtectedRoute><ClaimForm /></ProtectedRoute>} />
