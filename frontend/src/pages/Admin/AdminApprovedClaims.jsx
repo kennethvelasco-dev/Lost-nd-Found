@@ -12,7 +12,7 @@ const AdminApprovedClaims = () => {
 
     const fetchClaims = useCallback(() => {
         // Explicitly filter for approved only
-        request({ url: '/claims/pending', params: { status: 'approved' } });
+        request({ url: '/claims', params: { status: 'approved' } });
     }, [request]);
 
     useEffect(() => {
