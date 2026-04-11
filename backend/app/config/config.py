@@ -34,7 +34,12 @@ class Config:
     JWT_REFRESH_COOKIE_PATH = "/api/auth/refresh"
 
     # CORS Configuration
-    CORS_ORIGINS = os.environ.get("CORS_ORIGINS", "*")
+    raw_origins = os.environ.get("CORS_ORIGINS", "*")
+    CORS_ORIGINS = (
+        [o.strip() for o in raw_origins.split(",")]
+        if raw_origins != "*"
+        else "*"
+    )
 
     # Email (SMTP)
     SMTP_SERVER = os.environ.get("SMTP_SERVER")
