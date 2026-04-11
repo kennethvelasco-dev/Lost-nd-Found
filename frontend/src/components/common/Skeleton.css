@@ -1,0 +1,144 @@
+/* ─── Shimmer keyframe ─────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -600px 0; }
+  100% { background-position:  600px 0; }
+}
+
+.skeleton-block {
+  background: linear-gradient(
+    90deg,
+    var(--border-color, #e5e7eb) 25%,
+    #f3f4f6 50%,
+    var(--border-color, #e5e7eb) 75%
+  );
+  background-size: 1200px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ─── Sizing helpers ───────────────────────────────────────── */
+.sk-w-full  { width: 100%; }
+.sk-w-3-4   { width: 75%; }
+.sk-w-1-2   { width: 50%; }
+.sk-w-1-3   { width: 33%; }
+.sk-w-1-4   { width: 25%; }
+
+.sk-h-4  { height: 1rem; }
+.sk-h-5  { height: 1.25rem; }
+.sk-h-6  { height: 1.5rem; }
+.sk-h-8  { height: 2rem; }
+.sk-h-10 { height: 2.5rem; }
+.sk-h-12 { height: 3rem; }
+.sk-h-16 { height: 4rem; }
+.sk-h-24 { height: 6rem; }
+.sk-h-32 { height: 8rem; }
+.sk-h-48 { height: 12rem; }
+.sk-h-sq { aspect-ratio: 1 / 1; }    /* square */
+
+/* ─── Item-card skeleton ───────────────────────────────────── */
+.sk-card {
+  border-radius: var(--radius-lg, 12px);
+  overflow: hidden;
+  background: var(--surface, #fff);
+  box-shadow: var(--nm-flat, 0 2px 8px rgba(0,0,0,.06));
+}
+
+.sk-card-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+}
+
+.sk-card-body {
+  padding: var(--space-4, 1rem);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ─── Detail skeleton ──────────────────────────────────────── */
+.sk-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5, 1.5rem);
+  margin-top: var(--space-4, 1rem);
+}
+
+.sk-detail-img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md, 8px);
+}
+
+.sk-detail-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: var(--space-4, 1rem);
+  background: var(--surface, #fff);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--nm-flat, 0 2px 8px rgba(0,0,0,.06));
+}
+
+.sk-specs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3, 0.75rem);
+}
+
+/* ─── Activity skeleton ────────────────────────────────────── */
+.sk-activity-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: var(--space-4, 1rem);
+  background: var(--surface, #fff);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--nm-flat, 0 2px 8px rgba(0,0,0,.06));
+}
+
+.sk-activity-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ─── Dashboard stats skeleton ─────────────────────────────── */
+.sk-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-4, 1rem);
+  margin-top: var(--space-4, 1rem);
+}
+
+.sk-stat-card {
+  padding: var(--space-4, 1rem);
+  background: var(--surface, #fff);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--nm-flat, 0 2px 8px rgba(0,0,0,.06));
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ─── Claim list skeleton ──────────────────────────────────── */
+.sk-claim-card {
+  padding: var(--space-4, 1rem);
+  background: var(--surface, #fff);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--nm-flat, 0 2px 8px rgba(0,0,0,.06));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sk-claim-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sk-claim-body {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--space-4, 1rem);
+}

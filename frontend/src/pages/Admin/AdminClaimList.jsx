@@ -5,6 +5,7 @@ import StatusState from '../../components/UI/StatusState';
 import api from '../../services/api';
 import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
+import { ClaimListSkeleton } from '../../components/common/Skeleton';
 
 const AdminClaimList = () => {
     const { loading, error, data, request } = useHttp();
@@ -30,12 +31,13 @@ const AdminClaimList = () => {
                     <div className="title-underline"></div>
                 </div>
 
-                <StatusState 
-                    loading={loading} 
-                    error={error} 
-                    isEmpty={claims.length === 0} 
+                <StatusState
+                    loading={loading}
+                    error={error}
+                    isEmpty={claims.length === 0}
                     emptyMessage="No pending claims at the moment. Good job!"
                     onRetry={fetchClaims}
+                    skeleton={<ClaimListSkeleton rows={4} />}
                 >
                     <div className="claims-list" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
                         {claims.map(claim => (

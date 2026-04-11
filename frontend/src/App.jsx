@@ -18,22 +18,64 @@ import AdminClaimDetail from './pages/Admin/AdminClaimDetail';
 import AdminReturnItem from './pages/Admin/AdminReturnItem';
 import MyActivities from './pages/Discovery/MyActivities';
 import GlobalErrorBoundary from './components/Layout/GlobalErrorBoundary';
+import FullPageLoader from './components/common/FullPageLoader';
 import './index.css';
 
-// A generic ProtectedRoute that requires the user to be logged in
+// Protected route: only checks auth, not loading
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="page-container"><p>Loading session...</p></div>;
+  const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
   return children;
 };
 
-// Admin route protection
 const AdminRoute = ({ children }) => {
-  const { user, loading } = useAuth();
-  if (loading) return <div className="page-container"><p>Loading session...</p></div>;
-  if (!user || (user.role !== 'admin' && user.role !== 'Admin')) return <Navigate to="/lost-items" replace />;
+  const { user } = useAuth();
+  if (!user || (user.role !== 'admin' && user.role !== 'Admin')) {
+    return <Navigate to="/lost-items" replace />;
+  }
   return children;
+};
+
+const AppRoutes = () => (
+  <Routes>
+    {/* Public Auth Routes - Full Screen */}
+    <Route path="/login" element={<LoginPage />} />
+    <Route path="/signup" element={<SignupPage />} />
+
+    {/* Main Application Shell */}
+    <Route element={<Layout />}>
+      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/lost-items" element={<ProtectedRoute><LostItems /></ProtectedRoute>} />
+      <Route path="/returned-items" element={<ProtectedRoute><ReturnedItems /></ProtectedRoute>} />
+      <Route path="/items/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
+      <Route path="/items/:id/claim" element={<ProtectedRoute><ClaimForm /></ProtectedRoute>} />
+      <Route path="/confirmation" element={<ProtectedRoute><ConfirmationPage /></ProtectedRoute>} />
+      <Route path="/report-item" element={<ProtectedRoute><ReportItem /></ProtectedRoute>} />
+      <Route path="/my-activities" element={<ProtectedRoute><MyActivities /></ProtectedRoute>} />
+
+      {/* Admin Routes */}
+      <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/claims" element={<AdminRoute><AdminClaimList /></AdminRoute>} />
+      <Route path="/admin/approved-claims" element={<AdminRoute><AdminApprovedClaims /></AdminRoute>} />
+      <Route path="/admin/claims/:id" element={<AdminRoute><AdminClaimDetail /></AdminRoute>} />
+      <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
+      <Route path="/admin/return-item" element={<AdminRoute><AdminReturnItem /></AdminRoute>} />
+    </Route>
+
+    {/* Fallback */}
+    <Route path="*" element={<Navigate to="/" replace />} />
+  </Routes>
+);
+
+const AppWithLoader = () => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    // Global full-page loader while auth/session is initializing
+    return <FullPageLoader message="Checking your session and preparing your dashboard..." />;
+  }
+
+  return <AppRoutes />;
 };
 
 function App() {
@@ -41,34 +83,7 @@ function App() {
     <Router>
       <GlobalErrorBoundary>
         <AuthProvider>
-          <Routes>
-            {/* Public Auth Routes - Full Screen */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
-            
-            {/* Main Application Shell */}
-            <Route element={<Layout />}>
-              <Route path="/" element={<Navigate to="/login" replace />} />
-              <Route path="/lost-items" element={<ProtectedRoute><LostItems /></ProtectedRoute>} />
-              <Route path="/returned-items" element={<ProtectedRoute><ReturnedItems /></ProtectedRoute>} />
-              <Route path="/items/:id" element={<ProtectedRoute><ItemDetail /></ProtectedRoute>} />
-              <Route path="/items/:id/claim" element={<ProtectedRoute><ClaimForm /></ProtectedRoute>} />
-              <Route path="/confirmation" element={<ProtectedRoute><ConfirmationPage /></ProtectedRoute>} />
-              <Route path="/report-item" element={<ProtectedRoute><ReportItem /></ProtectedRoute>} />
-              <Route path="/my-activities" element={<ProtectedRoute><MyActivities /></ProtectedRoute>} />
-
-              {/* Admin Routes */}
-              <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-              <Route path="/admin/claims" element={<AdminRoute><AdminClaimList /></AdminRoute>} />
-              <Route path="/admin/approved-claims" element={<AdminRoute><AdminApprovedClaims /></AdminRoute>} />
-              <Route path="/admin/claims/:id" element={<AdminRoute><AdminClaimDetail /></AdminRoute>} />
-              <Route path="/admin/reports" element={<AdminRoute><AdminReports /></AdminRoute>} />
-              <Route path="/admin/return-item" element={<AdminRoute><AdminReturnItem /></AdminRoute>} />
-            </Route>
-
-            {/* Fallback */}
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          <AppWithLoader />
         </AuthProvider>
       </GlobalErrorBoundary>
     </Router>

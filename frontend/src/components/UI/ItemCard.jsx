@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Card from './Card';
 import Button from './Button';
+import LazyImage from '../common/LazyImage';
 import './ItemCard.css';
 
 const ItemCard = ({ item, isReturned }) => {
@@ -18,7 +19,7 @@ const ItemCard = ({ item, isReturned }) => {
             onClick={() => navigate(`/items/${item.report_id || item.id}`)}
         >
             <div className="item-image-container">
-                <img
+                <LazyImage
                     src={displayImage}
                     alt={item.item_type}
                     className="item-image"

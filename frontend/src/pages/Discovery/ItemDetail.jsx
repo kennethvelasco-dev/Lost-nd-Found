@@ -4,6 +4,8 @@ import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
 import Button from '../../components/UI/Button';
 import Card from '../../components/UI/Card';
+import LazyImage from '../../components/common/LazyImage';
+import { ItemDetailSkeleton } from '../../components/common/Skeleton';
 
 const ItemDetail = () => {
     const { id } = useParams();
@@ -27,12 +29,13 @@ const ItemDetail = () => {
     return (
         <div className="page-container">
             <div className="container">
-                <StatusState 
-                    loading={loading} 
-                    error={error} 
-                    isEmpty={!item && !loading && !error} 
+                <StatusState
+                    loading={loading}
+                    error={error}
+                    isEmpty={!item && !loading && !error}
                     emptyMessage="We couldn't find the item you're looking for. It may have been removed or resolved."
                     onRetry={() => request({ url: `/items/${id}` })}
+                    skeleton={<ItemDetailSkeleton />}
                 >
                     {item && (
                         <>
@@ -50,10 +53,10 @@ const ItemDetail = () => {
                             }}>
                                 <div className="image-section">
                                     <Card style={{ padding: '10px' }}>
-                                        <img 
-                                            src={images[currentImageIndex] || '/assets/pub_logo.png'} 
-                                            alt={item.item_type} 
-                                            style={{ width: '100%', aspectRatio: '1/1', objectFit: 'cover', borderRadius: 'var(--radius-md)', boxShadow: 'var(--nm-inset)' }}
+                                        <LazyImage
+                                            src={images[currentImageIndex] || '/assets/pub_logo.png'}
+                                            alt={item.item_type}
+                                            className="detail-main-image"
                                         />
                                         {images.length > 1 && (
                                             <div style={{ display: 'flex', gap: '10px', marginTop: '15px', justifyContent: 'center', flexWrap: 'wrap' }}>
@@ -63,7 +66,7 @@ const ItemDetail = () => {
                                                         onClick={() => setCurrentImageIndex(idx)}
                                                         style={{ padding: '4px', cursor: 'pointer', opacity: idx === currentImageIndex ? 1 : 0.5, transform: idx === currentImageIndex ? 'scale(1.05)' : 'scale(1)', transition: '0.2s' }}
                                                     >
-                                                        <img src={img} alt="thumb" style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '4px' }} />
+                                                        <LazyImage src={img} alt={`Thumbnail ${idx + 1}`} className="detail-thumb-image" />
                                                     </Card>
                                                 ))}
                                             </div>

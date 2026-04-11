@@ -3,6 +3,7 @@ import ItemCard from '../../components/UI/ItemCard';
 import SearchBar from '../../components/UI/SearchBar';
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
+import { ItemGridSkeleton } from '../../components/common/Skeleton';
 
 const LostItems = () => {
     const { loading, error, data, request } = useHttp();
@@ -41,12 +42,13 @@ const LostItems = () => {
                     onFilter={(f) => setFilter(f)}
                 />
 
-                <StatusState 
-                    loading={loading} 
-                    error={error} 
-                    isEmpty={items.length === 0} 
+                <StatusState
+                    loading={loading}
+                    error={error}
+                    isEmpty={items.length === 0}
                     emptyMessage="No items matching your search found."
                     onRetry={() => fetchItems(search, filter)}
+                    skeleton={<ItemGridSkeleton count={6} />}
                 >
                     <div className="grid-layout">
                         {items.map(item => (

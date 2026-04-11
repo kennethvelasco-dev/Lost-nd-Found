@@ -8,9 +8,11 @@ const StatusState = ({
     isEmpty, 
     emptyMessage = "No items found.", 
     onRetry, 
+    skeleton,
     children 
 }) => {
     if (loading) {
+        if (skeleton) return <>{skeleton}</>;
         return (
             <div className="status-container loading-state">
                 <div className="premium-spinner"></div>

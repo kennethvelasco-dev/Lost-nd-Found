@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import Card from '../../components/UI/Card';
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
+import { ActivitySkeleton } from '../../components/common/Skeleton';
 import './Discovery.css';
 
 const MyActivities = () => {
@@ -157,12 +158,13 @@ const MyActivities = () => {
                     <div className="title-underline"></div>
                 </div>
 
-                <StatusState 
-                    loading={loading} 
-                    error={error} 
-                    isEmpty={!hasAnyActivity} 
+                <StatusState
+                    loading={loading}
+                    error={error}
+                    isEmpty={!hasAnyActivity}
                     emptyMessage="You haven't reported or claimed any items yet."
                     onRetry={() => request({ url: '/items/my-activities' })}
+                    skeleton={<ActivitySkeleton rows={3} />}
                 >
                     <div className="activities-layout" style={{ 
                         display: 'grid', 

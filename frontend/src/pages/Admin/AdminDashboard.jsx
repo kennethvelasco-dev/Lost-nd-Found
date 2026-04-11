@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import Card from '../../components/UI/Card';
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
+import { DashboardSkeleton } from '../../components/common/Skeleton';
 
 const AdminDashboard = () => {
     const { loading, error, data: stats, request } = useHttp();
@@ -21,10 +22,11 @@ const AdminDashboard = () => {
                     <div className="title-underline"></div>
                 </div>
 
-                <StatusState 
-                    loading={loading} 
-                    error={error} 
+                <StatusState
+                    loading={loading}
+                    error={error}
                     onRetry={() => request({ url: '/admin/stats' })}
+                    skeleton={<DashboardSkeleton />}
                 >
                     <div className="stats-grid" style={{ 
                         display: 'grid', 
