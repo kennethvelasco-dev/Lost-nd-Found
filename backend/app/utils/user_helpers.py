@@ -66,15 +66,16 @@ def create_default_admin():
     """Initializes a default admin if it doesn't exist."""
     check_query = text("SELECT id FROM users WHERE username = :username")
     row = db.session.execute(check_query, {"username": "admin"}).fetchone()
-    
+
     if not row:
         pwd_hash = hash_password("AdminPass123!")
         insert_query = text("""
-            INSERT INTO users (username, password_hash, role, name, admin_id, created_at, is_email_verified) 
-            VALUES (:username, :password_hash, :role, :name, :admin_id, :created_at, :is_email_verified)
+            INSERT INTO users (username, email, password_hash, role, name, admin_id, created_at, is_email_verified) 
+            VALUES (:username, :email, :password_hash, :role, :name, :admin_id, :created_at, :is_email_verified)
         """)
         db.session.execute(insert_query, {
             "username": "admin",
+            "email": "velascokenneth0528@gmail.com",
             "password_hash": pwd_hash,
             "role": "admin",
             "name": "System Admin",
