@@ -1,10 +1,23 @@
 # LostnFound API Specification
 
 ## Base URL
-`http://localhost:5000/api`
 
-## Response Envelope
-All responses follow this standard envelope:
+- Local development: `http://localhost:5000/api`
+- Production (Render): `https://lost-nd-found.onrender.com/api`
+
+The frontend (Vercel) calls the backend at:
+
+- `BASE_URL/auth/...`
+- `BASE_URL/items/...`
+- `BASE_URL/claims/...`
+- `BASE_URL/admin/...`
+
+---
+
+## Response Format
+
+Most routes return JSON in one of these forms:
+
 ```json
 {
   "success": true,
@@ -16,6 +29,7 @@ All responses follow this standard envelope:
 ## Authentication
 
 ### `POST /auth/register`
+
 - **Rate Limit**: 5 per minute
 - **Payload**:
   ```json
@@ -28,6 +42,7 @@ All responses follow this standard envelope:
 - **Response Data**: `{"access_token": "...", "message": "User registered successfully"}`
 
 ### `POST /auth/login`
+
 - **Rate Limit**: 5 per minute
 - **Payload**: `{"username": "jdoe", "password": "Password123!"}`
 - **Response Data**: `{"access_token": "...", "message": "Login successful"}`
@@ -37,31 +52,38 @@ All responses follow this standard envelope:
 ## Items Management
 
 ### `POST /items/lost`
-- **Payload**: 
+
+- **Payload**:
   ```json
   {
-    "category": "Electronics", "item_type": "Phone", 
-    "public_description": "Black iPhone 13", 
-    "last_seen_location": "Library", "last_seen_datetime": "2024-03-20T10:00:00Z",
+    "category": "Electronics",
+    "item_type": "Phone",
+    "public_description": "Black iPhone 13",
+    "last_seen_location": "Library",
+    "last_seen_datetime": "2024-03-20T10:00:00Z",
     "private_details": "Broken screen on top left"
   }
   ```
 - **Response Data**: `{"item_id": 123, "message": "Lost item report created"}`
 
 ### `POST /items/found`
-- **Payload**: 
+
+- **Payload**:
   ```json
   {
-    "category": "Electronics", "item_type": "Phone", 
+    "category": "Electronics",
+    "item_type": "Phone",
     "public_description": "Black iPhone 13",
-    "found_location": "Cafe", "found_datetime": "2024-03-20T11:00:00Z"
+    "found_location": "Cafe",
+    "found_datetime": "2024-03-20T11:00:00Z"
   }
   ```
 - **Response Data**: `{"item_id": 124, "message": "Found item reported successfully"}`
 
 ### `GET /items/found`
+
 - **Query Params**: `limit`, `offset`
-- **Response Data**: 
+- **Response Data**:
   ```json
   {
     "items": [{"id": 124, "category": "...", ...}],
@@ -70,6 +92,7 @@ All responses follow this standard envelope:
   ```
 
 ### `GET /items/search`
+
 - **Query Params**: `category`, `item_type`, `color`, `brand`, `query`, `limit`, `offset`
 - **Response Data**: Similar to `/items/found` (paginated).
 
@@ -78,7 +101,8 @@ All responses follow this standard envelope:
 ## Claims Management
 
 ### `POST /claims/submit`
-- **Payload**: 
+
+- **Payload**:
   ```json
   {
     "found_item_id": 124 (optional),
@@ -90,17 +114,21 @@ All responses follow this standard envelope:
 - **Response Data**: `{"claim_id": 456, "message": "Claim submitted successfully"}`
 
 ### `GET /claims/pending`
+
 - **Response Data**: List of claims associated with the user.
 
 ### `GET /claims/<int:claim_id>/potential-matches`
+
 - **Description**: Returns list of found items that potentially match a specific claim.
 - **Response Data**: `{"matches": [{"id": 124, "match_score": 95, ...}]}`
 
 ### `POST /claims/<int:claim_id>/link`
+
 - **Payload**: `{"found_item_id": 124}`
 - **Description**: Manually link a claim to a specific found item.
 
 ### `POST /claims/<int:claim_id>/schedule`
+
 - **Payload**: `{"pickup_datetime": "2024-03-20T10:00:00", "pickup_location": "Main Office"}`
 - **Description**: Schedule a pickup for an approved claim.
 
@@ -109,17 +137,21 @@ All responses follow this standard envelope:
 ## Admin Operations
 
 ### `GET /admin/claims`
+
 - **Description**: View all pending claims in the system.
 
 ### `POST /admin/claims/<id>/verify`
+
 - **Role**: Admin only
 - **Payload**: `{"decision": "approved" | "rejected" | "completed", "handover_notes": "..."}`
 - **Response Data**: `{"message": "Claim verified successfully"}`
 
 ### `GET /admin/reports/transactions`
+
 - **Description**: List all completed transactions.
 
 ### `GET /admin/reports/transactions/<int:claim_id>`
+
 - **Description**: Detailed report for a specific completed transaction.
 
 ---
@@ -127,11 +159,14 @@ All responses follow this standard envelope:
 ## Infrastructure
 
 ### `GET /status`
+
 - **Description**: Verifies API and Database health.
-- **Response**: 
+- **Response**:
   ```json
   {
     "status": "healthy",
     "services": {"api": "up", "database": "up"}
   }
+  }
+  Status: 200 OK if both API and DB are reachable.
   ```
