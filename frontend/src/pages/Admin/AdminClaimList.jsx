@@ -13,7 +13,7 @@ const AdminClaimList = () => {
 
     const fetchClaims = useCallback(() => {
         // Explicitly filter for pending only
-        request({ url: '/claims', params: { status: 'pending' } });
+        request({ url: '/claims/pending', params: { status: 'pending' } });
     }, [request]);
 
     useEffect(() => {
