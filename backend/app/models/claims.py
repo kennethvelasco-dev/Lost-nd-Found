@@ -156,10 +156,18 @@ def link_claim_to_found_item(claim_id, found_item_id):
 
 # GET FILTERED CLAIMS
 def get_filtered_claims_db(status_filter=['pending']):
-    """Return claims filtered by status. Handles both linked and unlinked."""
+    """
+    Return claims filtered by decision/status. Handles both linked and unlinked.
+
+    status_filter is a list like ['pending'] or ['approved'] or ['pending', 'approved'].
+    """
+    if not status_filter:
+        # If no filter is provided, default to pending only
+        status_filter = ['pending']
+
     placeholders = ', '.join([f":s{i}" for i in range(len(status_filter))])
     params = {f"s{i}": status_filter[i] for i in range(len(status_filter))}
-    
+
     query = text(f"""
         SELECT
             c.id AS claim_id,
@@ -195,16 +203,21 @@ def get_filtered_claims_db(status_filter=['pending']):
         WHERE c.decision IN ({placeholders})
         ORDER BY c.verification_score DESC
     """)
-    result = db.session.execute(query, params).fetchall()
-    
+
+    try:
+        result = db.session.execute(query, params).fetchall()
+    except Exception as e:
+        logger.error(f"Error in get_filtered_claims_db with status_filter={status_filter}: {e}")
+        raise
+
     final_result = []
     for row in result:
         d = dict(row._mapping)
         if d.get("answers"):
             try:
                 d["answers"] = json.loads(d["answers"]) if isinstance(d["answers"], str) else d["answers"]
-            except:
-                pass
+            except Exception as parse_err:
+                logger.warning(f"Failed to parse answers JSON for claim {d.get('id')}: {parse_err}")
         final_result.append(d)
     return final_result
 
