@@ -2,8 +2,7 @@
   display: flex;
   height: 100vh;
   width: 100vw;
-  overflow: hidden;
-  /* Use Auth background if needed, or consistent background */
+  overflow: hidden; 
   background: rgba(230, 241, 232, 0.9);
 }
 
@@ -61,17 +60,24 @@
   justify-content: center;
   padding: var(--space-4);
   z-index: 10;
+
+  /* allow scrolling inside the form column only */
+  max-height: 100vh;
+  overflow-y: auto;
 }
 
 .auth-container {
   width: 100%;
-  max-width: 380px; /* Snugger form */
-  padding: var(--space-4); /* Reduced padding to remove white gap */
+  max-width: 380px;
+  padding: var(--space-4);
   background: var(--background);
   border-radius: var(--radius-md);
   box-shadow: var(--nm-flat);
   display: flex;
   flex-direction: column;
+
+  /* allow inner scrolling if needed on very small screens */
+  max-height: 100%;
 }
 
 .auth-logo {
