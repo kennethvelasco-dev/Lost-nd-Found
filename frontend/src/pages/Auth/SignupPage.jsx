@@ -89,6 +89,9 @@ const SignupPage = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                 />
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 4px 8px' }}>
+                    Use a unique email. The admin email (admin8857@gmail.com) is already in use.
+                </p>
 
                 <Input
                     label="Password"
@@ -98,6 +101,9 @@ const SignupPage = () => {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                 />
+                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 4px 8px' }}>
+                    At least 8 characters, with uppercase, lowercase, a number, and a special character.
+                </p>
 
                 <Input
                     label="Confirm Password"
