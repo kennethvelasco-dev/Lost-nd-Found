@@ -44,8 +44,8 @@ const ConfirmationPage = () => {
                             Admin Dashboard
                         </Button>
                     ) : (
-                        <Button variant="secondary" onClick={() => navigate('/user/profile')}>
-                            View My Claims
+                        <Button variant="secondary" onClick={() => navigate('/my-activities')}>
+                            View My Activities
                         </Button>
                     )}
                 </div>
