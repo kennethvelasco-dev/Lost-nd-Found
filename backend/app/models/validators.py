@@ -79,8 +79,8 @@ def validate_password_strength(password: str, username: str = None):
         raise ValidationError("Password must contain at least one special character.")
 
     results = zxcvbn(password, user_inputs=[username] if username else [])
-    # Relax requirement: accept score >= 2 
-    if results["score"] < 2:
+    # Further relax requirement: only reject the very weakest scores (< 1)
+    if results["score"] < 1:
         feedback = results["feedback"]["warning"] or "Please choose a slightly stronger password."
         raise ValidationError(f"Password strength too low: {feedback}")
 
