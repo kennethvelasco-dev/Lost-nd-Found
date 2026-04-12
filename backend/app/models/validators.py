@@ -65,10 +65,10 @@ def validate_email_complex(email: str):
         raise ValidationError(f"Invalid email: {str(e)}")
 
 def validate_password_strength(password: str, username: str = None):
-    """Enforce 8+ chars, complexity, and zxcvbn score >= 3."""
+    """Enforce 8+ chars, basic complexity, and reasonable zxcvbn score."""
     if not password or len(password) < 8:
         raise ValidationError("Password must be at least 8 characters long.")
-    
+
     if not re.search(r"[A-Z]", password):
         raise ValidationError("Password must contain at least one uppercase letter.")
     if not re.search(r"[a-z]", password):
@@ -79,10 +79,11 @@ def validate_password_strength(password: str, username: str = None):
         raise ValidationError("Password must contain at least one special character.")
 
     results = zxcvbn(password, user_inputs=[username] if username else [])
-    if results['score'] < 3:
-        feedback = results['feedback']['warning'] or "Password is too weak."
+    # Relax requirement: accept score >= 2 
+    if results["score"] < 2:
+        feedback = results["feedback"]["warning"] or "Please choose a slightly stronger password."
         raise ValidationError(f"Password strength too low: {feedback}")
-    
+
     return True
 
 def validate_found_item_id(item_id):
