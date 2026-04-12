@@ -65,9 +65,9 @@ def validate_email_complex(email: str):
         raise ValidationError(f"Invalid email: {str(e)}")
 
 def validate_password_strength(password: str, username: str = None):
-    """Enforce 12+ chars, complexity, and zxcvbn score >= 3."""
-    if not password or len(password) < 12:
-        raise ValidationError("Password must be at least 12 characters long.")
+    """Enforce 8+ chars, complexity, and zxcvbn score >= 3."""
+    if not password or len(password) < 8:
+        raise ValidationError("Password must be at least 8 characters long.")
     
     if not re.search(r"[A-Z]", password):
         raise ValidationError("Password must contain at least one uppercase letter.")
