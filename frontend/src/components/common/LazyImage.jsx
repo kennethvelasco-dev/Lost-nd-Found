@@ -6,11 +6,7 @@ const LazyImage = ({ src, alt, className }) => {
 
   return (
     <div className={`lazy-image-wrapper ${className || ''}`}>
-      {!loaded && (
-        <div className="lazy-image-placeholder">
-          Loading image...
-        </div>
-      )}
+      {!loaded && <div className="lazy-image-placeholder" />}
       <img
         src={src}
         alt={alt}
