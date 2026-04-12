@@ -7,48 +7,13 @@ from flask import current_app
 logger = logging.getLogger(__name__)
 
 def send_email(to_email, subject, html_content):
-    """ 
-    Sends an email using the built-in smtplib.
-    Falls back to console logging if SMTP settings are missing or if it fails.
     """
-    smtp_server = current_app.config.get("SMTP_SERVER")
-    smtp_port = current_app.config.get("SMTP_PORT", 587)
-    smtp_username = current_app.config.get("SMTP_USERNAME")
-    smtp_password = current_app.config.get("SMTP_PASSWORD")
-    smtp_use_tls = current_app.config.get("SMTP_USE_TLS", True)
-    from_email = current_app.config.get("SMTP_FROM_EMAIL", "onboarding@yourdomain.com")
-
-    if not smtp_server or not smtp_username or not smtp_password:
-        logger.warning("SMTP credentials not fully configured. Falling back to console logging.")
-        _mock_send(to_email, subject, html_content)
-        return True
-
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = from_email
-    msg["To"] = to_email
-
-    part = MIMEText(html_content, "html")
-    msg.attach(part)
-
-    try:
-        if smtp_port == 465:
-            server = smtplib.SMTP_SSL(smtp_server, smtp_port)
-        else:
-            server = smtplib.SMTP(smtp_server, smtp_port)
-            if smtp_use_tls:
-                server.starttls()
-                
-        server.login(smtp_username, smtp_password)
-        server.sendmail(from_email, to_email, msg.as_string())
-        server.quit()
-        logger.info(f"Email sent successfully to {to_email}.")
-        return True
-    except Exception as e:
-        logger.error(f"Failed to send email to {to_email} via SMTP: {str(e)}")
-        # Fallback to local console so it acts as an email mockup instead of crashing
-        _mock_send(to_email, subject, html_content)
-        return True
+    In this deployment, always use the mock email sender.
+    This avoids SMTP timeouts killing workers on Render.
+    """
+    logger.warning("SMTP sending disabled; using console mock instead.")
+    _mock_send(to_email, subject, html_content)
+    return True
 
 def _mock_send(to_email, subject, html_content):
     """Mock sending an email by printing to the console."""
