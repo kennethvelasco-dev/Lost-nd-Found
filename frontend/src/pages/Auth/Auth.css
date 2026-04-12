@@ -56,7 +56,7 @@
   min-width: 400px;
   background: var(--background);
   display: flex;
-  align-items: center;
+  align-items: flex-start; /* top-align content */
   justify-content: center;
   padding: var(--space-4);
   z-index: 10;
@@ -75,9 +75,7 @@
   box-shadow: var(--nm-flat);
   display: flex;
   flex-direction: column;
-
-  /* allow inner scrolling if needed on very small screens */
-  max-height: 100%;
+  overflow: hidden; /* keep contents visually inside card */
 }
 
 .auth-logo {
