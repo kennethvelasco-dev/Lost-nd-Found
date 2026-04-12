@@ -90,8 +90,11 @@ CREATE TABLE IF NOT EXISTS claims (
     id SERIAL PRIMARY KEY,
     user_id INTEGER REFERENCES users(id),
     found_item_id INTEGER REFERENCES found_items(id),
+    lost_item_id INTEGER REFERENCES lost_items(id),
     claimant_name TEXT NOT NULL,
     claimant_email TEXT NOT NULL,
+    lost_location TEXT,
+    lost_datetime TIMESTAMP WITH TIME ZONE,
     answers TEXT NOT NULL,
     verification_score INTEGER NOT NULL,
     decision TEXT NOT NULL DEFAULT 'pending',
@@ -101,11 +104,13 @@ CREATE TABLE IF NOT EXISTS claims (
     pickup_location TEXT,
     handover_notes TEXT,
     completed_at TIMESTAMP WITH TIME ZONE,
+    is_dismissed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE INDEX IF NOT EXISTS idx_claims_user ON claims(user_id);
 CREATE INDEX IF NOT EXISTS idx_claims_item ON claims(found_item_id);
+CREATE INDEX IF NOT EXISTS idx_claims_lost_item ON claims(lost_item_id);
 CREATE INDEX IF NOT EXISTS idx_claims_decision ON claims(decision);
 
 -- Activity Logs
