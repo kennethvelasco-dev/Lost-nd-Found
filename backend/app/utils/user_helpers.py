@@ -59,11 +59,19 @@ def create_user_db(username, email, password_hash, role="user", name=None, verif
         return None
 
 def get_user_by_username(username: str):
-    """Fetch a user by username."""
+    """Fetch a user by username, with a simple retry on transient DB errors."""
     query = text("SELECT * FROM users WHERE username = :username")
-    result = db.session.execute(query, {"username": username})
-    row = result.fetchone()
-    return dict(row._mapping) if row else None
+    for attempt in range(2):  # try up to 2 times
+        try:
+            result = db.session.execute(query, {"username": username})
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Error in get_user_by_username for {username} (attempt {attempt + 1}): {e}")
+            # First failure: loop will retry; second: fall through and return None
+            continue
+    return None
 
 def get_user_by_id(user_id: int):
     """Fetch a user by ID."""
