@@ -30,22 +30,49 @@ Most routes return JSON in one of these forms:
 
 ### `POST /auth/register`
 
-- **Rate Limit**: 5 per minute
+- **Rate Limit**: 3 per 15 minutes
 - **Payload**:
   ```json
   {
-    "username": "jdoe", "password": "Password123!",
-    "name": "John Doe", "email": "john@example.com", "role": "user",
-    "admin_id": "ADM-123" (required if role is admin)
+    "username": "jdoe",
+    "password": "Password123!",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "role": "user",
+    "admin_id": "ADM-123"
   }
   ```
-- **Response Data**: `{"access_token": "...", "message": "User registered successfully"}`
+- **Response Data**:
+  ```json
+  {
+    "success": true,
+    "message": "User registered successfully. Please check your email (or console) to verify your account."
+  }
+  ```
 
 ### `POST /auth/login`
 
-- **Rate Limit**: 5 per minute
-- **Payload**: `{"username": "jdoe", "password": "Password123!"}`
-- **Response Data**: `{"access_token": "...", "message": "Login successful"}`
+- **Rate Limit**: 10 per 15 minutes
+- **Payload**:
+  ```json
+  { "username": "jdoe", "password": "Password123!" }
+  ```
+- **Response Data**:
+  ```json
+  {
+    "success": true,
+    "message": "Login successful",
+    "data": {
+      "access_token": "<JWT>",
+      "user": {
+        "id": 1,
+        "username": "jdoe",
+        "role": "user",
+        "name": "John Doe"
+      }
+    }
+  }
+  ```
 
 ---
 
