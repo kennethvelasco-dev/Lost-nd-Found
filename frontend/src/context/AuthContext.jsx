@@ -37,10 +37,23 @@ export const AuthProvider = ({ children }) => {
     const register = async (userData) => {
         try {
             const response = await api.post('/auth/register', userData);
-            return { success: true, data: response.data };
+            // Backend returns { message: "..."}; wrap into our common shape
+            return {
+                success: true,
+                message: response.data?.message || 'Registration successful',
+                data: response.data
+            };
         } catch (err) {
-            return { success: false, message: err.response?.data?.message || 'Registration failed' };
+            return {
+                success: false,
+                message: err.response?.data?.message || 'Registration failed'
+            };
         }
+    };
+
+    // Convenience wrapper used by SignupPage
+    const signup = async (username, email, password, role = 'user') => {
+        return register({ username, email, password, role });
     };
 
     const logout = async () => {
@@ -84,7 +97,7 @@ export const AuthProvider = ({ children }) => {
     }, [user]);
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, register, signup, logout, loading }}>
             {children}
         </AuthContext.Provider>
     );

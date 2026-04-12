@@ -199,20 +199,6 @@ The frontend (Vercel) calls the backend at:
 - **Query Params**: category, item_type, color, brand, query, limit, offset
 - **Response Data**: Similar to /items/lost (paginated).
 
-### `POST /items/found`
-
-- **Payload**:
-  ```json
-  {
-    "category": "Electronics",
-    "item_type": "Phone",
-    "public_description": "Black iPhone 13",
-    "found_location": "Cafe",
-    "found_datetime": "2024-03-20T11:00:00Z"
-  }
-  ```
-- **Response Data**: `{"item_id": 124, "message": "Found item reported successfully"}`
-
 ### `GET /items/found`
 
 - **Query Params**: `limit`, `offset`
@@ -223,11 +209,6 @@ The frontend (Vercel) calls the backend at:
     "pagination": {"total": 1, "limit": 20, "offset": 0}
   }
   ```
-
-### `GET /items/search`
-
-- **Query Params**: `category`, `item_type`, `color`, `brand`, `query`, `limit`, `offset`
-- **Response Data**: Similar to `/items/found` (paginated).
 
 ---
 
