@@ -89,9 +89,6 @@ const SignupPage = () => {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                 />
-                <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '4px 4px 8px' }}>
-                    Use a unique email. The admin email (admin8857@gmail.com) is already in use.
-                </p>
 
                 <Input
                     label="Password"
