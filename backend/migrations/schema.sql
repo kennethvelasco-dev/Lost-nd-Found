@@ -50,6 +50,10 @@ CREATE TABLE IF NOT EXISTS lost_items (
     score_breakdown TEXT,
     status TEXT DEFAULT 'pending_approval',
     rejection_reason TEXT,
+    recipient_name TEXT,
+    recipient_id INTEGER,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    turnover_proof TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -78,6 +82,10 @@ CREATE TABLE IF NOT EXISTS found_items (
     claim_id INTEGER,
     processed_id TEXT,
     status TEXT NOT NULL DEFAULT 'found',
+    recipient_name TEXT,
+    recipient_id INTEGER,
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    turnover_proof TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
