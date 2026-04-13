@@ -23,10 +23,12 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password, role) => {
         try {
             const response = await api.post('/auth/login', { username, password });
-            const { user: serverUser } = response.data.data;
+            const { access_token, user: serverUser } = response.data.data;
 
-            // Tokens are set in Http-only cookies by the backend
+            // Persist user and access token (for header-based auth fallback)
             localStorage.setItem('user', JSON.stringify(serverUser));
+            localStorage.setItem('access_token', access_token);
+
             setUser(serverUser);
             return { success: true };
         } catch (err) {
