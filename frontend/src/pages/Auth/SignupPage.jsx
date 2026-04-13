@@ -11,7 +11,7 @@ const SignupPage = () => {
         email: '',
         password: '',
         confirmPassword: '',
-        role: 'user'
+        role: 'user' 
     });
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -53,26 +53,6 @@ const SignupPage = () => {
             {error && <div className="error-message" style={{ color: 'var(--danger)', marginBottom: 'var(--space-2)', textAlign: 'center', fontSize: '0.875rem' }}>{error}</div>}
 
             <form className="auth-form" onSubmit={handleSubmit}>
-                <div className="role-selector-container">
-                    <label className="form-label" style={{ textAlign: 'center', display: 'block', width: '100%', marginBottom: '12px' }}>Register as</label>
-                    <div className="role-selector">
-                        <button 
-                            type="button" 
-                            className={`role-tab ${formData.role === 'user' ? 'active' : ''}`}
-                            onClick={() => setFormData({ ...formData, role: 'user' })}
-                        >
-                            User
-                        </button>
-                        <button 
-                            type="button" 
-                            className={`role-tab ${formData.role === 'admin' ? 'active' : ''}`}
-                            onClick={() => setFormData({ ...formData, role: 'admin' })}
-                        >
-                            Admin
-                        </button>
-                    </div>
-                </div>
-
                 <Input
                     label="Username"
                     placeholder="Choose a unique username"
