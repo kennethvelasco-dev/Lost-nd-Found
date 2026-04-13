@@ -70,15 +70,15 @@ const MyActivities = () => {
     const ActivityCard = ({ item, type }) => {
         const status = item.status || item.decision || 'pending';
         const theme = getStatusTheme(status);
-        const canDismiss = [
-            'approved',
-            'rejected',
-            'lost',
-            'found',
-            'completed',
-            'reported_lost',
-            'pending_approval' // allow dismissing pending reports as well
-        ].includes(status.toLowerCase());
+
+        // Different rules for when the X should show
+        const s = status.toLowerCase();
+        const canDismiss =
+            type === 'report'
+                // For reports: allow user to clear any of their own reports
+                ? true
+                // For claims: only when resolved / not pending
+                : ['approved', 'rejected', 'completed'].includes(s);
 
         return (
             <Card style={{ position: 'relative', overflow: 'hidden' }}>
