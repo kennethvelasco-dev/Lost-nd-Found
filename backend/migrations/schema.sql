@@ -54,6 +54,7 @@ CREATE TABLE IF NOT EXISTS lost_items (
     recipient_id INTEGER,
     resolved_at TIMESTAMP WITH TIME ZONE,
     turnover_proof TEXT,
+    is_dismissed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -86,6 +87,7 @@ CREATE TABLE IF NOT EXISTS found_items (
     recipient_id INTEGER,
     resolved_at TIMESTAMP WITH TIME ZONE,
     turnover_proof TEXT,
+    is_dismissed BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
