@@ -38,6 +38,7 @@ const AdminClaimDetail = () => {
     };
 
     const claim = data;
+    const status = claim?.status || claim?.decision || 'pending';
 
     if (!claim && !loading && !error) return null;
 
@@ -57,7 +58,7 @@ const AdminClaimDetail = () => {
                     {claim && (
                         <div className="verification-grid" style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 'var(--space-4)' }}>
                             {/* Top Status Bar */}
-                            <Card style={{ borderLeft: `5px solid ${claim.status === 'approved' ? 'var(--success)' : claim.status === 'rejected' ? 'var(--danger)' : 'var(--warning)'}` }}>
+                            <Card style={{ borderLeft: `5px solid ${status === 'approved' ? 'var(--success)' : status === 'rejected' ? 'var(--danger)' : 'var(--warning)'}` }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -86,13 +87,13 @@ const AdminClaimDetail = () => {
                                         <span style={{ 
                                             padding: '6px 16px', 
                                             borderRadius: '20px', 
-                                            background: claim.status === 'approved' ? 'var(--success)' : claim.status === 'rejected' ? 'var(--danger)' : 'var(--warning)', 
+                                            background: status === 'approved' ? 'var(--success)' : status === 'rejected' ? 'var(--danger)' : 'var(--warning)', 
                                             color: 'white',
                                             fontWeight: 'bold',
                                             fontSize: '12px',
                                             textTransform: 'uppercase'
                                         }}>
-                                            {claim.status === 'approved' ? 'Ready for Pickup' : claim.status}
+                                            {status === 'approved' ? 'Ready for Pickup' : status}
                                         </span>
                                     </div>
                                 </div>
@@ -218,12 +219,12 @@ const AdminClaimDetail = () => {
 
                             {/* Bottom Actions */}
                             <Card style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-4)', padding: 'var(--space-4)', background: 'rgba(var(--primary-rgb), 0.02)' }}>
-                                {claim.status === 'pending' ? (
+                                {status === 'pending' ? (
                                     <>
                                         <Button variant="secondary" onClick={() => handleAction('reject')} disabled={verifying}>Reject Claim</Button>
                                         <Button variant="primary" size="lg" onClick={() => handleAction('approve')} disabled={verifying}>Approve Verification</Button>
                                     </>
-                                ) : claim.status === 'approved' ? (
+                                ) : status === 'approved' ? (
                                     <Button 
                                         variant="success" 
                                         size="lg"
@@ -247,7 +248,7 @@ const AdminClaimDetail = () => {
                                         Finalize Handover & Log Return
                                     </Button>
                                 ) : (
-                                    <p style={{ margin: 0, fontWeight: 'bold' }}>This claim has been {claim.status}.</p>
+                                    <p style={{ margin: 0, fontWeight: 'bold' }}>This claim has been {status}.</p>
                                 )}
                             </Card>
                         </div>
