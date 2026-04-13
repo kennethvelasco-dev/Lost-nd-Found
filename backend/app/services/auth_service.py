@@ -25,7 +25,8 @@ def register_user(data: dict) -> tuple:
     username = data.get("username", "").strip()
     email = data.get("email", "").lower().strip()
     password = data.get("password", "")
-    role = data.get("role", "user")
+    # Force self-registered accounts to be regular users
+    role = "user"
     name = data.get("name", "").strip()
 
     if not username or not password:
