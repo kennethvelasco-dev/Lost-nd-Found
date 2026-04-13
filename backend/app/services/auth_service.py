@@ -2,10 +2,12 @@ import time
 import secrets
 import bcrypt
 import logging
+from sqlalchemy import text
 from flask import current_app
 from datetime import datetime, timedelta, timezone
 from ..utils.email_service import send_verification_email, send_password_reset_email
 from ..extensions import limiter
+from ..extensions import db
 from ..models.validators import ValidationError
 
 def hash_password(password: str) -> str:
@@ -59,7 +61,14 @@ def register_user(data: dict) -> tuple:
     # In Zero-Cost strategy, this logs to console
     send_verification_email(email, verification_token)
 
-    return {"message": "User registered successfully. Please check your email (or console) to verify your account."}, 201
+    # Auto-verify the account
+    db.session.execute(
+        text("UPDATE users SET is_email_verified = TRUE WHERE id = :id"),
+        {"id": user_id}
+    )
+    db.session.commit()
+
+    return {"message": "User registered successfully."}, 201
 
 def login_user(data: dict) -> tuple:
     """
