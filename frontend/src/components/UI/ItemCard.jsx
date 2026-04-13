@@ -34,9 +34,14 @@ const ItemCard = ({ item, isReturned }) => {
                 
                 <div className="item-info-grid">
                     <div className="item-info-row">
-                        <span className="info-label">{item.type === 'lost' ? 'Lost at' : 'Found at'}</span>
-                        <span className="info-value">{item.found_location || item.last_seen_location}</span>
+                        <span className="info-label">
+                            {item.type === 'lost' ? 'Last seen at' : 'Found at'}
+                        </span>
+                        <span className="info-value">
+                            {item.found_location || item.last_seen_location || 'Unknown location'}
+                        </span>
                     </div>
+
                     {isResolved && item.recipient_name ? (
                         <>
                             <div className="item-info-row">

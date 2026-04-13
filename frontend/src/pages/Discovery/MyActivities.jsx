@@ -70,37 +70,44 @@ const MyActivities = () => {
     const ActivityCard = ({ item, type }) => {
         const status = item.status || item.decision || 'pending';
         const theme = getStatusTheme(status);
-        const canDismiss = ['approved', 'rejected', 'lost', 'found', 'completed'].includes(status.toLowerCase());
-
+        const canDismiss = ['approved', 'rejected', 'lost', 'found', 'completed', 'reported_lost'].includes(
+            status.toLowerCase()
+        );
+        
         return (
             <Card style={{ position: 'relative', overflow: 'hidden' }}>
                 {canDismiss && (
                     <button 
-                        onClick={() => handleDismiss(type === 'report' ? item.id : item.claim_id, type === 'report' ? item.type : 'claim')}
+                        onClick={() => handleDismiss(
+                            type === 'report' ? item.id : item.claim_id,
+                            type === 'report' ? item.type : 'claim'
+                        )}
                         style={{
                             position: 'absolute',
                             top: '12px',
                             right: '12px',
-                            background: 'none',
+                            background: 'rgba(0,0,0,0.03)',
                             border: 'none',
-                            fontSize: '18px',
+                            fontSize: '14px',
                             cursor: 'pointer',
                             color: 'var(--text-muted)',
-                            opacity: 0.6,
+                            opacity: 0.8,
                             transition: 'all 0.2s ease',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             zIndex: 2,
-                            padding: '4px'
+                            padding: '4px 8px',
+                            borderRadius: '999px'
                         }}
                         onMouseEnter={(e) => e.target.style.opacity = '1'}
-                        onMouseLeave={(e) => e.target.style.opacity = '0.6'}
-                        title="Dismiss from activities"
+                        onMouseLeave={(e) => e.target.style.opacity = '0.8'}
+                        title="Remove from My Activities"
                     >
                         ✕
                     </button>
                 )}
+
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', alignItems: 'center', paddingRight: canDismiss ? '30px' : '0' }}>
                     <h3 style={{ margin: 0, fontSize: '1.1rem' }}>
                         {type === 'report' ? item.item_type : `Claim #${item.claim_id}`}

@@ -30,6 +30,9 @@ const AdminClaimDetail = () => {
 
             await api.post(`/claims/${id}/verify`, { decision });
             fetchDetail();
+            if (decision === 'approved') {
+                navigate('/admin/claims');
+            }
         } catch (err) {
             alert(`Error: ${err.response?.data?.message || err.message}`);
         } finally {
@@ -138,9 +141,24 @@ const AdminClaimDetail = () => {
                                                 </tr>
                                                 <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
                                                     <td style={{ padding: '12px 8px', fontWeight: 'bold' }}>Incident Date</td>
-                                                    <td style={{ padding: '12px 8px' }}>{claim.incident_date ? new Date(claim.incident_date).toLocaleDateString() : 'N/A'}</td>
                                                     <td style={{ padding: '12px 8px' }}>
-                                                        {claim.answers?.claimed_datetime || claim.answers?.lost_datetime ? new Date(claim.answers?.claimed_datetime || claim.answers?.lost_datetime).toLocaleDateString() : 'N/A'}
+                                                        {claim.incident_date ? new Date(claim.incident_date).toLocaleDateString() : 'N/A'}
+                                                    </td>
+                                                    <td style={{ padding: '12px 8px' }}>
+                                                        {claim.answers?.claimed_datetime || claim.answers?.lost_datetime
+                                                            ? new Date(claim.answers?.claimed_datetime || claim.answers?.lost_datetime).toLocaleDateString()
+                                                            : 'N/A'}
+                                                    </td>
+                                                </tr>
+                                                <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                                    <td style={{ padding: '12px 8px', fontWeight: 'bold' }}>Where</td>
+                                                    <td style={{ padding: '12px 8px' }}>
+                                                        {claim.location || claim.found_location || claim.last_seen_location || 'N/A'}
+                                                    </td>
+                                                    <td style={{ padding: '12px 8px' }}>
+                                                        {claim.answers?.lost_location_claimed ||
+                                                         claim.answers?.claimed_location ||
+                                                         'N/A'}
                                                     </td>
                                                 </tr>
                                             </tbody>
@@ -221,8 +239,28 @@ const AdminClaimDetail = () => {
                             <Card style={{ display: 'flex', justifyContent: 'center', gap: 'var(--space-4)', padding: 'var(--space-4)', background: 'rgba(var(--primary-rgb), 0.02)' }}>
                                 {status === 'pending' ? (
                                     <>
-                                        <Button variant="secondary" onClick={() => handleAction('reject')} disabled={verifying}>Reject Claim</Button>
-                                        <Button variant="primary" size="lg" onClick={() => handleAction('approve')} disabled={verifying}>Approve Verification</Button>
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => handleAction('reject')}
+                                            disabled={verifying}
+                                            style={{ minWidth: '140px' }}
+                                        >
+                                            Reject Claim
+                                        </Button>
+                                        <Button
+                                            variant="primary"
+                                            size="lg"
+                                            onClick={() => handleAction('approve')}
+                                            disabled={verifying}
+                                            style={{
+                                                minWidth: '200px',
+                                                boxShadow: '0 8px 20px rgba(22, 163, 74, 0.3)',
+                                                fontWeight: 800,
+                                                textTransform: 'uppercase',
+                                            }}
+                                        >
+                                            {verifying ? 'Approving...' : 'Approve Claim'}
+                                        </Button>
                                     </>
                                 ) : status === 'approved' ? (
                                     <Button 

@@ -104,8 +104,28 @@ const ItemDetail = () => {
                                                 <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.color || 'No primary color'}</p>
                                             </div>
                                             <div className="spec-item">
-                                                <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>{item.type === 'lost' ? 'Lost at' : 'Found at'}</label>
-                                                <p style={{ margin: 0, fontWeight: 700, fontSize: '1.1rem' }}>{item.found_location || item.last_seen_location}</p>
+                                                <label
+                                                    style={{
+                                                        display: 'block',
+                                                        fontSize: '10px',
+                                                        color: 'var(--text-secondary)',
+                                                        textTransform: 'uppercase',
+                                                        marginBottom: '4px',
+                                                        fontWeight: 700
+                                                    }}
+                                                >
+                                
+                                                    {item.type === 'lost' ? 'Last seen at' : 'Found at'}
+                                                </label>
+                                                <p
+                                                    style={{
+                                                        margin: 0,
+                                                        fontWeight: 700,
+                                                        fontSize: '1.1rem'
+                                                    }}
+                                                >
+                                                    {item.found_location || item.last_seen_location || 'Unknown location'}
+                                                </p>
                                             </div>
                                             <div className="spec-item">
                                                 <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px', fontWeight: 700 }}>{item.type === 'lost' ? 'Lost on' : 'Found on'}</label>
