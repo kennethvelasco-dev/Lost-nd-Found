@@ -70,10 +70,16 @@ const MyActivities = () => {
     const ActivityCard = ({ item, type }) => {
         const status = item.status || item.decision || 'pending';
         const theme = getStatusTheme(status);
-        const canDismiss = ['approved', 'rejected', 'lost', 'found', 'completed', 'reported_lost'].includes(
-            status.toLowerCase()
-        );
-        
+        const canDismiss = [
+            'approved',
+            'rejected',
+            'lost',
+            'found',
+            'completed',
+            'reported_lost',
+            'pending_approval' // allow dismissing pending reports as well
+        ].includes(status.toLowerCase());
+
         return (
             <Card style={{ position: 'relative', overflow: 'hidden' }}>
                 {canDismiss && (
@@ -123,7 +129,9 @@ const MyActivities = () => {
                 <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', gap: '8px', marginTop: '4px' }}>
                     <span>{type === 'report' ? 'Report Date:' : 'Claim Request Date:'} {new Date(type === 'report' ? item.report_date : item.created_at).toLocaleDateString()}</span>
                     {type === 'report' && (
-                        <span>• Location: {item.last_seen_location || item.found_location}</span>
+                        <span>
+                            • Location: {item.last_seen_location || item.found_location || 'Unknown location'}
+                        </span>
                     )}
                 </div>
                 {(item.rejection_reason || item.decision_reason || (status.toLowerCase() === 'approved')) && (
