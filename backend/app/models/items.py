@@ -246,7 +246,7 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
             "proof": turnover_proof,
             "id": item_id
         }
-        
+
         # Try found_items
         res = db.session.execute(text("""
             UPDATE found_items SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
