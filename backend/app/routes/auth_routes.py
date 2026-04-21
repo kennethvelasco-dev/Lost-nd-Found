@@ -30,8 +30,7 @@ def register():
     data = request.get_json() or {}
     try:
         result, status = register_user(data)
-        # MUST-FIX: Returns JSON: { "message": ... }
-        return jsonify({"message": result["message"]}), status
+        return jsonify(success_response(message=result["message"])), status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), 400
 

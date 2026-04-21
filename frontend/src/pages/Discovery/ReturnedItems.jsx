@@ -11,12 +11,12 @@ const ReturnedItems = () => {
     const [filter, setFilter] = useState('');
 
     const fetchItems = useCallback(async (q = '', f = '') => {
-        const params = { status: 'found' };
+        const params = {};
         if (q) params.query = q;
         if (f) params.sort = f;
         
         try {
-            await request({ url: '/items/returned', params });
+            await request({ url: '/items/released', params });
         } catch (err) {
             console.error(err);
         }

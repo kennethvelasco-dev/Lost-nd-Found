@@ -143,3 +143,26 @@ def get_item_detail_service(identifier: str) -> tuple:
     if not item:
         return {"error": "Item not found"}, 404
     return item, 200
+
+def get_released_items_service(filters: dict) -> tuple:
+    """Service to fetch released items with pagination and search."""
+    from ..models.items import get_released_items_db
+    limit = int(filters.get("limit", 20))
+    offset = int(filters.get("offset", 0))
+    query = filters.get("query")
+    
+    items, total = get_released_items_db(limit=limit, offset=offset, query=query)
+    
+    # Format descriptions for consistency
+    from ..utils.formatter import format_item_description
+    for item in items:
+        item["full_description"] = format_item_description(item)
+        
+    return {
+        "items": items,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": offset
+        }
+    }, 200

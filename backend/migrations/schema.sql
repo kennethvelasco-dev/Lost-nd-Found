@@ -152,3 +152,23 @@ CREATE TABLE IF NOT EXISTS token_blocklist (
 );
 
 CREATE INDEX IF NOT EXISTS idx_token_blocklist_jti ON token_blocklist(jti);
+
+-- Released Items Table (Historical records of resolved items)
+CREATE TABLE IF NOT EXISTS released_items (
+    id SERIAL PRIMARY KEY,
+    original_report_id TEXT NOT NULL,
+    item_source TEXT NOT NULL, -- 'lost' or 'found'
+    category TEXT NOT NULL,
+    item_type TEXT NOT NULL,
+    claimant_name TEXT NOT NULL,
+    recipient_id TEXT, -- Student/Staff ID
+    released_by_admin TEXT NOT NULL,
+    handover_notes TEXT,
+    turnover_proof TEXT, -- Base64 or path
+    resolved_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_released_items_report_id ON released_items(original_report_id);
+CREATE INDEX IF NOT EXISTS idx_released_items_claimant ON released_items(claimant_name);
+

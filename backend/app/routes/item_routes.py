@@ -130,13 +130,14 @@ def dismiss_claim_route(id):
     return jsonify(success_response(result)), status
 
 @item_bp.route("/returned", methods=["GET"])
+@item_bp.route("/released", methods=["GET"])
 @jwt_required()
 def get_returned_items_route():
-    """Get all items marked as 'returned'."""
+    """Get all released/returned items from the dedicated storage."""
     filters = request.args.to_dict()
-    filters["status"] = "returned"
     try:
-        result, status = search_items_service(filters)
+        from ..services.item_service import get_released_items_service
+        result, status = get_released_items_service(filters)
         return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500

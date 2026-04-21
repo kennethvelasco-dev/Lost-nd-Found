@@ -38,17 +38,17 @@ The frontend (Vercel) calls the backend at:
     "password": "Password123!",
     "name": "John Doe",
     "email": "john@example.com",
-    "role": "user",
-    "admin_id": "ADM-123"
+    "role": "user"
   }
   ```
 - **Response Data**:
   ```json
   {
     "success": true,
-    "message": "User registered successfully. Please check your email (or console) to verify your account."
+    "message": "User registered successfully."
   }
   ```
+- **Note**: In this deployment, accounts are automatically verified upon registration for ease of use. A mock verification email is logged to the server console.
 
 ### `POST /auth/login`
 
@@ -121,21 +121,36 @@ The frontend (Vercel) calls the backend at:
   }
   ```
 
-### `GET /items/returned`
+### `GET /items/released`
 
+- **Description**: Fetch all items that have been successfully returned/released.
 - **Query Params**:
-  - status – "found" (backend maps to returned items)
-  - query, sort – same semantics as /items/lost
+  - query – search by claimant name, category, or item type
+  - limit, offset – for pagination
 - **Response Data**:
   ```json
   {
-  "success": true,
-  "data": {
-    "items": [ { "id": 124, "category": "Electronics", "item_type": "Phone", ... } ],
-    "pagination": { "total": 1, "limit": 20, "offset": 0 }
+    "success": true,
+    "data": {
+      "items": [
+        {
+          "id": 1,
+          "original_report_id": "UUID",
+          "item_source": "found",
+          "category": "Electronics",
+          "claimant_name": "John Smith",
+          "released_by_admin": "admin_user",
+          "resolved_at": "..."
+        }
+      ],
+      "pagination": { "total": 1, "limit": 20, "offset": 0 }
     }
   }
   ```
+
+### `GET /items/returned` (Legacy Alias)
+
+- **Description**: Alias for `/items/released` for backward compatibility.
 
 ### `GET /items/my-activities`
 
@@ -314,25 +329,21 @@ The frontend (Vercel) calls the backend at:
 
 - **Note**: Claim and report moderation flows use /claims/_ and /items/_ as described above, not /admin/claims.
 
-### `POST /admin/claims/<id>/verify`
+### `POST /claims/<id>/verify`
 
 - **Role**: Admin only
 - **Payload**: `{"decision": "approved" | "rejected" | "completed", "handover_notes": "..."}`
-- **Response Data**: `{"message": "Claim verified successfully"}`
+- **Response Data**: `{"success": true, "data": { ... }}`
 
-### `GET /admin/reports/transactions`
+### `GET /items/released` (Formerly Transaction Reports)
 
-- **Description**: List all completed transactions.
-
-### `GET /admin/reports/transactions/<int:claim_id>`
-
-- **Description**: Detailed report for a specific completed transaction.
+- **Description**: Access completed "transactions" via the released items endpoint.
 
 ---
 
 ## Infrastructure
 
-### `GET /status`
+### `GET /api/status`
 
 - **Description**: Verifies API and Database health.
 - **Response**:

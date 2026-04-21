@@ -36,8 +36,8 @@ You normally share the Vercel URL with users. The frontend talks to the backend 
 
 - **Authentication and Security**
   - Username/password login with bcrypt.
-  - Email verification on registration.
-  - Password reset via email link.
+  - Automatic email verification on registration (Zero-Cost strategy).
+  - Password reset via email link (mocks logged to console in dev).
   - Access and refresh tokens with rotation and a token blocklist.
   - Rate limiting on sensitive endpoints (login, register, reset, etc.).
 
@@ -259,9 +259,12 @@ The deployed frontend will then call the Render backend.
 
 ### Email Verification
 
-1. The verification link points to `FRONTEND_URL/verify-email?token=...`.
-2. The frontend calls `GET /api/auth/verify-email` with that token.
-3. On success, the account is marked as verified.
+1. In this deployment, accounts are automatically verified upon registration to ensure a zero-cost, friction-less developer experience.
+2. An email verification token is still generated and logged to the backend console (mock email).
+3. If manual verification were enabled:
+   - The verification link points to `FRONTEND_URL/verify-email?token=...`.
+   - The frontend calls `GET /api/auth/verify-email` with that token.
+   - On success, the account is marked as verified.
 
 ### Login
 
@@ -290,6 +293,7 @@ The schema is defined in `backend/migrations/schema.sql` and includes:
 | `lost_items` | Lost item reports with status, descriptions, and reporter |
 | `found_items` | Found item reports with status, descriptions, and reporter |
 | `claims` | Claims linking users to items, with scoring, decisions, and pickup info |
+| `released_items` | Historical record of resolved/returned items with claimant metadata |
 | `activity_logs` | Logging admin and system actions |
 | `audit_logs` | Audit trail for sensitive operations |
 | `token_blocklist` | JWT blocklist table |

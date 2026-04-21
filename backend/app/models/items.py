@@ -115,7 +115,7 @@ def get_published_found_items(limit=20, offset=0, categories=None) -> tuple[list
     """
     Return all published found items with pagination.
     """
-    where_clause = "WHERE status = 'lost'"
+    where_clause = "WHERE status = 'found'"
     params = {"limit": limit, "offset": offset}
     
     if categories:
@@ -152,7 +152,7 @@ def get_found_item_by_id(item_id: int) -> Optional[Dict[str, Any]]:
 
 def verify_report_db(report_id, entity_type, decision, reason, admin_username):
     table = "lost_items" if entity_type == "lost" else "found_items"
-    approved_status = "reported_lost" if entity_type == "lost" else "lost"
+    approved_status = "reported_lost" if entity_type == "lost" else "found"
     new_status = approved_status if decision == "approved" else "rejected"
 
     query = text(f"UPDATE {table} SET status = :status, rejection_reason = :reason WHERE id = :id")
@@ -198,7 +198,7 @@ def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]
         params["q"] = f"%{filters['query']}%"
 
     if status in ["returned", "lost"]:
-        cond_found = "status = 'lost'" if status == "lost" else "status = 'returned'"
+        cond_found = "status = 'found'" if status == "lost" else "status = 'returned'"
         cond_lost = "status = 'reported_lost'" if status == "lost" else "status = 'returned'"
         
         count_query = text(f"""
@@ -247,21 +247,43 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
             "id": item_id
         }
 
-        # Try found_items
-        res = db.session.execute(text("""
-            UPDATE found_items SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
+        # 1. Fetch item details to migrate
+        item = get_item_universal_db(item_id)
+        if not item:
+            return {"error": "Item not found"}, 404
+            
+        source_table = item.get("type", "found")
+        original_report_id = item.get("report_id")
+        category = item.get("category")
+        item_type = item.get("item_type")
+
+        # 2. Update original record status
+        table_name = "found_items" if source_table == "found" else "lost_items"
+        db.session.execute(text(f"""
+            UPDATE {table_name} SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
             resolved_at = :now, turnover_proof = :proof WHERE id = :id
         """), params)
         
-        table = "found_item"
-        if res.rowcount == 0:
-            res = db.session.execute(text("""
-                UPDATE lost_items SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
-                resolved_at = :now, turnover_proof = :proof WHERE id = :id
-            """), params)
-            if res.rowcount == 0:
-                return {"error": "Item not found"}, 404
-            table = "lost_item"
+        # 3. Create record in released_items table
+        db.session.execute(text("""
+            INSERT INTO released_items (
+                original_report_id, item_source, category, item_type,
+                claimant_name, recipient_id, released_by_admin,
+                handover_notes, turnover_proof, resolved_at
+            )
+            VALUES (:o_rid, :src, :cat, :type, :c_name, :r_id, :admin, :notes, :proof, :now)
+        """), {
+            "o_rid": original_report_id,
+            "src": source_table,
+            "cat": category,
+            "type": item_type,
+            "c_name": recipient_name,
+            "r_id": recipient_id,
+            "admin": admin_username,
+            "notes": handover_notes,
+            "proof": turnover_proof,
+            "now": now
+        })
         
         if claim_id:
             db.session.execute(text("""
@@ -269,12 +291,33 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
             """), {"notes": f"ID: {recipient_id} | {handover_notes}", "now": now, "cid": claim_id})
         
         db.session.commit()
-        log_action("resolve_item", table, item_id, admin_username, notes=f"Recipient: {recipient_name} ({recipient_id})")
-        return {"message": "Item marked as returned successfully"}, 200
+        log_action("resolve_item", source_table, item_id, admin_username, notes=f"Recipient: {recipient_name} ({recipient_id})")
+        return {"message": "Item marked as returned and moved to released storage successfully"}, 200
     except Exception as e:
         db.session.rollback()
         logger.error(f"Error resolving item: {str(e)}")
-        return {"error": "Failed to resolve item"}, 500
+        return {"error": f"Failed to resolve item: {str(e)}"}, 500
+
+def get_released_items_db(limit=20, offset=0, query=None):
+    """Fetch items from the dedicated released_items table."""
+    where_clause = ""
+    params = {"limit": limit, "offset": offset}
+    
+    if query:
+        where_clause = "WHERE claimant_name LIKE :q OR category LIKE :q OR item_type LIKE :q"
+        params["q"] = f"%{query}%"
+        
+    count_query = text(f"SELECT COUNT(*) FROM released_items {where_clause}")
+    total = db.session.execute(count_query, params).scalar() or 0
+    
+    select_query = text(f"""
+        SELECT * FROM released_items 
+        {where_clause} 
+        ORDER BY resolved_at DESC 
+        LIMIT :limit OFFSET :offset
+    """)
+    result = db.session.execute(select_query, params).fetchall()
+    return [dict(row._mapping) for row in result], total
 
 def get_item_universal_db(identifier):
     try:
@@ -301,11 +344,10 @@ def get_pending_reports_db():
     return {"pending": lost + found}
 
 def get_dashboard_stats_db():
-    total_lost = db.session.execute(text("SELECT COUNT(*) FROM lost_items WHERE status = 'lost'")).scalar() or 0
-    total_found = db.session.execute(text("SELECT COUNT(*) FROM found_items WHERE status IN ('found', 'lost')")).scalar() or 0
+    total_lost = db.session.execute(text("SELECT COUNT(*) FROM lost_items WHERE status = 'reported_lost'")).scalar() or 0
+    total_found = db.session.execute(text("SELECT COUNT(*) FROM found_items WHERE status = 'found'")).scalar() or 0
     pending_claims = db.session.execute(text("SELECT COUNT(*) FROM claims WHERE decision = 'pending'")).scalar() or 0
-    resolved = (db.session.execute(text("SELECT COUNT(*) FROM found_items WHERE status = 'returned'")).scalar() or 0) + \
-               (db.session.execute(text("SELECT COUNT(*) FROM lost_items WHERE status = 'returned'")).scalar() or 0)
+    resolved = db.session.execute(text("SELECT COUNT(*) FROM released_items")).scalar() or 0
     
     return {
         "total_lost": total_lost,
