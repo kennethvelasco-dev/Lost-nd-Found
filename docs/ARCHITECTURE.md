@@ -143,6 +143,7 @@ The schema is defined in `backend/migrations/schema.sql` and applied via `init_d
 | `lost_items`      | Lost item reports (user-submitted)                                    |
 | `found_items`     | Found item reports                                                    |
 | `claims`          | Claims linking users to items, with scores and decisions              |
+| `released_items`  | Snapshot of resolved items (historical archive)                       |
 | `activity_logs`   | High-level admin/user actions                                         |
 | `audit_logs`      | Detailed audit trail of sensitive actions (e.g. approvals)            |
 | `token_blocklist` | Revoked JWT tokens (by `jti`)                                         |

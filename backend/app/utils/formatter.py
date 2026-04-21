@@ -7,7 +7,15 @@ def format_item_description(item_data):
     item_type = item_data.get("item_type")
     color = item_data.get("color")
     brand = item_data.get("brand")
-    location = item_data.get("found_location") or item_data.get("last_seen_location")
+    
+    # Handle both original schemas and unified search results
+    found_loc = item_data.get("found_location")
+    lost_loc = item_data.get("last_seen_location")
+    raw_loc = item_data.get("location") # Used in search results
+    
+    # Determine the location and type
+    location = found_loc or lost_loc or raw_loc
+    is_found = found_loc is not None or (raw_loc is not None and item_data.get("source_table") == "found")
     
     parts = []
     
@@ -31,6 +39,7 @@ def format_item_description(item_data):
         description = f"A {category}"
 
     if location:
-        description += f" found at {location}" if "found_location" in item_data else f" lost at {location}"
+        verb = "found" if is_found else "lost"
+        description += f" {verb} at {location}"
         
     return description
