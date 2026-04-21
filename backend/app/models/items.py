@@ -256,6 +256,11 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
         original_report_id = item.get("report_id")
         category = item.get("category")
         item_type = item.get("item_type")
+        color = item.get("color")
+        brand = item.get("brand")
+        main_picture = item.get("main_picture")
+        last_seen_location = item.get("last_seen_location")
+        found_location = item.get("found_location")
 
         # 2. Update original record status
         table_name = "found_items" if source_table == "found" else "lost_items"
@@ -263,25 +268,58 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
             UPDATE {table_name} SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
             resolved_at = :now, turnover_proof = :proof WHERE id = :id
         """), params)
-        
-        # 3. Create record in released_items table
+
+        # 3. Create record in released_items table (snapshot)
         db.session.execute(text("""
             INSERT INTO released_items (
-                original_report_id, item_source, category, item_type,
-                claimant_name, recipient_id, released_by_admin,
-                handover_notes, turnover_proof, resolved_at
+                original_report_id,
+                item_source,
+                category,
+                item_type,
+                color,
+                brand,
+                claimant_name,
+                recipient_id,
+                released_by_admin,
+                handover_notes,
+                turnover_proof,
+                main_picture,
+                last_seen_location,
+                found_location,
+                resolved_at
             )
-            VALUES (:o_rid, :src, :cat, :type, :c_name, :r_id, :admin, :notes, :proof, :now)
+            VALUES (
+                :o_rid,
+                :src,
+                :cat,
+                :type,
+                :color,
+                :brand,
+                :c_name,
+                :r_id,
+                :admin,
+                :notes,
+                :proof,
+                :m_pic,
+                :last_seen,
+                :found_loc,
+                :now
+            )
         """), {
             "o_rid": original_report_id,
             "src": source_table,
             "cat": category,
             "type": item_type,
+            "color": color,
+            "brand": brand,
             "c_name": recipient_name,
             "r_id": recipient_id,
             "admin": admin_username,
             "notes": handover_notes,
             "proof": turnover_proof,
+            "m_pic": main_picture,
+            "last_seen": last_seen_location,
+            "found_loc": found_location,
             "now": now
         })
         

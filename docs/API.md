@@ -138,8 +138,14 @@ The frontend (Vercel) calls the backend at:
           "original_report_id": "UUID",
           "item_source": "found",
           "category": "Electronics",
+          "item_type": "Phone",
+          "color": "Black",
+          "brand": "Apple",
           "claimant_name": "John Smith",
           "released_by_admin": "admin_user",
+          "main_picture": "data:image/jpeg;base64,...",
+          "last_seen_location": "Science Library",
+          "found_location": null,
           "resolved_at": "..."
         }
       ],

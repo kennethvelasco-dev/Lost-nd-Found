@@ -52,7 +52,11 @@ const ReturnedItems = () => {
                 >
                     <div className="grid-layout">
                         {items.map(item => (
-                            <ItemCard key={item.id} item={item} isReturned={true} />
+                            <ItemCard
+                                key={item.id}
+                                item={{ ...item, type: item.item_source }} // 'lost' or 'found'
+                                isReturned={true}
+                            />
                         ))}
                     </div>
                 </StatusState>
