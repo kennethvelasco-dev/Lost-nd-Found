@@ -141,3 +141,20 @@ def get_returned_items_route():
         return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500
+
+
+@item_bp.route("/released/<string:report_id>", methods=["GET"])
+@jwt_required()
+def get_released_item_detail_route(report_id):
+    """
+    Get the released snapshot for a specific original report_id (lost/found).
+    Used by ItemDetail to show return log (claimant, notes, proof, etc.).
+    """
+    try:
+        from ..services.item_service import get_released_item_detail_service
+        result, status = get_released_item_detail_service(report_id)
+        if status >= 400:
+            return jsonify(error_response("NOT_FOUND", result.get("error", "Released item not found"))), status
+        return jsonify(success_response(result)), status
+    except Exception as e:
+        return jsonify(error_response("INTERNAL_ERROR", str(e))), 500

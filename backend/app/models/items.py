@@ -257,21 +257,38 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
         category = item.get("category")
         item_type = item.get("item_type")
 
+        # Snapshot fields to store in released_items
+        main_picture = item.get("main_picture")
+        public_description = item.get("public_description")
+        color = item.get("color")
+        brand = item.get("brand")
+        last_seen_location = item.get("last_seen_location")
+        found_location = item.get("found_location")
+
         # 2. Update original record status
         table_name = "found_items" if source_table == "found" else "lost_items"
         db.session.execute(text(f"""
             UPDATE {table_name} SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
             resolved_at = :now, turnover_proof = :proof WHERE id = :id
         """), params)
-        
-        # 3. Create record in released_items table
+
+        # 3. Create record in released_items table (with visual snapshot)
         db.session.execute(text("""
             INSERT INTO released_items (
                 original_report_id, item_source, category, item_type,
                 claimant_name, recipient_id, released_by_admin,
-                handover_notes, turnover_proof, resolved_at
+                handover_notes, turnover_proof,
+                color, brand, main_picture, public_description,
+                last_seen_location, found_location,
+                resolved_at
             )
-            VALUES (:o_rid, :src, :cat, :type, :c_name, :r_id, :admin, :notes, :proof, :now)
+            VALUES (
+                :o_rid, :src, :cat, :type,
+                :c_name, :r_id, :admin,
+                :notes, :proof,
+                :color, :brand, :m_pic, :pub_desc, :last_loc, :found_loc,
+                :now
+            )
         """), {
             "o_rid": original_report_id,
             "src": source_table,
@@ -282,6 +299,12 @@ def resolve_item_db(item_id, recipient_name, handover_notes, admin_username, cla
             "admin": admin_username,
             "notes": handover_notes,
             "proof": turnover_proof,
+            "color": color,
+            "brand": brand,
+            "m_pic": main_picture,
+            "pub_desc": public_description,
+            "last_loc": last_seen_location,
+            "found_loc": found_location,
             "now": now
         })
         
@@ -302,14 +325,14 @@ def get_released_items_db(limit=20, offset=0, query=None):
     """Fetch items from the dedicated released_items table."""
     where_clause = ""
     params = {"limit": limit, "offset": offset}
-    
+
     if query:
         where_clause = "WHERE claimant_name LIKE :q OR category LIKE :q OR item_type LIKE :q"
         params["q"] = f"%{query}%"
-        
+
     count_query = text(f"SELECT COUNT(*) FROM released_items {where_clause}")
     total = db.session.execute(count_query, params).scalar() or 0
-    
+
     select_query = text(f"""
         SELECT * FROM released_items 
         {where_clause} 
@@ -318,6 +341,18 @@ def get_released_items_db(limit=20, offset=0, query=None):
     """)
     result = db.session.execute(select_query, params).fetchall()
     return [dict(row._mapping) for row in result], total
+
+
+def get_released_item_by_original_id_db(original_report_id: str):
+    """Fetch a single released item snapshot by original_report_id (lost/found report_id)."""
+    query = text("""
+        SELECT * FROM released_items
+        WHERE original_report_id = :rid
+        ORDER BY resolved_at DESC
+        LIMIT 1
+    """)
+    row = db.session.execute(query, {"rid": original_report_id}).fetchone()
+    return dict(row._mapping) if row else None
 
 def get_item_universal_db(identifier):
     try:

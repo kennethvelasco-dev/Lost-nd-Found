@@ -150,14 +150,14 @@ def get_released_items_service(filters: dict) -> tuple:
     limit = int(filters.get("limit", 20))
     offset = int(filters.get("offset", 0))
     query = filters.get("query")
-    
+
     items, total = get_released_items_db(limit=limit, offset=offset, query=query)
-    
+
     # Format descriptions for consistency
     from ..utils.formatter import format_item_description
     for item in items:
         item["full_description"] = format_item_description(item)
-        
+
     return {
         "items": items,
         "pagination": {
@@ -166,3 +166,12 @@ def get_released_items_service(filters: dict) -> tuple:
             "offset": offset
         }
     }, 200
+
+
+def get_released_item_detail_service(original_report_id: str) -> tuple:
+    """Service to fetch a single released item snapshot by original report_id."""
+    from ..models.items import get_released_item_by_original_id_db
+    item = get_released_item_by_original_id_db(original_report_id)
+    if not item:
+        return {"error": "Released item not found"}, 404
+    return item, 200

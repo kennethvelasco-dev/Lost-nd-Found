@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
 import Button from '../../components/UI/Button';
@@ -10,7 +10,11 @@ import { ItemDetailSkeleton } from '../../components/common/Skeleton';
 const ItemDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
+
     const { loading, error, data, request } = useHttp();
+    const { loading: releasedLoading, error: releasedError, data: releasedData, request: releasedRequest } = useHttp();
+
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
     useEffect(() => {
@@ -19,12 +23,36 @@ const ItemDetail = () => {
 
     const item = data;
 
+    // If navigated from ReturnedItems, we might have `state.isFromReleased = true`
+    const fromReleasedList = location.state?.fromReleased === true;
+
+    // Load released snapshot when item is returned, or if forced via state
+    useEffect(() => {
+        if (!item) return;
+
+        const isReturnedStatus = item.status === 'returned';
+        const shouldFetchReleased = isReturnedStatus || fromReleasedList;
+
+        if (shouldFetchReleased && item.report_id) {
+            releasedRequest({ url: `/items/released/${item.report_id}` });
+        }
+    }, [item, fromReleasedList, releasedRequest]);
+
+    const releasedSnapshot = releasedData;
     const images = item ? [
         item.main_picture,
         item.additional_picture_1,
         item.additional_picture_2,
         item.additional_picture_3
     ].filter(Boolean) : [];
+
+    // Precompute status styling for the badge (when item is loaded)
+    const isReturned = item?.status === 'returned';
+    // Active states: approved (lost), found (found), reported_lost (lost)
+    const isActive = ['approved', 'found', 'reported_lost'].includes(item?.status);
+    
+    const statusBg = isReturned ? '#e0f2fe' : (isActive ? '#dcfce7' : '#fee2e2');
+    const statusColor = isReturned ? '#0369a1' : (isActive ? '#166534' : '#ef4444');
 
     return (
         <div className="page-container">
@@ -82,15 +110,15 @@ const ItemDetail = () => {
                                                 <span style={{ color: 'var(--text-secondary)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '1px' }}>System ID: #{item.id}</span>
                                             </div>
                                             <span style={{ 
-                                                background: item.status === 'approved' ? '#dcfce7' : '#fee2e2', 
-                                                color: item.status === 'approved' ? '#166534' : '#ef4444', 
+                                                background: statusBg, 
+                                                color: statusColor, 
                                                 padding: '6px 16px', 
                                                 borderRadius: '25px', 
                                                 fontSize: '12px', 
                                                 fontWeight: 800,
                                                 textTransform: 'uppercase'
                                             }}>
-                                                {item.status}
+                                                {isReturned ? 'returned' : item.status}
                                             </span>
                                         </div>
 
@@ -142,7 +170,76 @@ const ItemDetail = () => {
                                             <p style={{ margin: 0, lineHeight: 1.6 }}>{item.public_description || 'The reporter has not provided a public summary for this item.'}</p>
                                         </div>
 
-                                        {(item.type === 'found' || item.type === 'lost') && (
+                                        {/* Return Log / Released Snapshot */}
+                                        {item.status === 'returned' && (
+                                            <Card style={{ marginTop: 'var(--space-3)', borderLeft: '4px solid var(--primary)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 'var(--space-2)' }}>
+                                                    <div>
+                                                        <h3 style={{ margin: 0, fontSize: '1.2rem', color: 'var(--primary)' }}>Return Summary</h3>
+                                                        <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                                                            This item has been verified and released to its rightful owner.
+                                                        </p>
+                                                    </div>
+                                                    {releasedLoading && (
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Loading log...</span>
+                                                    )}
+                                                    {releasedError && (
+                                                        <span style={{ fontSize: '0.75rem', color: 'var(--danger)' }}>Failed to load log</span>
+                                                    )}
+                                                </div>
+
+                                                {releasedSnapshot && (
+                                                    <div style={{ display: 'grid', gridTemplateColumns: releasedSnapshot.turnover_proof ? '1.5fr 1fr' : '1fr', gap: 'var(--space-3)' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.9rem' }}>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Claimant / Recipient</span>
+                                                                <span style={{ fontWeight: 700 }}>{releasedSnapshot.claimant_name || item.recipient_name || 'N/A'}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Recipient ID</span>
+                                                                <span>{releasedSnapshot.recipient_id || 'N/A'}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Released By</span>
+                                                                <span>{releasedSnapshot.released_by_admin || 'N/A'}</span>
+                                                            </div>
+                                                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                                <span style={{ fontWeight: 600, color: 'var(--text-secondary)' }}>Released On</span>
+                                                                <span>{new Date(releasedSnapshot.resolved_at || item.resolved_at || item.created_at).toLocaleString()}</span>
+                                                            </div>
+                                                            {releasedSnapshot.handover_notes && (
+                                                                <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px dashed var(--border-color)' }}>
+                                                                    <span style={{ display: 'block', fontWeight: 600, fontSize: '0.8rem', color: 'var(--text-secondary)', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                                        Handover Notes
+                                                                    </span>
+                                                                    <p style={{ margin: 0, fontSize: '0.9rem' }}>{releasedSnapshot.handover_notes}</p>
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                            {releasedSnapshot.turnover_proof && (
+                                                                <div style={{ 
+                                                                    borderRadius: 'var(--radius-sm)', 
+                                                                    overflow: 'hidden', 
+                                                                    background: 'rgba(0,0,0,0.02)', 
+                                                                    border: '1px solid var(--border-color)',
+                                                                    maxHeight: '200px'
+                                                                }}>
+                                                                    <LazyImage
+                                                                        src={releasedSnapshot.turnover_proof}
+                                                                        alt="Turnover proof"
+                                                                        className="detail-main-image"
+                                                                        style={{ height: '100%', objectFit: 'cover' }}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                    </div>
+                                                )}
+                                            </Card>
+                                        )}
+
+                                        {/* Claim CTA only for items that are not yet returned */}
+                                        {(item.type === 'found' || item.type === 'lost') && item.status !== 'returned' && (
                                             <Button 
                                                 variant="primary" 
                                                 size="lg" 

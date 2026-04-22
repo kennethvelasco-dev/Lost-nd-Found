@@ -11,12 +11,22 @@ const ItemCard = ({ item, isReturned }) => {
     // Determine fallback image based on ID
     const placeholder = `/assets/item_${(item.id % 3) + 1}.jpg`;
     const displayImage = item.main_picture || item.image_url || placeholder;
-    const isResolved = isReturned || item.status === 'found';
+    const isResolved = isReturned || item.status === 'returned';
+    const isFoundType = item.type === 'found' || item.status === 'found';
+
+    // Released items store claimant_name; original tables have recipient_name
+    const displayRecipientName = item.recipient_name || item.claimant_name;
+
+    const handleClick = () => {
+        const targetId = item.report_id || item.id;
+        const state = isReturned ? { fromReleased: true } : undefined;
+        navigate(`/items/${targetId}`, { state });
+    };
 
     return (
         <Card 
             className="item-card" 
-            onClick={() => navigate(`/items/${item.report_id || item.id}`)}
+            onClick={handleClick}
         >
             <div className="item-image-container">
                 <LazyImage
@@ -24,8 +34,8 @@ const ItemCard = ({ item, isReturned }) => {
                     alt={item.item_type}
                     className="item-image"
                 />
-                <div className={`status-badge ${isResolved ? 'returned' : 'lost'}`}>
-                    {isResolved ? 'VERIFIED' : 'LOST'}
+                <div className={`status-badge ${isResolved ? 'returned' : (isFoundType ? 'found' : 'lost')}`}>
+                    {isResolved ? 'VERIFIED' : (isFoundType ? 'FOUND' : 'LOST')}
                 </div>
             </div>
 
@@ -45,11 +55,13 @@ const ItemCard = ({ item, isReturned }) => {
                         </span>
                     </div>
 
-                    {isResolved && item.recipient_name ? (
+                    {isResolved && displayRecipientName ? (
                         <>
                             <div className="item-info-row">
                                 <span className="info-label">Claimed By</span>
-                                <span className="info-value" style={{ color: 'var(--success)', fontWeight: 'bold' }}>{item.recipient_name}</span>
+                                <span className="info-value" style={{ color: 'var(--success)', fontWeight: 'bold' }}>
+                                    {displayRecipientName}
+                                </span>
                             </div>
                             <div className="item-info-row">
                                 <span className="info-label">Returned On</span>

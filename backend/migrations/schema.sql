@@ -160,8 +160,6 @@ CREATE TABLE IF NOT EXISTS released_items (
     item_source TEXT NOT NULL, -- 'lost' or 'found'
     category TEXT NOT NULL,
     item_type TEXT NOT NULL,
-    color TEXT,
-    brand TEXT,
     claimant_name TEXT NOT NULL,
     recipient_id TEXT, -- Student/Staff ID
     released_by_admin TEXT NOT NULL,
@@ -172,6 +170,7 @@ CREATE TABLE IF NOT EXISTS released_items (
     color TEXT,
     brand TEXT,
     main_picture TEXT,
+    public_description TEXT,
     last_seen_location TEXT,
     found_location TEXT,
 
