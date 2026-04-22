@@ -9,6 +9,7 @@ const ReturnedItems = () => {
     const { loading, error, data, request } = useHttp();
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('');
+    const [items, setItems] = useState([]);
 
     const fetchItems = useCallback(async (q = '', f = '') => {
         const params = {};
@@ -16,17 +17,30 @@ const ReturnedItems = () => {
         if (f) params.sort = f;
         
         try {
-            await request({ url: '/items/released', params });
+            const payload = await request({ url: '/items/released', params });
+            if (payload) {
+                const normalized = payload.items || (Array.isArray(payload) ? payload : []);
+                setItems(normalized);
+            }
         } catch (err) {
             console.error(err);
+            // Clear items on error to avoid showing stale data
+            setItems([]);
         }
     }, [request]);
 
+    // When search/filter change, clear visible list immediately and refetch
     useEffect(() => {
+        setItems([]);
         fetchItems(search, filter);
     }, [search, filter, fetchItems]);
 
-    const items = data?.items || (Array.isArray(data) ? data : []);
+    // Sync items if data updates independently
+    useEffect(() => {
+        if (!data) return;
+        const normalized = data.items || (Array.isArray(data) ? data : []);
+        setItems(normalized);
+    }, [data]);
 
     return (
         <div className="page-container">
