@@ -165,6 +165,14 @@ CREATE TABLE IF NOT EXISTS released_items (
     released_by_admin TEXT NOT NULL,
     handover_notes TEXT,
     turnover_proof TEXT, -- Base64 or path
+
+    -- Snapshot fields from original item
+    color TEXT,
+    brand TEXT,
+    main_picture TEXT,
+    last_seen_location TEXT,
+    found_location TEXT,
+
     resolved_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
