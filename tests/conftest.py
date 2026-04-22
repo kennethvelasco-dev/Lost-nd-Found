@@ -2,8 +2,8 @@ import os
 import pytest
 import sqlite3
 import tempfile
-from backend.__init__ import create_app
-from backend.models.base import init_db
+from backend.app import create_app
+from backend.app.models import init_db
 
 @pytest.fixture
 def app(tmp_path):
