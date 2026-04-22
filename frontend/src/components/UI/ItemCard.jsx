@@ -38,7 +38,10 @@ const ItemCard = ({ item, isReturned }) => {
                             {item.type === 'lost' ? 'Last seen at' : 'Found at'}
                         </span>
                         <span className="info-value">
-                            {item.found_location || item.last_seen_location || 'Unknown location'}
+                            {item.found_location ||
+                             item.last_seen_location ||
+                             item.location ||
+                             'Unknown location'}
                         </span>
                     </div>
 

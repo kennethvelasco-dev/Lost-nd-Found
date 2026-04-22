@@ -293,7 +293,7 @@ The schema is defined in `backend/migrations/schema.sql` and includes:
 | `lost_items` | Lost item reports with status, descriptions, and reporter |
 | `found_items` | Found item reports with status, descriptions, and reporter |
 | `claims` | Claims linking users to items, with scoring, decisions, and pickup info |
-| `released_items` | Historical record of resolved/returned items with claimant metadata |
+| `released_items` | Snapshot record of resolved items with claimant info, pictures, and locations |
 | `activity_logs` | Logging admin and system actions |
 | `audit_logs` | Audit trail for sensitive operations |
 | `token_blocklist` | JWT blocklist table |
