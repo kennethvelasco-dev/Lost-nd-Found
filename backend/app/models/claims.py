@@ -347,7 +347,9 @@ def update_claim(claim_id, data):
         if not updates:
             return {"error": "No valid fields to update"}, 400
 
-        query = text(f"UPDATE claims SET {', '.join(updates)} WHERE id = :id")  # nosec B608
+        query = text(
+            f"UPDATE claims SET {', '.join(updates)} WHERE id = :id"
+        )  # nosec B608
         db.session.execute(query, params)
         db.session.commit()
 

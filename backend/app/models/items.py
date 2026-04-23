@@ -421,7 +421,9 @@ def get_released_items_db(limit=20, offset=0, query=None):
         )
         params["q"] = f"%{query}%"
 
-    count_query = text(f"SELECT COUNT(*) FROM released_items {where_clause}")  # nosec B608
+    count_query = text(
+        f"SELECT COUNT(*) FROM released_items {where_clause}"
+    )  # nosec B608
     total = db.session.execute(count_query, params).scalar() or 0
 
     select_query = text(
