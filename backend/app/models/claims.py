@@ -65,13 +65,11 @@ def create_claim(data):
         if existing:
             # UPDATE instead of INSERT
             claim_id = existing.id
-            update_query = text(
-                """
+            update_query = text("""
                 UPDATE claims 
                 SET answers = :answers, verification_score = :score, created_at = :now
                 WHERE id = :id
-            """
-            )
+            """)
             db.session.execute(
                 update_query,
                 {
@@ -86,8 +84,7 @@ def create_claim(data):
             status_code = 200
         else:
             # INSERT new claim
-            insert_query = text(
-                """
+            insert_query = text("""
                 INSERT INTO claims (
                     user_id, found_item_id, lost_item_id, claimant_name, claimant_email, 
                     lost_location, lost_datetime,
@@ -95,8 +92,7 @@ def create_claim(data):
                 ) VALUES (:user_id, :found_item_id, :lost_item_id, :claimant_name, :claimant_email, 
                         :lost_location, :lost_datetime, :answers, :score, :decision, :now)
                 RETURNING id
-            """
-            )
+            """)
             params = {
                 "user_id": data.get("user_id"),
                 "found_item_id": found_item_id,
@@ -165,13 +161,11 @@ def link_claim_to_found_item(claim_id, found_item_id):
         score_result = compute_claim_score(answers, found_item)
         score = score_result.get("total", 0)
 
-        update_query = text(
-            """
+        update_query = text("""
             UPDATE claims 
             SET found_item_id = :f_id, verification_score = :score 
             WHERE id = :id
-        """
-        )
+        """)
         db.session.execute(
             update_query, {"f_id": found_item_id, "score": score, "id": claim_id}
         )
@@ -199,8 +193,7 @@ def get_filtered_claims_db(status_filter=["pending"]):
     placeholders = ", ".join([f":s{i}" for i in range(len(status_filter))])
     params = {f"s{i}": status_filter[i] for i in range(len(status_filter))}
 
-    query = text(
-        f"""
+    query = text(f"""
         SELECT
             c.id AS claim_id,
             c.id, 
@@ -234,8 +227,7 @@ def get_filtered_claims_db(status_filter=["pending"]):
         LEFT JOIN lost_items l ON c.lost_item_id = l.id
         WHERE c.decision IN ({placeholders})
         ORDER BY c.verification_score DESC
-    """
-    )
+    """)
 
     try:
         result = db.session.execute(query, params).fetchall()
@@ -264,8 +256,7 @@ def get_filtered_claims_db(status_filter=["pending"]):
 
 
 def get_all_completed_claims_db():
-    query = text(
-        """
+    query = text("""
         SELECT
             c.id AS claim_id,
             c.user_id,
@@ -293,8 +284,7 @@ def get_all_completed_claims_db():
         LEFT JOIN lost_items l ON c.lost_item_id = l.id
         WHERE c.decision = 'completed'
         ORDER BY c.completed_at DESC
-    """
-    )
+    """)
     result = db.session.execute(query).fetchall()
 
     final_result = []
@@ -396,13 +386,11 @@ def verify_claim(claim_id, decision, admin_username, handover_notes=None):
             if current_decision != "approved":
                 return {"error": "Only approved claims can be completed"}, 400
 
-            update_query = text(
-                """
+            update_query = text("""
                 UPDATE claims 
                 SET decision = :decision, handover_notes = :notes, completed_at = :now 
                 WHERE id = :id
-            """
-            )
+            """)
             db.session.execute(
                 update_query,
                 {
@@ -453,11 +441,9 @@ def schedule_pickup(claim_id, pickup_datetime, pickup_location):
             return {"error": "Scheduling only allowed for approved claims"}, 400
 
         db.session.execute(
-            text(
-                """
+            text("""
             UPDATE claims SET pickup_datetime = :dt, pickup_location = :loc WHERE id = :id
-        """
-            ),
+        """),
             {"dt": pickup_datetime, "loc": pickup_location, "id": claim_id},
         )
         db.session.commit()
@@ -469,8 +455,7 @@ def schedule_pickup(claim_id, pickup_datetime, pickup_location):
 
 
 def get_claim_detail_db(claim_id):
-    query = text(
-        """
+    query = text("""
         SELECT
             c.id AS claim_id,
             c.*, 
@@ -491,8 +476,7 @@ def get_claim_detail_db(claim_id):
         LEFT JOIN found_items f ON c.found_item_id = f.id
         LEFT JOIN lost_items l ON c.lost_item_id = l.id
         WHERE c.id = :id
-    """
-    )
+    """)
     row = db.session.execute(query, {"id": claim_id}).fetchone()
     if not row:
         return None
@@ -510,8 +494,7 @@ def get_claim_detail_db(claim_id):
 
 
 def get_claims_db(user_id):
-    query = text(
-        """
+    query = text("""
         SELECT c.*, c.id AS claim_id, c.decision AS status,
                u.username AS user_name,
                COALESCE(f.item_type, l.item_type) AS item_type,
@@ -523,8 +506,7 @@ def get_claims_db(user_id):
         LEFT JOIN lost_items l ON c.lost_item_id = l.id
         WHERE c.user_id = :id AND (c.is_dismissed = FALSE OR c.is_dismissed IS NULL)
         ORDER BY c.created_at DESC
-    """
-    )
+    """)
     result = db.session.execute(query, {"id": user_id}).fetchall()
     final = []
     for row in result:

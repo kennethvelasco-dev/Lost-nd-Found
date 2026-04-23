@@ -1,8 +1,10 @@
+import os
 import sqlite3
 import urllib.request
 import urllib.parse
 import json
 import time
+import pytest
 
 BASE_URL = "http://127.0.0.1:5000/api"
 DB_PATH = "lostnfound.db"
@@ -32,6 +34,10 @@ def get_reset_token(email):
     return row[0] if row else None
 
 
+@pytest.mark.skipif(
+    os.getenv("CI") == "true",
+    reason="Password reset integration test requires running server; skipped in CI",
+)
 def test_password_reset():
     print("Testing Password Reset Flow...")
 

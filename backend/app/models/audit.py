@@ -38,12 +38,10 @@ def log_action(
         validate_int(entity_id, "entity_id")
 
         # Insert into audit_logs
-        query = text(
-            """
+        query = text("""
             INSERT INTO audit_logs (action, entity_type, entity_id, performed_by, timestamp, notes)
             VALUES (:action, :type, :id, :by, :now, :notes)
-        """
-        )
+        """)
 
         db.session.execute(
             query,

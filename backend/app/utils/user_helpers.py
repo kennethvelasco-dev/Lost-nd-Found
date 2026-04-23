@@ -31,13 +31,11 @@ def create_user_db(
     """Inserts a new user record into the database."""
     from ..models.validators import ValidationError
 
-    query = text(
-        """
+    query = text("""
         INSERT INTO users (username, email, password_hash, role, name, verification_token, created_at)
         VALUES (:username, :email, :password_hash, :role, :name, :verification_token, :created_at)
         RETURNING id
-    """
-    )
+    """)
     params = {
         "username": username,
         "email": email,
@@ -99,12 +97,10 @@ def create_default_admin():
 
     if not row:
         pwd_hash = hash_password("AdminPass123!")
-        insert_query = text(
-            """
+        insert_query = text("""
             INSERT INTO users (username, email, password_hash, role, name, admin_id, created_at, is_email_verified) 
             VALUES (:username, :email, :password_hash, :role, :name, :admin_id, :created_at, :is_email_verified)
-        """
-        )
+        """)
         db.session.execute(
             insert_query,
             {

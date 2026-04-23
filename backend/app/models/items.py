@@ -16,8 +16,7 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
     try:
         require_fields(data, ["category", "last_seen_location", "last_seen_datetime"])
 
-        query = text(
-            """
+        query = text("""
             INSERT INTO lost_items (
                 report_id, category, item_type, last_seen_location,
                 last_seen_datetime, public_description, private_details,
@@ -26,8 +25,7 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
             )
             VALUES (:report_id, :cat, :type, :loc, :dt, :pub, :priv, :m_pic, :p1, :p2, :p3, :rep_id, :status, :now)
             RETURNING id
-        """
-        )
+        """)
 
         params = {
             "report_id": str(uuid.uuid4()),
@@ -70,8 +68,7 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
     try:
         require_fields(data, ["category", "found_location", "found_datetime"])
 
-        query = text(
-            """
+        query = text("""
             INSERT INTO found_items (
                 report_id, category, item_type, color, brand,
                 found_location, found_datetime,
@@ -81,8 +78,7 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
             )
             VALUES (:report_id, :cat, :type, :color, :brand, :loc, :dt, :pub, :priv, :m_pic, :p1, :p2, :p3, :rep_id, :status, :now)
             RETURNING id
-        """
-        )
+        """)
 
         params = {
             "report_id": str(uuid.uuid4()),
@@ -144,8 +140,7 @@ def get_published_found_items(
     count_query = text(f"SELECT COUNT(*) FROM found_items {where_clause}")  # nosec B608
     total_count = db.session.execute(count_query, params).scalar()
 
-    select_query = text(
-        f"""
+    select_query = text(f"""
         SELECT id, report_id, category, item_type, color, brand,
                found_location, found_datetime, public_description,
                main_picture, reporter_id
@@ -153,8 +148,7 @@ def get_published_found_items(
         {where_clause}
         ORDER BY created_at DESC
         LIMIT :limit OFFSET :offset
-    """
-    )  # nosec B608
+    """)  # nosec B608
     result = db.session.execute(select_query, params).fetchall()
     items = [dict(row._mapping) for row in result]
     return items, total_count
@@ -247,16 +241,13 @@ def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]
             "status = 'reported_lost'" if status == "lost" else "status = 'returned'"
         )
 
-        count_query = text(
-            f"""
+        count_query = text(f"""
             SELECT (SELECT COUNT(*) FROM found_items WHERE {cond_found} {c_common}) + 
                    (SELECT COUNT(*) FROM lost_items WHERE {cond_lost} {c_common})
-        """
-        )  # nosec B608
+        """)  # nosec B608
         total_count = db.session.execute(count_query, params).scalar() or 0
 
-        select_query = text(
-            f"""
+        select_query = text(f"""
             SELECT id, report_id, category, item_type, color, brand,
                    found_location AS location, found_datetime AS incident_date,
                    public_description, main_picture, status, created_at, resolved_at,
@@ -270,8 +261,7 @@ def search_items_db(filters: Dict[str, Any]) -> tuple[list[Dict[str, Any]], int]
             FROM lost_items WHERE {cond_lost} {c_common}
             ORDER BY created_at DESC
             LIMIT :limit OFFSET :offset
-        """
-        )  # nosec B608
+        """)  # nosec B608
         result = db.session.execute(select_query, params).fetchall()
     else:
         table = "found_items" if status == "found" else "lost_items"
@@ -329,19 +319,16 @@ def resolve_item_db(
         # 2. Update original record status
         table_name = "found_items" if source_table == "found" else "lost_items"
         db.session.execute(
-            text(
-                f"""
+            text(f"""
             UPDATE {table_name} SET status = 'returned', recipient_name = :name, recipient_id = :rid, 
             resolved_at = :now, turnover_proof = :proof WHERE id = :id
-        """
-            ),  # nosec B608
+        """),  # nosec B608
             params,
         )
 
         # 3. Create record in released_items table (with visual snapshot)
         db.session.execute(
-            text(
-                """
+            text("""
             INSERT INTO released_items (
                 original_report_id, item_source, category, item_type,
                 claimant_name, recipient_id, released_by_admin,
@@ -357,8 +344,7 @@ def resolve_item_db(
                 :color, :brand, :m_pic, :pub_desc, :last_loc, :found_loc,
                 :now
             )
-        """
-            ),
+        """),
             {
                 "o_rid": original_report_id,
                 "src": source_table,
@@ -381,11 +367,9 @@ def resolve_item_db(
 
         if claim_id:
             db.session.execute(
-                text(
-                    """
+                text("""
                 UPDATE claims SET decision = 'completed', handover_notes = :notes, completed_at = :now WHERE id = :cid
-            """
-                ),
+            """),
                 {
                     "notes": f"ID: {recipient_id} | {handover_notes}",
                     "now": now,
@@ -426,28 +410,24 @@ def get_released_items_db(limit=20, offset=0, query=None):
     )  # nosec B608
     total = db.session.execute(count_query, params).scalar() or 0
 
-    select_query = text(
-        f"""
+    select_query = text(f"""
         SELECT * FROM released_items 
         {where_clause} 
         ORDER BY resolved_at DESC 
         LIMIT :limit OFFSET :offset
-    """
-    )  # nosec B608
+    """)  # nosec B608
     result = db.session.execute(select_query, params).fetchall()
     return [dict(row._mapping) for row in result], total
 
 
 def get_released_item_by_original_id_db(original_report_id: str):
     """Fetch a single released item snapshot by original_report_id (lost/found report_id)."""
-    query = text(
-        """
+    query = text("""
         SELECT * FROM released_items
         WHERE original_report_id = :rid
         ORDER BY resolved_at DESC
         LIMIT 1
-    """
-    )
+    """)
     row = db.session.execute(query, {"rid": original_report_id}).fetchone()
     return dict(row._mapping) if row else None
 
