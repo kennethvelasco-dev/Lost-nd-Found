@@ -16,11 +16,13 @@ def verify_email_db(token):
     if not user:
         return False
 
-    update_query = text("""
+    update_query = text(
+        """
         UPDATE users 
         SET is_email_verified = TRUE, verification_token = NULL 
         WHERE id = :id
-    """)
+    """
+    )
     db.session.execute(update_query, {"id": user.id})
     db.session.commit()
     return True
@@ -28,11 +30,13 @@ def verify_email_db(token):
 
 def block_token_db(jti):
     # 'ON CONFLICT DO NOTHING' for Postgres, equivalent to 'INSERT OR IGNORE'
-    query = text("""
+    query = text(
+        """
         INSERT INTO token_blocklist (jti, created_at) 
         VALUES (:jti, :created_at)
         ON CONFLICT (jti) DO NOTHING
-    """)
+    """
+    )
     db.session.execute(query, {"jti": jti, "created_at": datetime.now(timezone.utc)})
     db.session.commit()
 
@@ -44,10 +48,12 @@ def is_token_blocked_db(jti):
 
 
 def update_login_attempts_db(user_id, attempts, lockout_until=None):
-    query = text("""
+    query = text(
+        """
         UPDATE users SET failed_login_attempts = :attempts, lockout_until = :lockout_until 
         WHERE id = :user_id
-    """)
+    """
+    )
     db.session.execute(
         query,
         {"attempts": attempts, "lockout_until": lockout_until, "user_id": user_id},
@@ -56,10 +62,12 @@ def update_login_attempts_db(user_id, attempts, lockout_until=None):
 
 
 def reset_login_attempts_db(user_id):
-    query = text("""
+    query = text(
+        """
         UPDATE users SET failed_login_attempts = 0, lockout_until = NULL 
         WHERE id = :user_id
-    """)
+    """
+    )
     db.session.execute(query, {"user_id": user_id})
     db.session.commit()
 
@@ -71,10 +79,12 @@ def get_user_by_email_db(email):
 
 
 def save_pwd_reset_token_db(user_id, token, expires_at):
-    query = text("""
+    query = text(
+        """
         UPDATE users SET reset_token = :token, reset_token_expires = :expires_at 
         WHERE id = :user_id
-    """)
+    """
+    )
     db.session.execute(
         query, {"token": token, "expires_at": expires_at, "user_id": user_id}
     )
@@ -82,10 +92,12 @@ def save_pwd_reset_token_db(user_id, token, expires_at):
 
 
 def get_user_by_reset_token_db(token):
-    query = text("""
+    query = text(
+        """
         SELECT id FROM users 
         WHERE reset_token = :token AND reset_token_expires > :now
-    """)
+    """
+    )
     result = db.session.execute(
         query, {"token": token, "now": datetime.now(timezone.utc)}
     ).fetchone()
@@ -93,10 +105,12 @@ def get_user_by_reset_token_db(token):
 
 
 def update_user_password_db(user_id, hashed_password):
-    query = text("""
+    query = text(
+        """
         UPDATE users 
         SET password_hash = :hash, reset_token = NULL, reset_token_expires = NULL 
         WHERE id = :user_id
-    """)
+    """
+    )
     db.session.execute(query, {"hash": hashed_password, "user_id": user_id})
     db.session.commit()
