@@ -6,31 +6,38 @@ from ..extensions import db
 
 logger = logging.getLogger(__name__)
 
+
 # Hashing Helpers
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
     salt = bcrypt.gensalt(rounds=12)
-    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
+
 
 def verify_password(password: str, password_hash: str) -> bool:
     """Check a password against its hash."""
     if not password or not password_hash:
         return False
     try:
-        return bcrypt.checkpw(password.encode('utf-8'), password_hash.encode('utf-8'))
+        return bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8"))
     except Exception:
         return False
 
+
 # Database Helpers (Models)
-def create_user_db(username, email, password_hash, role="user", name=None, verification_token=None):
+def create_user_db(
+    username, email, password_hash, role="user", name=None, verification_token=None
+):
     """Inserts a new user record into the database."""
     from ..models.validators import ValidationError
 
-    query = text("""
+    query = text(
+        """
         INSERT INTO users (username, email, password_hash, role, name, verification_token, created_at)
         VALUES (:username, :email, :password_hash, :role, :name, :verification_token, :created_at)
         RETURNING id
-    """)
+    """
+    )
     params = {
         "username": username,
         "email": email,
@@ -38,7 +45,7 @@ def create_user_db(username, email, password_hash, role="user", name=None, verif
         "role": role,
         "name": name,
         "verification_token": verification_token,
-        "created_at": datetime.now(timezone.utc)
+        "created_at": datetime.now(timezone.utc),
     }
     try:
         result = db.session.execute(query, params)
@@ -58,6 +65,7 @@ def create_user_db(username, email, password_hash, role="user", name=None, verif
 
         return None
 
+
 def get_user_by_username(username: str):
     """Fetch a user by username, with a simple retry on transient DB errors."""
     query = text("SELECT * FROM users WHERE username = :username")
@@ -68,10 +76,13 @@ def get_user_by_username(username: str):
             return dict(row._mapping) if row else None
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Error in get_user_by_username for {username} (attempt {attempt + 1}): {e}")
+            logger.error(
+                f"Error in get_user_by_username for {username} (attempt {attempt + 1}): {e}"
+            )
             # First failure: loop will retry; second: fall through and return None
             continue
     return None
+
 
 def get_user_by_id(user_id: int):
     """Fetch a user by ID."""
@@ -80,6 +91,7 @@ def get_user_by_id(user_id: int):
     row = result.fetchone()
     return dict(row._mapping) if row else None
 
+
 def create_default_admin():
     """Initializes a default admin if it doesn't exist."""
     check_query = text("SELECT id FROM users WHERE username = :username")
@@ -87,18 +99,23 @@ def create_default_admin():
 
     if not row:
         pwd_hash = hash_password("AdminPass123!")
-        insert_query = text("""
+        insert_query = text(
+            """
             INSERT INTO users (username, email, password_hash, role, name, admin_id, created_at, is_email_verified) 
             VALUES (:username, :email, :password_hash, :role, :name, :admin_id, :created_at, :is_email_verified)
-        """)
-        db.session.execute(insert_query, {
-            "username": "admin",
-            "email": "admin8857@gmail.com",
-            "password_hash": pwd_hash,
-            "role": "admin",
-            "name": "System Admin",
-            "admin_id": "ADM-001",
-            "created_at": datetime.now(timezone.utc),
-            "is_email_verified": True
-        })
+        """
+        )
+        db.session.execute(
+            insert_query,
+            {
+                "username": "admin",
+                "email": "admin8857@gmail.com",
+                "password_hash": pwd_hash,
+                "role": "admin",
+                "name": "System Admin",
+                "admin_id": "ADM-001",
+                "created_at": datetime.now(timezone.utc),
+                "is_email_verified": True,
+            },
+        )
         db.session.commit()

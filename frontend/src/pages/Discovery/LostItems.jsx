@@ -9,7 +9,8 @@ const LostItems = () => {
     const { loading, error, data, request } = useHttp();
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('');
-    const [items, setItems] = useState([]);
+
+    const items = data?.items || (Array.isArray(data) ? data : []);
 
     const fetchItems = useCallback(async (q = '', f = '') => {
         const params = { status: 'lost' };
@@ -17,29 +18,16 @@ const LostItems = () => {
         if (f) params.sort = f;
         
         try {
-            const payload = await request({ url: '/items/lost', params });
-            if (payload) {
-                const normalized = payload.items || (Array.isArray(payload) ? payload : []);
-                setItems(normalized);
-            }
+            await request({ url: '/items/lost', params });
         } catch (err) {
             console.error(err);
-            setItems([]);
         }
     }, [request]);
 
-    // When search/filter change, clear visible list immediately and refetch
+    // When search/filter change, refetch
     useEffect(() => {
-        setItems([]);
         fetchItems(search, filter);
     }, [search, filter, fetchItems]);
-
-    // Sync items if data updates independently
-    useEffect(() => {
-        if (!data) return;
-        const normalized = data.items || (Array.isArray(data) ? data : []);
-        setItems(normalized);
-    }, [data]);
 
     return (
         <div className="page-container">

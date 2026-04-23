@@ -16,7 +16,7 @@ const LoginPage = () => {
     
     const { login } = useAuth();
     const navigate = useNavigate();
-    const [expiredMsg, setExpiredMsg] = useState(
+    const [expiredMsg] = useState(
         window.location.search.includes('session_expired') ? 'Your session has expired. Please log in again.' : ''
     );
 
@@ -36,7 +36,7 @@ const LoginPage = () => {
             } else {
                 setError(result.message || 'Invalid credentials');
             }
-        } catch (err) {
+        } catch {
             setError('An unexpected error occurred. Please try again.');
         } finally {
             setLoading(false);

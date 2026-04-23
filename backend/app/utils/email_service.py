@@ -6,6 +6,7 @@ from flask import current_app
 
 logger = logging.getLogger(__name__)
 
+
 def send_email(to_email, subject, html_content):
     """
     In this deployment, always use the mock email sender.
@@ -15,22 +16,29 @@ def send_email(to_email, subject, html_content):
     _mock_send(to_email, subject, html_content)
     return True
 
+
 def _mock_send(to_email, subject, html_content):
     """Mock sending an email by printing to the console."""
-    print("\n" + "="*60)
+    print("\n" + "=" * 60)
     print(f"ZERO-COST EMAIL LOG (MOCK)")
     print(f"TO: {to_email}")
     print(f"SUBJECT: {subject}")
     print("-" * 30)
     try:
-        clean_text = html_content.replace("<p>", "\n").replace("</p>", "").replace("<h1>", "\n## ").replace("</h1>", "\n")
+        clean_text = (
+            html_content.replace("<p>", "\n")
+            .replace("</p>", "")
+            .replace("<h1>", "\n## ")
+            .replace("</h1>", "\n")
+        )
         print(clean_text)
     except:
         print(html_content)
-    print("="*60 + "\n")
+    print("=" * 60 + "\n")
+
 
 def send_verification_email(email, token):
-    """ Sends a verification link via email. """
+    """Sends a verification link via email."""
     # In production, BASE_URL should come from config
     base_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
     link = f"{base_url}/verify-email?token={token}"
@@ -50,8 +58,9 @@ def send_verification_email(email, token):
     """
     return send_email(email, subject, html_content)
 
+
 def send_password_reset_email(email, token):
-    """ Sends a password reset link via email. """
+    """Sends a password reset link via email."""
     base_url = current_app.config.get("FRONTEND_URL", "http://localhost:3000")
     link = f"{base_url}/reset-password?token={token}"
     subject = "Reset your Lost & Found Password"

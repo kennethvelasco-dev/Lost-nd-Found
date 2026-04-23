@@ -10,13 +10,14 @@ from ..services.item_service import (
     get_pending_reports_service,
     verify_report_service,
     get_user_activities_service,
-    dismiss_activity_service
+    dismiss_activity_service,
 )
 from ..utils.response import error_response, success_response
 from ..models import ValidationError
 from ..utils.production_safety import require_json_fields
 
 item_bp = Blueprint("items", __name__)
+
 
 @item_bp.route("/<string:report_id>", methods=["GET"])
 @jwt_required()
@@ -25,10 +26,12 @@ def get_item_detail_route(report_id):
     result, status = get_item_detail_service(report_id)
     return jsonify(success_response(result)), status
 
+
 @item_bp.route("/lost", methods=["GET", "POST"])
 @jwt_required()
 def lost_items_route():
     if request.method == "POST":
+
         @require_json_fields(["category", "last_seen_location", "last_seen_datetime"])
         def process_post():
             data = request.json or {}
@@ -37,14 +40,19 @@ def lost_items_route():
                 result, status = submit_lost_item(data, identity)
                 return jsonify(success_response(result)), status
             except ValidationError as ve:
-                return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
+                return (
+                    jsonify(error_response("VALIDATION_ERROR", ve.message)),
+                    ve.status_code,
+                )
+
         return process_post()
-    
+
     # GET logic
     filters = request.args.to_dict()
-    filters["status"] = "lost" 
+    filters["status"] = "lost"
     result, status = search_items_service(filters)
     return jsonify(success_response(result)), status
+
 
 @item_bp.route("/found", methods=["GET", "POST"])
 @jwt_required()
@@ -56,26 +64,33 @@ def found_items():
             result, status = submit_found_item(data, identity)
             return jsonify(success_response(result)), status
         except ValidationError as ve:
-            return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
-        
+            return (
+                jsonify(error_response("VALIDATION_ERROR", ve.message)),
+                ve.status_code,
+            )
+
     limit = request.args.get("limit", 20, type=int)
     offset = request.args.get("offset", 0, type=int)
     result, status = get_found_items(limit, offset)
     return jsonify(success_response(result)), status
+
 
 @item_bp.route("/search", methods=["GET"])
 @jwt_required()
 def search_items_route():
     filters = request.args.to_dict()
     # Ensure limit/offset are integers if provided
-    if "limit" in filters: filters["limit"] = int(filters["limit"])
-    if "offset" in filters: filters["offset"] = int(filters["offset"])
-    
+    if "limit" in filters:
+        filters["limit"] = int(filters["limit"])
+    if "offset" in filters:
+        filters["offset"] = int(filters["offset"])
+
     try:
         result, status = search_items_service(filters)
         return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500
+
 
 @item_bp.route("/pending", methods=["GET"])
 @jwt_required()
@@ -84,6 +99,7 @@ def get_pending_reports():
     """Get reports awaiting approval. Admin only."""
     result, status = get_pending_reports_service()
     return jsonify(success_response(result)), status
+
 
 @item_bp.route("/reports/<int:id>/verify", methods=["POST"])
 @jwt_required()
@@ -94,16 +110,25 @@ def verify_report_route(id):
     data = request.json or {}
     admin_username = get_jwt_identity()
     result, status = verify_report_service(
-        id, 
-        data["type"], 
-        data["decision"], 
-        data.get("reason", ""), 
-        admin_username
+        id, data["type"], data["decision"], data.get("reason", ""), admin_username
     )
     if status >= 400:
-        return jsonify(error_response("VERIFICATION_ERROR", result.get("error", "Action failed"))), status
-        
-    return jsonify(success_response(result, message=f"Report {data['decision']} successfully")), status
+        return (
+            jsonify(
+                error_response(
+                    "VERIFICATION_ERROR", result.get("error", "Action failed")
+                )
+            ),
+            status,
+        )
+
+    return (
+        jsonify(
+            success_response(result, message=f"Report {data['decision']} successfully")
+        ),
+        status,
+    )
+
 
 @item_bp.route("/my-activities", methods=["GET"])
 @jwt_required()
@@ -113,6 +138,7 @@ def get_my_activities():
     result, status = get_user_activities_service(user_id)
     return jsonify(success_response(result)), status
 
+
 @item_bp.route("/reports/<string:type>/<int:id>/dismiss", methods=["POST"])
 @jwt_required()
 def dismiss_report_route(type, id):
@@ -120,6 +146,7 @@ def dismiss_report_route(type, id):
     user_id = get_jwt_identity()
     result, status = dismiss_activity_service(id, type, user_id)
     return jsonify(success_response(result)), status
+
 
 @item_bp.route("/claims/<int:id>/dismiss", methods=["POST"])
 @jwt_required()
@@ -129,6 +156,7 @@ def dismiss_claim_route(id):
     result, status = dismiss_activity_service(id, "claim", user_id)
     return jsonify(success_response(result)), status
 
+
 @item_bp.route("/returned", methods=["GET"])
 @item_bp.route("/released", methods=["GET"])
 @jwt_required()
@@ -137,6 +165,7 @@ def get_returned_items_route():
     filters = request.args.to_dict()
     try:
         from ..services.item_service import get_released_items_service
+
         result, status = get_released_items_service(filters)
         return jsonify(success_response(result)), status
     except Exception as e:
@@ -152,9 +181,17 @@ def get_released_item_detail_route(report_id):
     """
     try:
         from ..services.item_service import get_released_item_detail_service
+
         result, status = get_released_item_detail_service(report_id)
         if status >= 400:
-            return jsonify(error_response("NOT_FOUND", result.get("error", "Released item not found"))), status
+            return (
+                jsonify(
+                    error_response(
+                        "NOT_FOUND", result.get("error", "Released item not found")
+                    )
+                ),
+                status,
+            )
         return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500

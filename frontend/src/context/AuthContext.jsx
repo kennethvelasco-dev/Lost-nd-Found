@@ -1,5 +1,4 @@
 /* eslint-disable react-refresh/only-export-components */
-/* eslint-disable react-hooks/exhaustive-deps */
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import api from '../services/api';
 
@@ -20,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         setLoading(false);
     }, []);
 
-    const login = async (username, password, role) => {
+    const login = async (username, password) => {
         try {
             const response = await api.post('/auth/login', { username, password });
             const { access_token, user: serverUser } = response.data.data;

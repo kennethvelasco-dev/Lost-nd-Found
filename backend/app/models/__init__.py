@@ -7,7 +7,7 @@ from .items import (
     create_found_item,
     get_published_found_items,
     get_found_item_by_id,
-    get_item_universal_db
+    get_item_universal_db,
 )
 
 # Claims
@@ -18,7 +18,7 @@ from .claims import (
     get_claim_detail_db,
     update_claim,
     update_claim_status,
-    verify_claim
+    verify_claim,
 )
 
 # Audit
@@ -30,5 +30,5 @@ from .validators import (
     require_fields,
     validate_int,
     validate_found_item_id,
-    validate_claim_decision
+    validate_claim_decision,
 )

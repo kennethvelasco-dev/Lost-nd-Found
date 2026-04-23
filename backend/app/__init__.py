@@ -10,11 +10,13 @@ from .utils.response import error_response
 from .services.auth_service import is_token_revoked
 from werkzeug.exceptions import HTTPException
 
+
 def create_app(config_name=None):
     if config_name is None:
         config_name = os.environ.get("FLASK_ENV", "development")
 
     from .config.config import config_by_name
+
     config_class = config_by_name.get(config_name, config_by_name["default"])
 
     app = Flask(__name__)
@@ -33,14 +35,14 @@ def create_app(config_name=None):
         jti = jwt_payload.get("jti")
         if is_token_revoked(jti):
             return True
-            
+
         # 2. Check absolute timeout (24h)
         auth_time = jwt_payload.get("auth_time")
         if auth_time:
             max_age = app.config.get("SESSION_ABSOLUTE_TIMEOUT", 24) * 3600
             if time.time() - auth_time > max_age:
-                return True # Treat as revoked/expired
-                
+                return True  # Treat as revoked/expired
+
         return False
 
     @jwt.expired_token_loader
@@ -49,11 +51,21 @@ def create_app(config_name=None):
 
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
-        return jsonify(error_response("TOKEN_INVALID", "Signature verification failed")), 401
+        return (
+            jsonify(error_response("TOKEN_INVALID", "Signature verification failed")),
+            401,
+        )
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
-        return jsonify(error_response("TOKEN_MISSING", "Request does not contain an access token")), 401
+        return (
+            jsonify(
+                error_response(
+                    "TOKEN_MISSING", "Request does not contain an access token"
+                )
+            ),
+            401,
+        )
 
     # Register Blueprints
     from .routes.auth_routes import auth_bp
@@ -86,29 +98,35 @@ def create_app(config_name=None):
     def handle_exception(e):
         # Log the full error server-side
         import traceback
+
         app.logger.error(f"UNHANDLED EXCEPTION: {str(e)}\n{traceback.format_exc()}")
-        
+
         # Determine status code
         status_code = 500
         if isinstance(e, HTTPException):
             status_code = e.code
             message = e.description
         else:
-            message = "An unexpected server error occurred." if not app.debug else str(e)
+            message = (
+                "An unexpected server error occurred." if not app.debug else str(e)
+            )
 
         return jsonify(error_response("SERVER_ERROR", message)), status_code
 
     @app.after_request
     def add_security_headers(response):
-        response.headers['X-Frame-Options'] = 'DENY'
-        response.headers['X-Content-Type-Options'] = 'nosniff'
-        response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["Strict-Transport-Security"] = (
+            "max-age=31536000; includeSubDomains"
+        )
         return response
 
     with app.app_context():
         init_db()
         # Initialize default data if needed
         from .utils.user_helpers import create_default_admin
+
         create_default_admin()
 
     return app

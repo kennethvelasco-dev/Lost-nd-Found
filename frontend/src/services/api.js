@@ -48,7 +48,7 @@ api.interceptors.response.use(
 
                 // Retry the original request (now with refreshed cookie and Authorization header)
                 return api(originalRequest);
-            } catch (refreshError) {
+            } catch {
                 // Refresh token failed or expired, force logout
                 localStorage.removeItem('user');
                 localStorage.removeItem('access_token');

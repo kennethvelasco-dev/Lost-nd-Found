@@ -55,7 +55,7 @@ class GlobalErrorBoundary extends React.Component {
                             </Button>
                         </div>
 
-                        {process.env.NODE_ENV === 'development' && (
+                        {import.meta.env.MODE === 'development' && (
                             <details style={{ marginTop: '20px', textAlign: 'left', fontSize: '12px', opacity: 0.7 }}>
                                 <summary>Technical Details</summary>
                                 <pre style={{ whiteSpace: 'pre-wrap' }}>{this.state.error?.toString()}</pre>

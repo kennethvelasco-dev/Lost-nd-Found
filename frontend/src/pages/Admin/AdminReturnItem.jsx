@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Button from '../../components/UI/Button';
@@ -32,7 +32,7 @@ const AdminReturnItem = () => {
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState('');
 
-    const fetchItemDetails = async (idToFetch) => {
+    const fetchItemDetails = useCallback(async (idToFetch) => {
         const id = idToFetch || formData.item_id;
         if (!id) return;
         setFetching(true);
@@ -41,20 +41,20 @@ const AdminReturnItem = () => {
             const response = await api.get(`/items/${id}`);
             // Check nesting based on API response structure
             setItemDetails(response.data?.data?.item || response.data?.data || response.data);
-        } catch (err) {
+        } catch {
             setError('Item not found. Please check the ID.');
             setItemDetails(null);
         } finally {
             setFetching(false);
         }
-    };
+    }, [formData.item_id]);
 
     // Auto-fetch if itemId is provided via state
     useEffect(() => {
         if (itemId) {
             fetchItemDetails(itemId);
         }
-    }, [itemId]);
+    }, [itemId, fetchItemDetails]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

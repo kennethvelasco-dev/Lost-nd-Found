@@ -3,28 +3,33 @@ import json
 from email_validator import validate_email, EmailNotValidError
 from zxcvbn import zxcvbn
 
+
 class ValidationError(Exception):
     """Custom exception for validation errors."""
+
     def __init__(self, message, status_code=400):
         self.message = message
         self.status_code = status_code
         super().__init__(message)
 
+
 DISPOSABLE_DOMAINS = {
-    "mailinator.com", "10minutemail.com", "temp-mail.org", "guerrillamail.com",
-    "sharklasers.com", "dispostable.com", "yopmail.com", "duck.com"
+    "mailinator.com",
+    "10minutemail.com",
+    "temp-mail.org",
+    "guerrillamail.com",
+    "sharklasers.com",
+    "dispostable.com",
+    "yopmail.com",
+    "duck.com",
 }
 
+
 def require_fields(data, required_fields):
-    missing = [
-        f for f in required_fields
-        if f not in data or data[f] in (None, "", [])
-    ]
+    missing = [f for f in required_fields if f not in data or data[f] in (None, "", [])]
     if missing:
-        raise ValidationError(
-            f"Missing required fields: {', '.join(missing)}",
-            400
-        )
+        raise ValidationError(f"Missing required fields: {', '.join(missing)}", 400)
+
 
 def validate_string(value, field_name, min_len=0, max_len=1000):
     if not isinstance(value, str):
@@ -35,6 +40,7 @@ def validate_string(value, field_name, min_len=0, max_len=1000):
         raise ValidationError(f"{field_name} is too long (max {max_len})", 400)
     return value
 
+
 def validate_int(value, field_name, min_val=None, max_val=None):
     try:
         val = int(value)
@@ -44,16 +50,15 @@ def validate_int(value, field_name, min_val=None, max_val=None):
             raise ValidationError(f"{field_name} must be at most {max_val}", 400)
         return val
     except (TypeError, ValueError):
-        raise ValidationError(
-            f"{field_name} must be an integer",
-            400
-        )
+        raise ValidationError(f"{field_name} must be an integer", 400)
+
 
 def validate_email_complex(email: str):
     """Multi-layer Email Validation (Format + MX + Disposable check)."""
-    if not email: return None
-    
-    domain = email.split('@')[-1].lower()
+    if not email:
+        return None
+
+    domain = email.split("@")[-1].lower()
     if domain in DISPOSABLE_DOMAINS:
         raise ValidationError("Disposable email addresses are not allowed.")
 
@@ -63,6 +68,7 @@ def validate_email_complex(email: str):
         return valid.normalized
     except EmailNotValidError as e:
         raise ValidationError(f"Invalid email: {str(e)}")
+
 
 def validate_password_strength(password: str, username: str = None):
     """Enforce 8+ chars, basic complexity, and reasonable zxcvbn score."""
@@ -81,13 +87,18 @@ def validate_password_strength(password: str, username: str = None):
     results = zxcvbn(password, user_inputs=[username] if username else [])
     # Further relax requirement: only reject the very weakest scores (< 1)
     if results["score"] < 1:
-        feedback = results["feedback"]["warning"] or "Please choose a slightly stronger password."
+        feedback = (
+            results["feedback"]["warning"]
+            or "Please choose a slightly stronger password."
+        )
         raise ValidationError(f"Password strength too low: {feedback}")
 
     return True
 
+
 def validate_found_item_id(item_id):
     return validate_int(item_id, "found_item_id", min_val=1)
+
 
 def validate_claim_decision(decision):
     if decision not in {"approved", "rejected", "completed"}:

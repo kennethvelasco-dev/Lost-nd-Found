@@ -2,20 +2,21 @@ from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..utils.decorators import admin_required
 from ..services.admin_service import (
-    get_pending_claims_service, 
+    get_pending_claims_service,
     process_claim_verification,
-    get_admin_stats_service
+    get_admin_stats_service,
 )
 from ..services.item_service import submit_admin_found_item, resolve_item_service
 from ..utils.response import success_response, error_response
 from ..models import ValidationError
 from ..services.reporting_service import (
     get_transaction_summary,
-    get_all_completed_transactions_report
+    get_all_completed_transactions_report,
 )
 from ..extensions import limiter
 
 admin_bp = Blueprint("admin", __name__)
+
 
 @admin_bp.route("/claims", methods=["GET"])
 @jwt_required()
@@ -28,6 +29,7 @@ def view_claims():
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
 
+
 @admin_bp.route("/claims/<int:claim_id>/verify", methods=["POST"])
 @jwt_required()
 @admin_required
@@ -36,12 +38,11 @@ def verify_claim_route(claim_id):
     data = request.json or {}
     try:
         admin_user_id = get_jwt_identity()
-        result, status = process_claim_verification(
-            claim_id, data, admin_user_id
-        )
+        result, status = process_claim_verification(claim_id, data, admin_user_id)
         return jsonify(success_response(result)), status
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
+
 
 @admin_bp.route("/items/found", methods=["POST"])
 @jwt_required()
@@ -56,6 +57,7 @@ def admin_report_found_item():
     except ValidationError as ve:
         return jsonify(error_response("VALIDATION_ERROR", ve.message)), ve.status_code
 
+
 # REPORTING ENDPOINTS
 @admin_bp.route("/reports/transactions", methods=["GET"])
 @jwt_required()
@@ -66,6 +68,7 @@ def get_transactions_list():
     transactions, status = get_all_completed_transactions_report()
     return jsonify(success_response(transactions)), status
 
+
 @admin_bp.route("/reports/transactions/<int:claim_id>", methods=["GET"])
 @jwt_required()
 @admin_required
@@ -74,6 +77,7 @@ def get_transaction_report(claim_id):
     """Get detailed report for one transaction."""
     report, status = get_transaction_summary(claim_id)
     return jsonify(success_response(report) if status == 200 else report), status
+
 
 @admin_bp.route("/resolve-item", methods=["POST"])
 @jwt_required()
@@ -85,8 +89,12 @@ def resolve_item_route():
     admin_username = get_jwt_identity()
     result, status = resolve_item_service(data, admin_username)
     if status >= 400:
-        return jsonify(error_response("RESOLUTION_ERROR", result.get("error", "Error"))), status
+        return (
+            jsonify(error_response("RESOLUTION_ERROR", result.get("error", "Error"))),
+            status,
+        )
     return jsonify(success_response(result)), status
+
 
 @admin_bp.route("/stats", methods=["GET"])
 @jwt_required()

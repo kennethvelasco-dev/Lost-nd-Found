@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useHttp } from '../../hooks/useHttp';
 import StatusState from '../../components/UI/StatusState';
-import api from '../../services/api';
 import Card from '../../components/UI/Card';
 import Button from '../../components/UI/Button';
 import { ClaimListSkeleton } from '../../components/common/Skeleton';
