@@ -113,7 +113,7 @@ def create_claim(data):
             result = db.session.execute(insert_query, params)
             row = result.fetchone()
             db.session.commit()
-            claim_id = row[0] if row else None
+            claim_id = row[0] if row else result.lastrowid
             message = "Claim submitted successfully"
             status_code = 201
 

@@ -47,9 +47,9 @@ def create_lost_item(data: Dict[str, Any]) -> Dict[str, Any]:
         }
 
         result = db.session.execute(query, params)
-        db.session.commit()
         row = result.fetchone()
-        item_id = row[0] if row else None
+        db.session.commit()
+        item_id = row[0] if row else result.lastrowid
 
         log_action(
             "create", "lost_item", item_id, str(data.get("reporter_id", "system"))
@@ -99,14 +99,14 @@ def create_found_item(data: Dict[str, Any]) -> Dict[str, Any]:
             "p2": data.get("additional_picture_2"),
             "p3": data.get("additional_picture_3"),
             "rep_id": data.get("reporter_id"),
-            "status": "pending_approval",
+            "status": data.get("status", "found"),
             "now": datetime.now(timezone.utc),
         }
 
         result = db.session.execute(query, params)
-        db.session.commit()
         row = result.fetchone()
-        item_id = row[0] if row else None
+        db.session.commit()
+        item_id = row[0] if row else result.lastrowid
 
         log_action(
             "create", "found_item", item_id, str(data.get("reporter_id", "system"))

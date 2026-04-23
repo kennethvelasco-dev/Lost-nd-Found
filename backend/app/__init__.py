@@ -122,11 +122,10 @@ def create_app(config_name=None):
         )
         return response
 
-    with app.app_context():
-        init_db()
-        # Initialize default data if needed
-        from .utils.user_helpers import create_default_admin
-
-        create_default_admin()
+    if not app.testing:
+        with app.app_context():
+            init_db()
+            from .utils.user_helpers import create_default_admin
+            create_default_admin()
 
     return app

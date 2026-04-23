@@ -28,6 +28,14 @@ def init_db():
     with open(schema_path, "r") as f:
         schema_sql = f.read()
 
+    # SQLite compatibility: replace SERIAL with INTEGER PRIMARY KEY AUTOINCREMENT
+    # Note: SQLite's INTEGER PRIMARY KEY is enough for auto-increment,
+    # but SERIAL PRIMARY KEY in SQLite doesn't auto-increment.
+    if "sqlite" in current_app.config.get("SQLALCHEMY_DATABASE_URI", "").lower():
+        schema_sql = schema_sql.replace(
+            "SERIAL PRIMARY KEY", "INTEGER PRIMARY KEY AUTOINCREMENT"
+        )
+
     try:
         # Split by semicolon for Postgres compatibility if not using executescript
         # SQLite's executescript is convenient, but for Postgres we need individual statements

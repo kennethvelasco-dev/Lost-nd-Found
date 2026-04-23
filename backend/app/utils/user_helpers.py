@@ -26,16 +26,22 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 # Database Helpers (Models)
 def create_user_db(
-    username, email, password_hash, role="user", name=None, verification_token=None
+    username,
+    email,
+    password_hash,
+    role="user",
+    name=None,
+    admin_id=None,
+    verification_token=None,
 ):
     """Inserts a new user record into the database."""
     from ..models.validators import ValidationError
 
     query = text(
         """
-        INSERT INTO users (username, email, password_hash, role, name, verification_token, created_at)
-        VALUES (:username, :email, :password_hash, :role, :name, :verification_token, :created_at)
-        RETURNING id
+        INSERT INTO users (username, email, password_hash, role, name, admin_id, verification_token, created_at)
+        VALUES (:username, :email, :password_hash, :role, :name, :admin_id, :verification_token, :created_at)
+        RETURNING *
     """
     )
     params = {
@@ -44,6 +50,7 @@ def create_user_db(
         "password_hash": password_hash,
         "role": role,
         "name": name,
+        "admin_id": admin_id,
         "verification_token": verification_token,
         "created_at": datetime.now(timezone.utc),
     }
@@ -51,18 +58,12 @@ def create_user_db(
         result = db.session.execute(query, params)
         row = result.fetchone()
         db.session.commit()
-        return row[0] if row else None
+
+        user_id = row[0] if row else result.lastrowid
+        return user_id
     except Exception as e:
         db.session.rollback()
-        logger.error(f"DB Error creating user: {str(e)}")
-
-        # Turn unique constraint violations into user-facing validation errors
-        msg = str(e)
-        if "users_email_key" in msg:
-            raise ValidationError("An account with this email already exists.")
-        if "users_username_key" in msg:
-            raise ValidationError("Username already exists.")
-
+        logger.error(f"DB Error creating user: {str(e)}", exc_info=True)
         return None
 
 

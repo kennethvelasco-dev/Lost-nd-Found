@@ -20,7 +20,7 @@ claim_bp = Blueprint("claims", __name__)
 @claim_bp.route("/submit", methods=["POST"])
 @claim_bp.route("", methods=["POST"])  # Alias for fallback/compatibility
 @jwt_required()
-@require_json_fields(["found_item_id", "description", "color"])
+@require_json_fields(["description"])
 def post_claim():
     """Submit a claim for a found item or a general report."""
     user_id = get_jwt_identity()

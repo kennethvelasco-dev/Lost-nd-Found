@@ -31,8 +31,15 @@ def register_user(data: dict) -> tuple:
     email = data.get("email", "").lower().strip()
     password = data.get("password", "")
     # Force self-registered accounts to be regular users
-    role = "user"
+    role = data.get("role", "user")
+    if role not in ["user", "admin"]:
+        raise ValidationError("Role must be either 'user' or 'admin'")
+
     name = data.get("name", "").strip()
+    admin_id = data.get("admin_id")
+
+    if role == "admin" and not admin_id:
+        raise ValidationError("Admin ID is required for admin accounts")
 
     if not username or not password:
         raise ValidationError("Username and password are required")
@@ -56,6 +63,7 @@ def register_user(data: dict) -> tuple:
         password_hash=hashed_password,
         role=role,
         name=name,
+        admin_id=admin_id,
         verification_token=verification_token,
     )
 
@@ -72,7 +80,29 @@ def register_user(data: dict) -> tuple:
     )
     db.session.commit()
 
-    return {"message": "User registered successfully."}, 201
+    # Create tokens
+    from flask_jwt_extended import create_access_token, create_refresh_token
+
+    auth_time = int(time.time())
+    additional_claims = {"role": role, "auth_time": auth_time}
+    access_token = create_access_token(
+        identity=str(user_id), additional_claims=additional_claims
+    )
+    refresh_token = create_refresh_token(
+        identity=str(user_id), additional_claims=additional_claims
+    )
+
+    return {
+        "message": "User registered successfully.",
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "user": {
+            "id": user_id,
+            "username": username,
+            "role": role,
+            "name": name,
+        },
+    }, 201
 
 
 def login_user(data: dict) -> tuple:
