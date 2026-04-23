@@ -5,19 +5,15 @@ import api from '../services/api';
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        // We no longer check for tokens in JS. 
-        // We trust the 'user' object for UI state. 
-        // Real validation happens via Http-only cookies on first API call.
-        const storedUser = localStorage.getItem('user');
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
+    const [user, setUser] = useState(() => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch {
+            return null;
         }
-        setLoading(false);
-    }, []);
+    });
+    const loading = false;
 
     const login = async (username, password) => {
         try {

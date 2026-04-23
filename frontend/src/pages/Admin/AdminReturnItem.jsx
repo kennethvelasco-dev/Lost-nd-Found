@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Button from '../../components/UI/Button';
@@ -32,29 +32,39 @@ const AdminReturnItem = () => {
     const [fetching, setFetching] = useState(false);
     const [error, setError] = useState('');
 
-    const fetchItemDetails = useCallback(async (idToFetch) => {
-        const id = idToFetch || formData.item_id;
-        if (!id) return;
-        setFetching(true);
-        setError('');
-        try {
-            const response = await api.get(`/items/${id}`);
-            // Check nesting based on API response structure
-            setItemDetails(response.data?.data?.item || response.data?.data || response.data);
-        } catch {
-            setError('Item not found. Please check the ID.');
-            setItemDetails(null);
-        } finally {
-            setFetching(false);
-        }
-    }, [formData.item_id]);
-
-    // Auto-fetch if itemId is provided via state
+    // Auto-fetch if itemId is provided via router state
     useEffect(() => {
-        if (itemId) {
-            fetchItemDetails(itemId);
-        }
-    }, [itemId, fetchItemDetails]);
+        if (!itemId) return;
+
+        let cancelled = false;
+
+        const load = async () => {
+            setFetching(true);
+            setError('');
+            try {
+                const response = await api.get(`/items/${itemId}`);
+                const item = response.data?.data?.item || response.data?.data || response.data;
+                if (!cancelled) {
+                    setItemDetails(item);
+                }
+            } catch {
+                if (!cancelled) {
+                    setError('Item not found. Please check the ID.');
+                    setItemDetails(null);
+                }
+            } finally {
+                if (!cancelled) {
+                    setFetching(false);
+                }
+            }
+        };
+
+        load();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [itemId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -115,7 +125,28 @@ const AdminReturnItem = () => {
                                         // Allow overwrite for admin flexibility
                                     />
                                 </div>
-                                <Button type="button" variant="secondary" onClick={() => fetchItemDetails()} disabled={fetching} style={{ marginBottom: '16px' }}>
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    onClick={async () => {
+                                        const id = formData.item_id;
+                                        if (!id) return;
+                                        setFetching(true);
+                                        setError('');
+                                        try {
+                                            const response = await api.get(`/items/${id}`);
+                                            const item = response.data?.data?.item || response.data?.data || response.data;
+                                            setItemDetails(item);
+                                        } catch {
+                                            setError('Item not found. Please check the ID.');
+                                            setItemDetails(null);
+                                        } finally {
+                                            setFetching(false);
+                                        }
+                                    }}
+                                    disabled={fetching}
+                                    style={{ marginBottom: '16px' }}
+                                >
                                     {fetching ? '...' : 'Fetch'}
                                 </Button>
                             </div>
