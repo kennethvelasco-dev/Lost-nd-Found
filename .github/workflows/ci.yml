@@ -83,7 +83,7 @@ jobs:
         run: bandit -r app/ -v --exit-zero
 
       - name: Vulnerability Check (Safety)
-        run: safety check --exit-code 0
+        run: safety check --exit-code
 
       - name: Run Tests
         env:
