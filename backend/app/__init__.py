@@ -126,6 +126,7 @@ def create_app(config_name=None):
         with app.app_context():
             init_db()
             from .utils.user_helpers import create_default_admin
+
             create_default_admin()
 
     return app
