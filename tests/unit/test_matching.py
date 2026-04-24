@@ -1,7 +1,7 @@
 import pytest
 from datetime import datetime, timedelta
-from backend.helpers.formatter import format_item_description
-from backend.services.scoring_service import compute_claim_score
+from backend.app.utils.formatter import format_item_description
+from backend.app.services.scoring_service import compute_claim_score
 
 
 def test_sentence_splicing_found():
@@ -43,7 +43,7 @@ def test_scoring_logic_exact_match():
         "claimed_item_type": "Laptop",
         "claimed_color": "Silver",
         "claimed_brand": "Apple",
-        "claimed_datetime": target_date.isoformat(),
+        "lost_datetime_claimed": target_date.isoformat(),
     }
 
     result = compute_claim_score(claim, found_item)
@@ -56,7 +56,7 @@ def test_scoring_logic_date_tolerance():
 
     # Within 3 days
     close_date = target_date + timedelta(days=2)
-    claim_close = {"claimed_datetime": close_date.isoformat()}
+    claim_close = {"lost_datetime_claimed": close_date.isoformat()}
     result_close = compute_claim_score(claim_close, found_item)
     # The 'date' rule weight is 20. If matched, it should contribute 20.
     date_breakdown = next(b for b in result_close["breakdown"] if b["field"] == "date")
@@ -64,7 +64,7 @@ def test_scoring_logic_date_tolerance():
 
     # Beyond tolerance (10 days)
     far_date = target_date + timedelta(days=10)
-    claim_far = {"claimed_datetime": far_date.isoformat()}
+    claim_far = {"lost_datetime_claimed": far_date.isoformat()}
     result_far = compute_claim_score(claim_far, found_item)
     date_breakdown_far = next(
         b for b in result_far["breakdown"] if b["field"] == "date"

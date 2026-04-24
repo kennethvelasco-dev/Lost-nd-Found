@@ -75,8 +75,17 @@ class ProductionConfig(Config):
     JWT_COOKIE_SAMESITE = "None"
 
 
+class TestingConfig(Config):
+    DEBUG = True
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    # Disable CSRF and other checks for tests if needed
+    JWT_COOKIE_CSRF_PROTECT = False
+
+
 config_by_name = {
     "development": DevelopmentConfig,
     "production": ProductionConfig,
+    "testing": TestingConfig,
     "default": DevelopmentConfig,
 }

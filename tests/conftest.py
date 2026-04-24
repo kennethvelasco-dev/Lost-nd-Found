@@ -8,17 +8,20 @@ from backend.app.models import init_db
 
 @pytest.fixture
 def app(tmp_path):
-    # Create a temporary directory and file for the database
-    d = tmp_path / "testdata"
-    d.mkdir()
-    db_path = d / "test.db"
+    # Create a temporary file for the database to avoid :memory: sharing issues in some cases
+    db_fd, db_path = tempfile.mkstemp()
 
-    app = create_app()
-    app.config.update({"TESTING": True, "DATABASE_PATH": str(db_path)})
+    app = create_app("testing")
+    app.config.update({
+        "SQLALCHEMY_DATABASE_URI": f"sqlite:///{db_path}"
+    })
 
     with app.app_context():
         init_db()
         yield app
+
+    os.close(db_fd)
+    os.unlink(db_path)
 
     # tmp_path is automatically cleaned up by pytest
 

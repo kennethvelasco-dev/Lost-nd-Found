@@ -1,6 +1,6 @@
 import pytest
-from backend.services.auth_service import register_user
-from backend.models import ValidationError
+from backend.app.services.auth_service import register_user
+from backend.app.models import ValidationError
 
 
 def test_user_registration_success(app):
