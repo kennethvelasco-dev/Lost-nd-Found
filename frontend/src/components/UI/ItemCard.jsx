@@ -20,7 +20,7 @@ const ItemCard = ({ item, isReturned }) => {
     const handleClick = () => {
         if (isReturned) {
             console.log('Inspect clicked (returned):', item.id, item.original_report_id, item.category, item.item_type);
-            navigate(`/admin/return-log/${item.id}`);
+            navigate(`/returns/${item.id}`);
         } else {
             const targetId = item.report_id || item.id;
             console.log('Inspect clicked (standard):', targetId, item.category, item.item_type);

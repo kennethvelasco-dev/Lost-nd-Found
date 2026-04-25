@@ -195,3 +195,18 @@ def get_released_item_detail_route(report_id):
         return jsonify(success_response(result)), status
     except Exception as e:
         return jsonify(error_response("INTERNAL_ERROR", str(e))), 500
+
+
+@item_bp.route("/released/<int:released_id>", methods=["GET"])
+@limiter.limit("200 per hour")
+def get_public_released_detail(released_id):
+    """Public detail view for a specific released item by its ID.
+    Accessible to non-admin users (read-only).
+    """
+    from ..models.items import get_released_item_by_id_db
+
+    item = get_released_item_by_id_db(released_id)
+    if not item:
+        return jsonify(error_response("NOT_FOUND", "Released item not found")), 404
+    return jsonify(success_response(item)), 200
+
