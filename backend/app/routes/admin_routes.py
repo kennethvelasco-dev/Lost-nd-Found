@@ -113,8 +113,8 @@ def get_stats_route():
 def get_released_detail(released_id):
     """Fetch detail for a specific released item by its ID."""
     from ..models.items import get_released_item_by_id_db
+
     item = get_released_item_by_id_db(released_id)
     if not item:
         return jsonify(error_response("NOT_FOUND", "Released item not found")), 404
     return jsonify(success_response(item)), 200
-

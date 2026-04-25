@@ -209,4 +209,3 @@ def get_public_released_detail(released_id):
     if not item:
         return jsonify(error_response("NOT_FOUND", "Released item not found")), 404
     return jsonify(success_response(item)), 200
-
