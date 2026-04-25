@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from ..utils.decorators import admin_required
+from ..extensions import limiter
 from ..services.item_service import (
     submit_found_item,
     submit_lost_item,
