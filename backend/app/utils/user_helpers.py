@@ -110,7 +110,7 @@ def create_default_admin():
             insert_query,
             {
                 "username": "admin",
-                "email": "admin8857@gmail.com",
+                "email": "admin8857@example.com",
                 "password_hash": pwd_hash,
                 "role": "admin",
                 "name": "System Admin",

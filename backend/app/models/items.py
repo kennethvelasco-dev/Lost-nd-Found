@@ -339,7 +339,7 @@ def resolve_item_db(
         )
 
         # 3. Create record in released_items table (with visual snapshot)
-        db.session.execute(
+        released_id = db.session.execute(
             text(
                 """
             INSERT INTO released_items (
@@ -357,6 +357,7 @@ def resolve_item_db(
                 :color, :brand, :m_pic, :pub_desc, :last_loc, :found_loc,
                 :now
             )
+            RETURNING id
         """
             ),
             {
@@ -377,7 +378,7 @@ def resolve_item_db(
                 "found_loc": found_location,
                 "now": now,
             },
-        )
+        ).scalar()
 
         if claim_id:
             db.session.execute(
@@ -402,7 +403,9 @@ def resolve_item_db(
             notes=f"Recipient: {recipient_name} ({recipient_id})",
         )
         return {
-            "message": "Item marked as returned and moved to released storage successfully"
+            "message": "Item marked as returned and moved to released storage successfully",
+            "released_item_id": released_id,
+            "original_report_id": original_report_id,
         }, 200
     except Exception as e:
         db.session.rollback()
@@ -439,7 +442,9 @@ def get_released_items_db(limit=20, offset=0, query=None):
 
 
 def get_released_item_by_original_id_db(original_report_id: str):
-    """Fetch a single released item snapshot by original_report_id (lost/found report_id)."""
+    """Fetch the latest released item snapshot by original_report_id (lost/found report_id).
+    Kept for backward compatibility and summary views.
+    """
     query = text(
         """
         SELECT * FROM released_items
@@ -449,6 +454,19 @@ def get_released_item_by_original_id_db(original_report_id: str):
     """
     )
     row = db.session.execute(query, {"rid": original_report_id}).fetchone()
+    return dict(row._mapping) if row else None
+
+
+def get_released_item_by_id_db(released_id: int):
+    """Fetch a single released item snapshot by its own primary key ID."""
+    query = text(
+        """
+        SELECT * FROM released_items
+        WHERE id = :id
+        LIMIT 1
+    """
+    )
+    row = db.session.execute(query, {"id": released_id}).fetchone()
     return dict(row._mapping) if row else None
 
 

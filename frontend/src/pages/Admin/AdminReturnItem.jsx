@@ -78,7 +78,7 @@ const AdminReturnItem = () => {
         }
 
         try {
-            await api.post('/admin/resolve-item', {
+            const response = await api.post('/admin/resolve-item', {
                 item_id: formData.item_id,
                 claim_id: formData.claim_id,
                 owner_name: formData.owner_name,
@@ -88,11 +88,18 @@ const AdminReturnItem = () => {
                 turnover_proof: turnoverProof[0]
             });
             
+            const releasedId = response.data?.data?.released_item_id;
+
             navigate('/confirmation', { 
                 state: { 
                     title: 'Return Logged!', 
                     message: `Item #${formData.item_id} has been officially returned to ${formData.owner_name} (ID: ${formData.recipient_id}). The return log is now finalized.`,
-                    nextSteps: []
+                    nextSteps: releasedId ? [
+                        {
+                            label: 'View Return Log Details',
+                            to: `/admin/return-log/${releasedId}`
+                        }
+                    ] : []
                 } 
             });
         } catch (err) {
