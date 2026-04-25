@@ -18,9 +18,14 @@ const ItemCard = ({ item, isReturned }) => {
     const displayRecipientName = item.recipient_name || item.claimant_name;
 
     const handleClick = () => {
-        const targetId = item.report_id || item.id;
-        const state = isReturned ? { fromReleased: true } : undefined;
-        navigate(`/items/${targetId}`, { state });
+        if (isReturned) {
+            console.log('Inspect clicked (returned):', item.id, item.original_report_id, item.category, item.item_type);
+            navigate(`/admin/return-log/${item.id}`);
+        } else {
+            const targetId = item.report_id || item.id;
+            console.log('Inspect clicked (standard):', targetId, item.category, item.item_type);
+            navigate(`/items/${targetId}`);
+        }
     };
 
     return (

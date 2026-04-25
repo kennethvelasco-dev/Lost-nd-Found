@@ -104,3 +104,17 @@ def get_stats_route():
     """Get system-wide stats for admin dashboard."""
     result, status = get_admin_stats_service()
     return jsonify(success_response(result)), status
+
+
+@admin_bp.route("/released-items/<int:released_id>", methods=["GET"])
+@jwt_required()
+@admin_required
+@limiter.limit("50 per 15 minutes")
+def get_released_detail(released_id):
+    """Fetch detail for a specific released item by its ID."""
+    from ..models.items import get_released_item_by_id_db
+    item = get_released_item_by_id_db(released_id)
+    if not item:
+        return jsonify(error_response("NOT_FOUND", "Released item not found")), 404
+    return jsonify(success_response(item)), 200
+
