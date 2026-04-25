@@ -457,12 +457,22 @@ def get_released_item_by_original_id_db(original_report_id: str):
     return dict(row._mapping) if row else None
 
 
-def get_released_item_by_id_db(released_id: int):
-    """Fetch a single released item snapshot by its own primary key ID."""
+def get_released_item_detail_view_db(released_id: int):
+    """
+    Fetch a released item detail view for APIs.
+
+    Includes:
+    - snapshot from released_items
+    - admin office ID (users.admin_id) via LEFT JOIN
+    """
     query = text(
         """
-        SELECT * FROM released_items
-        WHERE id = :id
+        SELECT 
+            r.*,
+            u.admin_id AS admin_office_id
+        FROM released_items r
+        LEFT JOIN users u ON u.username = r.released_by_admin
+        WHERE r.id = :id
         LIMIT 1
     """
     )

@@ -203,10 +203,11 @@ def get_released_item_detail_route(report_id):
 def get_public_released_detail(released_id):
     """Public detail view for a specific released item by its ID.
     Accessible to non-admin users (read-only).
+    Includes admin office ID for clearer audit trail.
     """
-    from ..models.items import get_released_item_by_id_db
+    from ..models.items import get_released_item_detail_view_db
 
-    item = get_released_item_by_id_db(released_id)
+    item = get_released_item_detail_view_db(released_id)
     if not item:
         return jsonify(error_response("NOT_FOUND", "Released item not found")), 404
     return jsonify(success_response(item)), 200
