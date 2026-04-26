@@ -143,6 +143,7 @@ FLASK_SECRET_KEY=<random-value>
 ```
 
 And either:
+
 - Set `DATABASE_URL` to your Supabase session pooler URI, **or**
 - Leave `DATABASE_URL` unset to fall back to a local SQLite file (`lostnfound.db`).
 
@@ -158,11 +159,11 @@ By default the API listens on `http://localhost:5000`.
 
 **Service settings:**
 
-| Setting | Value |
-|---|---|
-| Root directory | `backend` |
-| Build command | `pip install -r requirements.txt` |
-| Start command | `gunicorn "app:create_app()" -b 0.0.0.0:$PORT` |
+| Setting        | Value                                          |
+| -------------- | ---------------------------------------------- |
+| Root directory | `backend`                                      |
+| Build command  | `pip install -r requirements.txt`              |
+| Start command  | `gunicorn "app:create_app()" -b 0.0.0.0:$PORT` |
 
 **Required environment variables on Render:**
 
@@ -225,7 +226,7 @@ The Axios client in `src/services/api.js` uses:
 
 ```js
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+  import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api";
 ```
 
 Run the frontend:
@@ -240,12 +241,12 @@ Vite serves the app at `http://localhost:5173` by default.
 
 **Project configuration:**
 
-| Setting | Value |
-|---|---|
-| Framework preset | Vite |
-| Root directory | `frontend` |
-| Build command | `npm run build` |
-| Output directory | `dist` |
+| Setting          | Value           |
+| ---------------- | --------------- |
+| Framework preset | Vite            |
+| Root directory   | `frontend`      |
+| Build command    | `npm run build` |
+| Output directory | `dist`          |
 
 **Environment variable on Vercel:**
 
@@ -295,16 +296,16 @@ The deployed frontend will then call the Render backend.
 
 The schema is defined in `backend/migrations/schema.sql` and includes:
 
-| Table | Description |
-|---|---|
-| `users` | Users with roles, email verification, lockout, and password reset fields |
-| `lost_items` | Lost item reports with status, descriptions, and reporter |
-| `found_items` | Found item reports with status, descriptions, and reporter |
-| `claims` | Claims linking users to items, with scoring, decisions, and pickup info |
-| `released_items` | Snapshot record of resolved items with claimant info, pictures, and locations |
-| `activity_logs` | Logging admin and system actions |
-| `audit_logs` | Audit trail for sensitive operations |
-| `token_blocklist` | JWT blocklist table |
+| Table             | Description                                                                   |
+| ----------------- | ----------------------------------------------------------------------------- |
+| `users`           | Users with roles, email verification, lockout, and password reset fields      |
+| `lost_items`      | Lost item reports with status, descriptions, and reporter                     |
+| `found_items`     | Found item reports with status, descriptions, and reporter                    |
+| `claims`          | Claims linking users to items, with scoring, decisions, and pickup info       |
+| `released_items`  | Snapshot record of resolved items with claimant info, pictures, and locations |
+| `activity_logs`   | Logging admin and system actions                                              |
+| `audit_logs`      | Audit trail for sensitive operations                                          |
+| `token_blocklist` | JWT blocklist table                                                           |
 
 On startup, `init_db()` executes `schema.sql` against the configured database.
 
