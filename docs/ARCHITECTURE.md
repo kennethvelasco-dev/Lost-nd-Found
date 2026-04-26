@@ -91,6 +91,21 @@ Implemented via Flask-Limiter in `app/extensions.py`:
 | `POST /auth/reset-password`  | 5 per hour    |
 | `POST /auth/refresh`    | 5 per minute       |
 
+### Released Items & Return Logs
+
+- The `released_items` table acts as a **historical snapshot** when an item is successfully returned:
+  - References the original report: `original_report_id`, `item_source` (`lost` or `found`).
+  - Stores claimant and recipient information: `claimant_name`, `recipient_id` (student/school ID).
+  - Persists admin information: `released_by_admin` (admin username), with `admin_office_id` derived from `users.admin_id`.
+  - Captures evidence: `main_picture` (original report) and `turnover_proof` (handover photo).
+  - Captures context: `category`, `item_type`, `color`, `brand`, `last_seen_location`, `found_location`, `public_description`, `handover_notes`, `resolved_at`.
+
+- The function `get_released_item_detail_view_db(released_id)` is the **single backend source of truth** for a released item detail view:
+  - It returns a released item snapshot enriched with `admin_office_id` via a LEFT JOIN with the `users` table.
+  - It is used by both:
+    - `/api/items/released/<released_id>` – user-facing, read-only detail route.
+    - `/api/admin/released-items/<released_id>` – admin-only detail route (same payload, admin-protected).
+
 ### CORS and Security Headers
 
 - **CORS**: Configured via `flask-cors` in `create_app`. `CORS_ORIGINS` is read from the environment as a comma-separated list.
@@ -104,6 +119,25 @@ Implemented via Flask-Limiter in `app/extensions.py`:
 ## Frontend: Vite + React
 
 The frontend lives in `frontend/` and is a single-page application deployed on Vercel.
+
+#### Return Log UI
+
+- `ReturnedItems.jsx`
+  - Fetches released items from `/api/items/released`.
+  - Renders a grid of `ItemCard` components with `isReturned={true}`.
+  - Items are identified by `released_items.id` and navigate to `/returns/:id`.
+
+- `ItemCard.jsx`
+  - For non-returned items, clicking navigates to `/items/:report_id` or `/items/:id`.
+  - For returned items, clicking “Inspect Item” navigates to `/returns/:id`, where `id` is the released record’s primary key.
+
+- `ReturnLogDetail.jsx`
+  - Reads `id` from the route and calls `/api/items/released/:id`.
+  - Shows:
+    - Original report photo and handover proof photo (`main_picture`, `turnover_proof`).
+    - Claimant name and student/recipient ID (`claimant_name`, `recipient_id`).
+    - Admin username and admin office ID (`released_by_admin`, `admin_office_id`).
+    - Item origin (lost vs found), locations, color/brand, public description, and handover notes.
 
 ### Key Design Choices
 

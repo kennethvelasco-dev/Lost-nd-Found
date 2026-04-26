@@ -34,6 +34,14 @@ You normally share the Vercel URL with users. The frontend talks to the backend 
   - Approve or reject reports and claims.
   - Mark items as returned and view dashboard statistics.
 
+- **Return Logs (User-Facing)**
+  - `/returned-items`: list of successful returns available to authenticated users.
+  - `/returns/:id`: detailed audit view per released item, including:
+    - Original report photo and handover proof photo.
+    - Claimant name and student/recipient ID.
+    - Admin username and admin office ID.
+    - Handover notes and item metadata (category, type, color, brand, locations).
+
 - **Authentication and Security**
   - Username/password login with bcrypt.
   - Automatic email verification on registration (Zero-Cost strategy).
@@ -97,7 +105,7 @@ root/
 - Flask-Limiter
 - Flask-SQLAlchemy / SQLAlchemy `2.x`
 - `psycopg2-binary` (PostgreSQL driver)
-- Supabase Postgres via session pooler (IPv4-compatible)
+- Supabase Postgres via session pooler (IPv4-compatible) as the primary database host (no Supabase Auth or storage; the backend owns the `users`, `items`, `claims`, and `released_items` tables).
 - `bcrypt` for password hashing
 - `email-validator` and `zxcvbn` for email and password strength checks
 - `python-dotenv` for configuration

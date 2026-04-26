@@ -154,6 +154,40 @@ The frontend (Vercel) calls the backend at:
   }
   ```
 
+### `GET /items/released/:id`
+
+- **Description**: Fetch a single released item by its `id` from `released_items`. Used by the `/returns/:id` page to show a full return log.
+- **Authentication**: none (read-only, but rate limited).
+- **Response Data**:
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": 1,
+      "original_report_id": "UUID",
+      "item_source": "found",
+      "category": "Electronics",
+      "item_type": "Phone",
+      "color": "Black",
+      "brand": "Apple",
+      "claimant_name": "John Smith",
+      "recipient_id": "2024-000123",
+      "released_by_admin": "admin_user",
+      "admin_office_id": "ADM-001",
+      "main_picture": "https://.../original.jpg",
+      "turnover_proof": "https://.../handover.jpg",
+      "public_description": "Black iPhone 13",
+      "last_seen_location": "Science Library",
+      "found_location": null,
+      "handover_notes": "Verified ID and signed handover receipt",
+      "resolved_at": "2026-04-25T06:01:07.972579Z"
+    }
+  }
+  ```
+- **Notes**:
+  - `recipient_id` is the student/recipient ID recorded by the admin at handover.
+  - `admin_office_id` is derived from the admin’s profile (`users.admin_id`) and provides an auditable office identifier.
+
 ### `GET /items/returned` (Legacy Alias)
 
 - **Description**: Alias for `/items/released` for backward compatibility.
